@@ -38,6 +38,11 @@
     font-size:13px;
     color:var(--grey);
   }
+  .updated-line{
+    font-size:10.5px !important;
+    color:var(--grey);
+    margin-top:4px !important;
+  }
 
   .card{
     background:var(--card);
@@ -112,27 +117,39 @@
     text-transform:uppercase;
     color:var(--grey);
     margin:0 0 12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+  }
+  .swipe-hint{
+    font-size:10px;
+    letter-spacing:0;
+    text-transform:none;
+    color:var(--azure);
+    font-weight:400;
   }
 
   .table-scroll{
     width:100%;
-    overflow-x:hidden;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    padding-bottom:6px;
   }
   table.data-table{
     border-collapse:collapse;
-    table-layout:fixed;
-    width:100%;
-    font-size:clamp(9px, 1.1vw, 12px);
+    table-layout:auto;
+    width:max-content;
+    min-width:100%;
+    font-size:13px;
   }
   table.data-table th, table.data-table td{
-    padding:6px 3px;
+    padding:8px 10px;
     text-align:center;
-    overflow:hidden;
-    text-overflow:ellipsis;
     white-space:nowrap;
+    min-width:54px;
   }
   table.data-table thead th{
-    font-size:clamp(8px, 0.9vw, 10px);
+    font-size:10.5px;
     letter-spacing:.02em;
     text-transform:uppercase;
     color:var(--grey);
@@ -146,17 +163,19 @@
   }
   table.data-table td.now-col{color:var(--azure);font-weight:600;}
   table.data-table th.row-label, table.data-table td.row-label{
+    position:sticky;
+    left:0;
     text-align:left;
     background:var(--card);
     font-weight:600;
     color:var(--ink);
-    width:78px;
-    white-space:normal;
-    overflow-wrap:break-word;
-    line-height:1.15;
+    min-width:96px;
+    white-space:nowrap;
+    z-index:1;
+    box-shadow:2px 0 4px -2px rgba(14,42,71,.15);
   }
   table.data-table tbody tr:nth-child(odd) td.row-label{background:#F8FBFC;}
-  table.data-table td.icon-cell svg{display:block;margin:0 auto;width:60%;height:auto;}
+  table.data-table td.icon-cell svg{display:block;margin:0 auto;}
   table.data-table td.day-dot{color:var(--grey);}
   table.data-table td.night-dot{color:var(--ink);}
 
@@ -167,6 +186,25 @@
     margin-top:10px;
   }
   footer a{color:var(--azure);}
+
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:3px;
+    padding:2px 6px;
+    border-radius:9px;
+    font-size:0.85em;
+    font-weight:700;
+    white-space:nowrap;
+    color:#fff;
+  }
+  .badge-none{background:#B7C4CC;}
+  .badge-low{background:#5FA777;}
+  .badge-moderate{background:#E0A233;}
+  .badge-high{background:#DB6A3B;}
+  .badge-extreme{background:#C0392B;}
+
+  .high-pop{color:#C0392B;font-weight:700;}
 
   .state-msg{
     text-align:center;
@@ -180,8 +218,9 @@
 <div class="wrap">
   <div class="wrap-narrow">
     <header>
-      <h1 id="titleLine">43.633308°N, 7.006525°E</h1>
+      <h1 id="titleLine">Locating address…</h1>
       <p id="dateLine">Loading forecast…</p>
+      <p id="updatedLine" class="updated-line"></p>
     </header>
 
     <div class="card" id="nowCard">
@@ -190,14 +229,14 @@
   </div>
 
   <div class="card">
-    <div class="section-title">Hourly forecast — next 24h</div>
+    <div class="section-title"><span>Hourly forecast — next 24h</span><span class="swipe-hint">swipe →</span></div>
     <div class="table-scroll">
       <table class="data-table" id="hourlyTable"></table>
     </div>
   </div>
 
   <div class="card">
-    <div class="section-title">15-minute forecast — next 6h</div>
+    <div class="section-title"><span>15-minute forecast — next 6h</span><span class="swipe-hint">swipe →</span></div>
     <div class="table-scroll">
       <table class="data-table" id="minutelyTable"></table>
     </div>
@@ -214,9 +253,9 @@
 <script>
 const API = "https://api.open-meteo.com/v1/forecast?latitude=43.633308&longitude=7.006525&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,weather_code,cloud_cover,wind_speed_10m,wind_gusts_10m,uv_index,cape&models=meteofrance_arome_france_hd&minutely_15=temperature_2m,precipitation,rain,cape,lightning_potential,wind_speed_10m&timezone=Europe%2FParis&forecast_days=2";
 // AROME-HD doesn't output these — pulled instead from Open-Meteo's default best-match blend
-const BLEND_API = "https://api.open-meteo.com/v1/forecast?latitude=43.633308&longitude=7.006525&hourly=precipitation_probability,rain,showers,cloud_cover,uv_index,weather_code&minutely_15=rain,lightning_potential&timezone=Europe%2FParis&forecast_days=2";
+const BLEND_API = "https://api.open-meteo.com/v1/forecast?latitude=43.633308&longitude=7.006525&hourly=precipitation_probability,rain,showers,cloud_cover,uv_index,weather_code&minutely_15=rain,lightning_potential,weather_code&timezone=Europe%2FParis&forecast_days=2";
 const BLENDED_FIELDS = ['precipitation_probability','rain','showers','cloud_cover','uv_index','weather_code'];
-const BLENDED_MINUTELY_FIELDS = ['rain','lightning_potential'];
+const BLENDED_MINUTELY_FIELDS = ['rain','lightning_potential','weather_code'];
 const LAT = 43.633308;
 const LON = 7.006525;
 
@@ -237,28 +276,30 @@ const WMO = {
   95:{label:"Thunderstorm", icon:"storm"}, 96:{label:"Thunderstorm + hail", icon:"storm"}, 99:{label:"Thunderstorm + hail", icon:"storm"},
 };
 
-function icon(type, size=28, color="#0E2A47"){
+function icon(type, size=28){
+  const cloudGrey = "#8FA3B0";
+  const sunGold = "#F2A93B";
   const paths = {
-    sun: `<circle cx="14" cy="14" r="6" stroke="${color}" stroke-width="2" fill="none"/>
-          <g stroke="${color}" stroke-width="2" stroke-linecap="round">
+    sun: `<circle cx="14" cy="14" r="6" fill="${sunGold}" stroke="${sunGold}" stroke-width="2"/>
+          <g stroke="${sunGold}" stroke-width="2" stroke-linecap="round">
           <line x1="14" y1="1" x2="14" y2="4"/><line x1="14" y1="24" x2="14" y2="27"/>
           <line x1="1" y1="14" x2="4" y2="14"/><line x1="24" y1="14" x2="27" y2="14"/>
           <line x1="5" y1="5" x2="7" y2="7"/><line x1="21" y1="21" x2="23" y2="23"/>
           <line x1="23" y1="5" x2="21" y2="7"/><line x1="7" y1="21" x2="5" y2="23"/>
           </g>`,
-    "sun-cloud": `<circle cx="10" cy="11" r="5" stroke="${color}" stroke-width="2" fill="none"/>
-          <g stroke="${color}" stroke-width="1.6" stroke-linecap="round">
+    "sun-cloud": `<circle cx="10" cy="11" r="5" fill="${sunGold}" stroke="${sunGold}" stroke-width="2"/>
+          <g stroke="${sunGold}" stroke-width="1.6" stroke-linecap="round">
           <line x1="10" y1="1.5" x2="10" y2="3.5"/><line x1="2" y1="11" x2="4" y2="11"/>
           <line x1="4" y1="4" x2="5.5" y2="5.5"/></g>
-          <path d="M9 24c-3 0-5.5-2.2-5.5-5 0-2.5 2-4.5 4.4-4.8.9-2.5 3.3-4.2 6-4.2 3.5 0 6.4 2.7 6.7 6.1 2 .4 3.4 2.1 3.4 4.1 0 2.3-1.9 4-4.3 4H9z" fill="#fff" stroke="${color}" stroke-width="2"/>`,
-    cloud: `<path d="M7 22c-3.3 0-6-2.4-6-5.5 0-2.7 2.1-5 4.9-5.4C6.9 8 9.9 5.5 13.5 5.5c4 0 7.3 3 7.7 6.9 2.3.4 4.1 2.3 4.1 4.6 0 2.5-2.1 4.5-4.8 4.5H7z" stroke="${color}" stroke-width="2" fill="none"/>`,
-    fog: `<path d="M7 14c-3.3 0-6-2.1-6-4.8C1 6.8 3.4 4.7 6.5 4.5 7.4 2.4 9.9.5 13 .5c3.5 0 6.4 2.4 6.9 5.5 2 .3 3.6 1.8 3.6 3.6 0 2-1.8 3.6-4.1 3.6H7z" stroke="${color}" stroke-width="1.6" fill="none"/>
-          <g stroke="${color}" stroke-width="2" stroke-linecap="round"><line x1="2" y1="20" x2="24" y2="20"/><line x1="5" y1="25" x2="21" y2="25"/></g>`,
-    rain: `<path d="M7 14c-3.3 0-6-2.1-6-4.8C1 6.8 3.4 4.7 6.5 4.5 7.4 2.4 9.9.5 13 .5c3.5 0 6.4 2.4 6.9 5.5 2 .3 3.6 1.8 3.6 3.6 0 2-1.8 3.6-4.1 3.6H7z" stroke="${color}" stroke-width="1.6" fill="none"/>
+          <path d="M9 24c-3 0-5.5-2.2-5.5-5 0-2.5 2-4.5 4.4-4.8.9-2.5 3.3-4.2 6-4.2 3.5 0 6.4 2.7 6.7 6.1 2 .4 3.4 2.1 3.4 4.1 0 2.3-1.9 4-4.3 4H9z" fill="#fff" stroke="${cloudGrey}" stroke-width="2"/>`,
+    cloud: `<path d="M7 22c-3.3 0-6-2.4-6-5.5 0-2.7 2.1-5 4.9-5.4C6.9 8 9.9 5.5 13.5 5.5c4 0 7.3 3 7.7 6.9 2.3.4 4.1 2.3 4.1 4.6 0 2.5-2.1 4.5-4.8 4.5H7z" fill="#E3ECF1" stroke="${cloudGrey}" stroke-width="2"/>`,
+    fog: `<path d="M7 14c-3.3 0-6-2.1-6-4.8C1 6.8 3.4 4.7 6.5 4.5 7.4 2.4 9.9.5 13 .5c3.5 0 6.4 2.4 6.9 5.5 2 .3 3.6 1.8 3.6 3.6 0 2-1.8 3.6-4.1 3.6H7z" fill="#E3ECF1" stroke="${cloudGrey}" stroke-width="1.6"/>
+          <g stroke="${cloudGrey}" stroke-width="2" stroke-linecap="round"><line x1="2" y1="20" x2="24" y2="20"/><line x1="5" y1="25" x2="21" y2="25"/></g>`,
+    rain: `<path d="M7 14c-3.3 0-6-2.1-6-4.8C1 6.8 3.4 4.7 6.5 4.5 7.4 2.4 9.9.5 13 .5c3.5 0 6.4 2.4 6.9 5.5 2 .3 3.6 1.8 3.6 3.6 0 2-1.8 3.6-4.1 3.6H7z" fill="#E3ECF1" stroke="${cloudGrey}" stroke-width="1.6"/>
           <g stroke="#2F8FCB" stroke-width="2" stroke-linecap="round"><line x1="8" y1="18" x2="6" y2="24"/><line x1="14" y1="18" x2="12" y2="24"/><line x1="20" y1="18" x2="18" y2="24"/></g>`,
-    snow: `<path d="M7 14c-3.3 0-6-2.1-6-4.8C1 6.8 3.4 4.7 6.5 4.5 7.4 2.4 9.9.5 13 .5c3.5 0 6.4 2.4 6.9 5.5 2 .3 3.6 1.8 3.6 3.6 0 2-1.8 3.6-4.1 3.6H7z" stroke="${color}" stroke-width="1.6" fill="none"/>
+    snow: `<path d="M7 14c-3.3 0-6-2.1-6-4.8C1 6.8 3.4 4.7 6.5 4.5 7.4 2.4 9.9.5 13 .5c3.5 0 6.4 2.4 6.9 5.5 2 .3 3.6 1.8 3.6 3.6 0 2-1.8 3.6-4.1 3.6H7z" fill="#E3ECF1" stroke="${cloudGrey}" stroke-width="1.6"/>
           <g stroke="#8FC4E8" stroke-width="2" stroke-linecap="round"><line x1="8" y1="18" x2="8" y2="25"/><line x1="14" y1="18" x2="14" y2="25"/><line x1="20" y1="18" x2="20" y2="25"/></g>`,
-    storm: `<path d="M7 13c-3.3 0-6-2.1-6-4.8C1 5.8 3.4 3.7 6.5 3.5 7.4 1.4 9.9-.5 13-.5c3.5 0 6.4 2.4 6.9 5.5 2 .3 3.6 1.8 3.6 3.6 0 2-1.8 3.6-4.1 3.6H7z" stroke="${color}" stroke-width="1.6" fill="none" transform="translate(0,3)"/>
+    storm: `<path d="M7 13c-3.3 0-6-2.1-6-4.8C1 5.8 3.4 3.7 6.5 3.5 7.4 1.4 9.9-.5 13-.5c3.5 0 6.4 2.4 6.9 5.5 2 .3 3.6 1.8 3.6 3.6 0 2-1.8 3.6-4.1 3.6H7z" fill="#D7DFE4" stroke="${cloudGrey}" stroke-width="1.6" transform="translate(0,3)"/>
           <path d="M14 17l-4 7h4l-2 6 7-9h-4l3-4z" fill="#D46B3C"/>`,
   };
   return `<svg width="${size}" height="${size}" viewBox="0 0 28 28" fill="none">${paths[type]||paths.cloud}</svg>`;
@@ -289,16 +330,58 @@ function roundOr(v, suffix){
   return Math.round(v)+(suffix||'');
 }
 
+// CAPE (J/kg) — standard convective-instability thresholds
+function capeBadge(v){
+  if(v === null || v === undefined || Number.isNaN(v)) return '–';
+  let cls, label;
+  if(v < 300){ cls='badge-none'; label='Stable'; }
+  else if(v < 1000){ cls='badge-low'; label='Slight'; }
+  else if(v < 2500){ cls='badge-moderate'; label='Moderate'; }
+  else if(v < 3500){ cls='badge-high'; label='High'; }
+  else { cls='badge-extreme'; label='Extreme'; }
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+// Lightning Potential Index (J/kg) — 0 = none, higher = more likely/severe storms
+function lightningBadge(v){
+  if(v === null || v === undefined || Number.isNaN(v)) return '–';
+  let cls, label;
+  if(v <= 0){ cls='badge-none'; label='⚡ None'; }
+  else if(v < 2){ cls='badge-low'; label='⚡ Low'; }
+  else if(v < 5){ cls='badge-moderate'; label='⚡ Moderate'; }
+  else if(v < 10){ cls='badge-high'; label='⚡ High'; }
+  else { cls='badge-extreme'; label='⚡ Extreme'; }
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+let lastUpdated = null;
+
 function updateHeader(now){
-  document.getElementById('titleLine').textContent =
-    `${fmtCoord(LAT,'N','S')}, ${fmtCoord(LON,'E','W')}`;
   const dateStr = now.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long'});
   const timeStr = now.toLocaleTimeString('en-GB',{hour:'2-digit', minute:'2-digit'});
   document.getElementById('dateLine').textContent = `${dateStr} · ${timeStr}`;
+  if(lastUpdated){
+    const upd = lastUpdated.toLocaleTimeString('en-GB',{hour:'2-digit', minute:'2-digit'});
+    document.getElementById('updatedLine').textContent = `Data refreshed at ${upd} · auto-refreshes hourly`;
+  }
 }
 
-// keep the clock in the header ticking between data refreshes
+// keep the clock (and "last updated" text) ticking between data refreshes
 setInterval(()=> updateHeader(new Date()), 30*1000);
+
+// resolve the coordinates to a human-readable postal address, once, via
+// OpenStreetMap's Nominatim reverse-geocoding service
+async function loadAddress(){
+  try{
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${LAT}&lon=${LON}&zoom=18&addressdetails=1`);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    const title = data.display_name || `${fmtCoord(LAT,'N','S')}, ${fmtCoord(LON,'E','W')}`;
+    document.getElementById('titleLine').textContent = title;
+  }catch(err){
+    document.getElementById('titleLine').textContent = `${fmtCoord(LAT,'N','S')}, ${fmtCoord(LON,'E','W')}`;
+  }
+}
 
 function mergeByTime(mainTimes, mainArr, blendTimes, blendArr){
   const map = new Map();
@@ -313,14 +396,16 @@ function mergeByTime(mainTimes, mainArr, blendTimes, blendArr){
 function mergeData(main, blend){
   if(blend && blend.hourly){
     BLENDED_FIELDS.forEach(f=>{
-      if(main.hourly[f] && blend.hourly[f]){
+      if(!main.hourly[f]) main.hourly[f] = main.hourly.time.map(()=>null);
+      if(blend.hourly[f]){
         main.hourly[f] = mergeByTime(main.hourly.time, main.hourly[f], blend.hourly.time, blend.hourly[f]);
       }
     });
   }
   if(blend && blend.minutely_15 && main.minutely_15){
     BLENDED_MINUTELY_FIELDS.forEach(f=>{
-      if(main.minutely_15[f] && blend.minutely_15[f]){
+      if(!main.minutely_15[f]) main.minutely_15[f] = main.minutely_15.time.map(()=>null);
+      if(blend.minutely_15[f]){
         main.minutely_15[f] = mergeByTime(main.minutely_15.time, main.minutely_15[f], blend.minutely_15.time, blend.minutely_15[f]);
       }
     });
@@ -341,6 +426,7 @@ async function load(){
       try{ blendData = await blendRes.json(); }catch(e){ blendData = null; }
     }
     const data = mergeData(mainData, blendData);
+    lastUpdated = new Date();
     render(data);
   }catch(err){
     document.getElementById('nowCard').innerHTML = `<div class="state-msg">Couldn't load forecast (${err.message}).</div>`;
@@ -421,7 +507,8 @@ function buildHourlyTable(h, curIdx){
     {label:'', get:(i)=> icon((WMO[h.weather_code[i]]||{icon:'cloud'}).icon, 20), isIcon:true},
     {label:'Temp', get:(i)=> roundOr(h.temperature_2m[i], '°')},
     {label:'Humidity', get:(i)=> roundOr(h.relative_humidity_2m[i], '%')},
-    {label:'Precip. prob.*', get:(i)=> roundOr(h.precipitation_probability[i], '%')},
+    {label:'Precip. prob.*', get:(i)=> roundOr(h.precipitation_probability[i], '%'),
+      cellClass:(i)=> (h.precipitation_probability[i]!==null && h.precipitation_probability[i]>50) ? 'high-pop' : ''},
     {label:'Precipitation', get:(i)=> numOr(h.precipitation[i], 1, ' mm')},
     {label:'Rain*', get:(i)=> numOr(h.rain[i], 1, ' mm')},
     {label:'Showers*', get:(i)=> numOr(h.showers[i], 1, ' mm')},
@@ -430,7 +517,7 @@ function buildHourlyTable(h, curIdx){
     {label:'Wind speed', get:(i)=> roundOr(h.wind_speed_10m[i], ' km/h')},
     {label:'Wind gusts', get:(i)=> roundOr(h.wind_gusts_10m[i], ' km/h')},
     {label:'UV index*', get:(i)=> numOr(h.uv_index[i], 1, '')},
-    {label:'CAPE', get:(i)=> roundOr(h.cape[i], ' J/kg')},
+    {label:'CAPE', get:(i)=> capeBadge(h.cape[i])},
   ];
 
   let thead = '<thead><tr><th class="row-label"></th>';
@@ -443,7 +530,7 @@ function buildHourlyTable(h, curIdx){
     tbody += `<td class="row-label">${row.label}</td>`;
     idxs.forEach((i,n0)=>{
       const cell = row.get(i,n0);
-      tbody += `<td class="${row.isIcon?'icon-cell':''} ${n0===0?'now-col':''}">${cell}</td>`;
+      tbody += `<td class="${row.isIcon?'icon-cell':''} ${row.cellClass?row.cellClass(i):''} ${n0===0?'now-col':''}">${cell}</td>`;
     });
     tbody += '</tr>';
   });
@@ -470,11 +557,12 @@ function buildMinutelyTable(m, now){
   thead += '</tr></thead>';
 
   const rows = [
+    {label:'', get:(i)=> icon((WMO[m.weather_code[i]]||{icon:'cloud'}).icon, 20), isIcon:true},
     {label:'Temp', get:(i)=> numOr(m.temperature_2m[i], 1, '°')},
     {label:'Precipitation', get:(i)=> numOr(m.precipitation[i], 1, ' mm')},
     {label:'Rain*', get:(i)=> numOr(m.rain[i], 1, ' mm')},
-    {label:'CAPE', get:(i)=> roundOr(m.cape[i], ' J/kg')},
-    {label:'Lightning pot.*', get:(i)=> roundOr(m.lightning_potential[i], ' J/kg')},
+    {label:'CAPE', get:(i)=> capeBadge(m.cape[i])},
+    {label:'Lightning*', get:(i)=> lightningBadge(m.lightning_potential[i])},
     {label:'Wind speed', get:(i)=> roundOr(m.wind_speed_10m[i], ' km/h')},
   ];
 
@@ -493,8 +581,11 @@ function buildMinutelyTable(m, now){
   document.getElementById('minutelyTable').innerHTML = thead + tbody;
 }
 
+loadAddress();
 load();
-setInterval(load, 10*60*1000);
+setInterval(load, 60*60*1000); // auto-refresh forecast data every hour — matches the
+                                // minutely_15 update cadence (hourly); the AROME-HD
+                                // hourly run itself only refreshes every 3h anyway
 </script>
 </body>
 </html>
