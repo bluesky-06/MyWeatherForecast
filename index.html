@@ -29,9 +29,10 @@
   header{text-align:center;margin-bottom:20px;}
   header h1{
     font-family:'Fraunces',serif;
-    font-weight:600;
-    font-size:22px;
+    font-weight:500;
+    font-size:15px;
     margin:0 0 2px;
+    color:var(--ink);
   }
   header p{
     margin:0;
@@ -253,9 +254,9 @@
 <script>
 const API = "https://api.open-meteo.com/v1/forecast?latitude=43.633308&longitude=7.006525&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,weather_code,cloud_cover,wind_speed_10m,wind_gusts_10m,uv_index,cape&models=meteofrance_arome_france_hd&minutely_15=temperature_2m,precipitation,rain,cape,lightning_potential,wind_speed_10m&timezone=Europe%2FParis&forecast_days=2";
 // AROME-HD doesn't output these — pulled instead from Open-Meteo's default best-match blend
-const BLEND_API = "https://api.open-meteo.com/v1/forecast?latitude=43.633308&longitude=7.006525&hourly=precipitation_probability,rain,showers,cloud_cover,uv_index,weather_code&minutely_15=rain,lightning_potential,weather_code&timezone=Europe%2FParis&forecast_days=2";
-const BLENDED_FIELDS = ['precipitation_probability','rain','showers','cloud_cover','uv_index','weather_code'];
-const BLENDED_MINUTELY_FIELDS = ['rain','lightning_potential','weather_code'];
+const BLEND_API = "https://api.open-meteo.com/v1/forecast?latitude=43.633308&longitude=7.006525&hourly=precipitation_probability,showers,cloud_cover,uv_index,weather_code&minutely_15=lightning_potential,weather_code&timezone=Europe%2FParis&forecast_days=2";
+const BLENDED_FIELDS = ['precipitation_probability','showers','cloud_cover','uv_index','weather_code'];
+const BLENDED_MINUTELY_FIELDS = ['lightning_potential','weather_code'];
 const LAT = 43.633308;
 const LON = 7.006525;
 
@@ -376,7 +377,16 @@ async function loadAddress(){
     const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${LAT}&lon=${LON}&zoom=18&addressdetails=1`);
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data = await res.json();
-    const title = data.display_name || `${fmtCoord(LAT,'N','S')}, ${fmtCoord(LON,'E','W')}`;
+    const a = data.address || {};
+    const streetNum = a.house_number || '';
+    const streetName = a.road || a.pedestrian || a.footway || '';
+    const street = [streetNum, streetName].filter(Boolean).join(' ');
+    const city = a.city || a.town || a.village || a.municipality || '';
+    const postcode = a.postcode || '';
+    const cityLine = [postcode, city].filter(Boolean).join(' ');
+    const country = a.country || '';
+    const parts = [street, cityLine, country].filter(Boolean);
+    const title = parts.length ? parts.join(', ') : (data.display_name || `${fmtCoord(LAT,'N','S')}, ${fmtCoord(LON,'E','W')}`);
     document.getElementById('titleLine').textContent = title;
   }catch(err){
     document.getElementById('titleLine').textContent = `${fmtCoord(LAT,'N','S')}, ${fmtCoord(LON,'E','W')}`;
@@ -504,15 +514,13 @@ function buildHourlyTable(h, curIdx){
 
   const rows = [
     {label:'Time', get:(i,n0)=> n0===0 ? 'Now' : fmtHourShort(h.time[i])},
-    {label:'', get:(i)=> icon((WMO[h.weather_code[i]]||{icon:'cloud'}).icon, 20), isIcon:true},
+    {label:'Weather*', get:(i)=> icon((WMO[h.weather_code[i]]||{icon:'cloud'}).icon, 22), isIcon:true},
     {label:'Temp', get:(i)=> roundOr(h.temperature_2m[i], '°')},
     {label:'Humidity', get:(i)=> roundOr(h.relative_humidity_2m[i], '%')},
     {label:'Precip. prob.*', get:(i)=> roundOr(h.precipitation_probability[i], '%'),
       cellClass:(i)=> (h.precipitation_probability[i]!==null && h.precipitation_probability[i]>50) ? 'high-pop' : ''},
     {label:'Precipitation', get:(i)=> numOr(h.precipitation[i], 1, ' mm')},
-    {label:'Rain*', get:(i)=> numOr(h.rain[i], 1, ' mm')},
     {label:'Showers*', get:(i)=> numOr(h.showers[i], 1, ' mm')},
-    {label:'Weather*', get:(i)=> (WMO[h.weather_code[i]]||{label:'—'}).label},
     {label:'Cloud cover*', get:(i)=> roundOr(h.cloud_cover[i], '%')},
     {label:'Wind speed', get:(i)=> roundOr(h.wind_speed_10m[i], ' km/h')},
     {label:'Wind gusts', get:(i)=> roundOr(h.wind_gusts_10m[i], ' km/h')},
@@ -560,7 +568,6 @@ function buildMinutelyTable(m, now){
     {label:'', get:(i)=> icon((WMO[m.weather_code[i]]||{icon:'cloud'}).icon, 20), isIcon:true},
     {label:'Temp', get:(i)=> numOr(m.temperature_2m[i], 1, '°')},
     {label:'Precipitation', get:(i)=> numOr(m.precipitation[i], 1, ' mm')},
-    {label:'Rain*', get:(i)=> numOr(m.rain[i], 1, ' mm')},
     {label:'CAPE', get:(i)=> capeBadge(m.cape[i])},
     {label:'Lightning*', get:(i)=> lightningBadge(m.lightning_potential[i])},
     {label:'Wind speed', get:(i)=> roundOr(m.wind_speed_10m[i], ' km/h')},
