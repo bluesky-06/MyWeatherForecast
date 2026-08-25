@@ -133,10 +133,15 @@
     letter-spacing:.1em;
     text-transform:uppercase;
     color:var(--grey);
-    margin:0 0 12px;
+    margin:0 0 4px;
     display:flex;
     justify-content:space-between;
     align-items:baseline;
+  }
+  .section-sub{
+    font-size:10.5px;
+    color:var(--grey);
+    margin:0 0 12px;
   }
   .swipe-hint{
     font-size:10px;
@@ -261,6 +266,7 @@
 
   <div class="card">
     <div class="section-title"><span>Hourly forecast — next 24h</span><span class="swipe-hint">swipe →</span></div>
+    <div class="section-sub">AROME-HD model data updates every 3 hours</div>
     <div class="table-scroll">
       <table class="data-table" id="hourlyTable"></table>
     </div>
@@ -268,6 +274,7 @@
 
   <div class="card">
     <div class="section-title"><span>15-minute forecast — next 6h</span><span class="swipe-hint">swipe →</span></div>
+    <div class="section-sub">Nowcast data updates every hour</div>
     <div class="table-scroll">
       <table class="data-table" id="minutelyTable"></table>
     </div>
@@ -636,6 +643,8 @@ function mergeData(main, blend){
   return main;
 }
 
+let cachedData = null;
+
 async function load(){
   try{
     const [mainRes, blendRes] = await Promise.all([
@@ -650,11 +659,21 @@ async function load(){
     }
     const data = mergeData(mainData, blendData);
     lastUpdated = new Date();
+    cachedData = data;
     render(data);
   }catch(err){
     document.getElementById('nowCard').innerHTML = `<div class="state-msg">Couldn't load forecast (${err.message}).</div>`;
   }
 }
+
+// re-render using the already-fetched data, purely to move the "Now" column/
+// title values forward in time — no network call. The underlying API data
+// itself only needs the slower hourly fetch (see load()), but "which cell is
+// Now" should stay accurate every minute in between refreshes.
+function refreshNowPosition(){
+  if(cachedData) render(cachedData);
+}
+setInterval(refreshNowPosition, 60*1000);
 
 function render(data){
   const now = new Date();
