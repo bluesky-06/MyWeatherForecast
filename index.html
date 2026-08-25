@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Weather Forecast — 43.633308°N, 7.006525°E</title>
+<title>Weather Forecast — 43.628048°N, 7.015687°E</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -44,6 +44,21 @@
     color:var(--grey);
     margin-top:4px !important;
   }
+  .astro-strip{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:6px 14px;
+    margin-top:8px;
+  }
+  .astro-chip{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    font-size:11px;
+    color:var(--grey);
+  }
+  .astro-chip b{color:var(--ink);font-weight:600;}
 
   .card{
     background:var(--card);
@@ -111,6 +126,7 @@
     font-size:13px;
   }
   .precip-banner b{color:var(--azure);}
+  .precip-lines{display:flex;flex-direction:column;gap:3px;}
 
   .section-title{
     font-size:11px;
@@ -158,11 +174,24 @@
     border-bottom:1px solid #EAF1F5;
   }
   table.data-table tbody tr:nth-child(odd){background:#F8FBFC;}
-  table.data-table tbody tr.now-col-row td.now-col,
-  table.data-table thead th.now-col{
-    background:#EAF4FB;
+  table.data-table td.now-col{
+    background:#DCEEFA;
+    color:var(--ink);
+    font-weight:700;
+    border-left:2px solid var(--azure);
+    border-right:2px solid var(--azure);
   }
-  table.data-table td.now-col{color:var(--azure);font-weight:600;}
+  table.data-table thead th.now-col{
+    background:var(--azure);
+    color:#fff;
+    font-weight:700;
+    border-radius:6px 6px 0 0;
+    letter-spacing:.04em;
+  }
+  table.data-table tbody tr:last-child td.now-col{
+    border-bottom:2px solid var(--azure);
+    border-radius:0 0 6px 6px;
+  }
   table.data-table th.row-label, table.data-table td.row-label{
     position:sticky;
     left:0;
@@ -221,6 +250,7 @@
     <header>
       <h1 id="titleLine">Locating address…</h1>
       <p id="dateLine">Loading forecast…</p>
+      <div class="astro-strip" id="astroStrip"></div>
       <p id="updatedLine" class="updated-line"></p>
     </header>
 
@@ -252,13 +282,13 @@
 </div>
 
 <script>
-const API = "https://api.open-meteo.com/v1/forecast?latitude=43.633308&longitude=7.006525&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,weather_code,cloud_cover,wind_speed_10m,wind_gusts_10m,uv_index,cape&models=meteofrance_arome_france_hd&minutely_15=temperature_2m,precipitation,rain,cape,lightning_potential,wind_speed_10m&timezone=Europe%2FParis&forecast_days=2";
+const API = "https://api.open-meteo.com/v1/forecast?latitude=43.628048&longitude=7.015687&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,weather_code,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,uv_index,cape&models=meteofrance_arome_france_hd&minutely_15=temperature_2m,precipitation,rain,cape,lightning_potential,wind_speed_10m,wind_gusts_10m,wind_direction_10m&daily=sunrise,sunset,precipitation_sum&timezone=Europe%2FParis&forecast_days=2";
 // AROME-HD doesn't output these — pulled instead from Open-Meteo's default best-match blend
-const BLEND_API = "https://api.open-meteo.com/v1/forecast?latitude=43.633308&longitude=7.006525&hourly=precipitation_probability,showers,cloud_cover,uv_index,weather_code&minutely_15=lightning_potential,weather_code&timezone=Europe%2FParis&forecast_days=2";
-const BLENDED_FIELDS = ['precipitation_probability','showers','cloud_cover','uv_index','weather_code'];
-const BLENDED_MINUTELY_FIELDS = ['lightning_potential','weather_code'];
-const LAT = 43.633308;
-const LON = 7.006525;
+const BLEND_API = "https://api.open-meteo.com/v1/forecast?latitude=43.628048&longitude=7.015687&hourly=precipitation_probability,showers,cloud_cover,uv_index,weather_code,is_day,wind_direction_10m&minutely_15=lightning_potential,weather_code,is_day,wind_direction_10m&timezone=Europe%2FParis&forecast_days=2";
+const BLENDED_FIELDS = ['precipitation_probability','showers','cloud_cover','uv_index','weather_code','is_day','wind_direction_10m'];
+const BLENDED_MINUTELY_FIELDS = ['lightning_potential','weather_code','is_day','wind_direction_10m'];
+const LAT = 43.628048;
+const LON = 7.015687;
 
 const WMO = {
   0:{label:"Clear sky", icon:"sun"},
@@ -280,6 +310,7 @@ const WMO = {
 function icon(type, size=28){
   const cloudGrey = "#8FA3B0";
   const sunGold = "#F2A93B";
+  const moonBlue = "#8B9DC3";
   const paths = {
     sun: `<circle cx="14" cy="14" r="6" fill="${sunGold}" stroke="${sunGold}" stroke-width="2"/>
           <g stroke="${sunGold}" stroke-width="2" stroke-linecap="round">
@@ -293,6 +324,9 @@ function icon(type, size=28){
           <line x1="10" y1="1.5" x2="10" y2="3.5"/><line x1="2" y1="11" x2="4" y2="11"/>
           <line x1="4" y1="4" x2="5.5" y2="5.5"/></g>
           <path d="M9 24c-3 0-5.5-2.2-5.5-5 0-2.5 2-4.5 4.4-4.8.9-2.5 3.3-4.2 6-4.2 3.5 0 6.4 2.7 6.7 6.1 2 .4 3.4 2.1 3.4 4.1 0 2.3-1.9 4-4.3 4H9z" fill="#fff" stroke="${cloudGrey}" stroke-width="2"/>`,
+    moon: `<path d="M18.5 3.5a10 10 0 1 0 6 12.7 8 8 0 0 1-6-12.7z" fill="${moonBlue}" stroke="${moonBlue}" stroke-width="1.6" stroke-linejoin="round"/>`,
+    "moon-cloud": `<path d="M15.5 2.5a7.2 7.2 0 1 0 4.3 9.1 5.7 5.7 0 0 1-4.3-9.1z" fill="${moonBlue}" stroke="${moonBlue}" stroke-width="1.4" stroke-linejoin="round" transform="translate(-2,0) scale(0.85)"/>
+          <path d="M9 24c-3 0-5.5-2.2-5.5-5 0-2.5 2-4.5 4.4-4.8.9-2.5 3.3-4.2 6-4.2 3.5 0 6.4 2.7 6.7 6.1 2 .4 3.4 2.1 3.4 4.1 0 2.3-1.9 4-4.3 4H9z" fill="#fff" stroke="${cloudGrey}" stroke-width="2"/>`,
     cloud: `<path d="M7 22c-3.3 0-6-2.4-6-5.5 0-2.7 2.1-5 4.9-5.4C6.9 8 9.9 5.5 13.5 5.5c4 0 7.3 3 7.7 6.9 2.3.4 4.1 2.3 4.1 4.6 0 2.5-2.1 4.5-4.8 4.5H7z" fill="#E3ECF1" stroke="${cloudGrey}" stroke-width="2"/>`,
     fog: `<path d="M7 14c-3.3 0-6-2.1-6-4.8C1 6.8 3.4 4.7 6.5 4.5 7.4 2.4 9.9.5 13 .5c3.5 0 6.4 2.4 6.9 5.5 2 .3 3.6 1.8 3.6 3.6 0 2-1.8 3.6-4.1 3.6H7z" fill="#E3ECF1" stroke="${cloudGrey}" stroke-width="1.6"/>
           <g stroke="${cloudGrey}" stroke-width="2" stroke-linecap="round"><line x1="2" y1="20" x2="24" y2="20"/><line x1="5" y1="25" x2="21" y2="25"/></g>`,
@@ -304,6 +338,18 @@ function icon(type, size=28){
           <path d="M14 17l-4 7h4l-2 6 7-9h-4l3-4z" fill="#D46B3C"/>`,
   };
   return `<svg width="${size}" height="${size}" viewBox="0 0 28 28" fill="none">${paths[type]||paths.cloud}</svg>`;
+}
+
+// picks the right icon variant for a weather_code, swapping sunny icons for
+// moon icons when it's night (isDay: 1=day, 0=night, null/undefined=unknown → assume day)
+function weatherIconType(code, isDay){
+  const wmo = WMO[code] || {icon:'cloud'};
+  let type = wmo.icon;
+  if(isDay === 0){
+    if(type === 'sun') type = 'moon';
+    else if(type === 'sun-cloud') type = 'moon-cloud';
+  }
+  return type;
 }
 
 function fmtHourShort(iso){
@@ -331,31 +377,198 @@ function roundOr(v, suffix){
   return Math.round(v)+(suffix||'');
 }
 
-// CAPE (J/kg) — standard convective-instability thresholds
-function capeBadge(v){
+// CAPE (J/kg) — standard convective-instability thresholds, shown as a bar-meter icon
+function capeIcon(v){
   if(v === null || v === undefined || Number.isNaN(v)) return '–';
-  let cls, label;
-  if(v < 300){ cls='badge-none'; label='Stable'; }
-  else if(v < 1000){ cls='badge-low'; label='Slight'; }
-  else if(v < 2500){ cls='badge-moderate'; label='Moderate'; }
-  else if(v < 3500){ cls='badge-high'; label='High'; }
-  else { cls='badge-extreme'; label='Extreme'; }
-  return `<span class="badge ${cls}">${label}</span>`;
+  let level, color, label;
+  if(v < 300){ level=1; color='#B7C4CC'; label='Stable'; }
+  else if(v < 1000){ level=2; color='#5FA777'; label='Slight instability'; }
+  else if(v < 2500){ level=3; color='#E0A233'; label='Moderate instability'; }
+  else if(v < 3500){ level=4; color='#DB6A3B'; label='High instability'; }
+  else { level=5; color='#C0392B'; label='Extreme instability'; }
+  const heights = [4,8,12,16,20];
+  let bars = '';
+  for(let b=0;b<5;b++){
+    const h = heights[b];
+    const y = 22-h;
+    const fill = b < level ? color : '#E4EBF0';
+    bars += `<rect x="${b*5+1}" y="${y}" width="3.4" height="${h}" rx="1" fill="${fill}"/>`;
+  }
+  return `<svg width="24" height="22" viewBox="0 0 26 22" fill="none"><title>${label} (CAPE ${Math.round(v)} J/kg)</title>${bars}</svg>`;
 }
 
 // Lightning Potential Index (J/kg) — 0 = none, higher = more likely/severe storms
 function lightningBadge(v){
   if(v === null || v === undefined || Number.isNaN(v)) return '–';
+  if(v <= 0) return ''; // nothing to show when there's no lightning risk
   let cls, label;
-  if(v <= 0){ cls='badge-none'; label='⚡ None'; }
-  else if(v < 2){ cls='badge-low'; label='⚡ Low'; }
+  if(v < 2){ cls='badge-low'; label='⚡ Low'; }
   else if(v < 5){ cls='badge-moderate'; label='⚡ Moderate'; }
   else if(v < 10){ cls='badge-high'; label='⚡ High'; }
   else { cls='badge-extreme'; label='⚡ Extreme'; }
   return `<span class="badge ${cls}">${label}</span>`;
 }
 
+// Wind speed/gusts (km/h) — colored by intensity, loosely Beaufort-based
+function windValue(v){
+  if(v === null || v === undefined || Number.isNaN(v)) return '–';
+  let color;
+  if(v < 20) color = '#5FA777';       // calm / light
+  else if(v < 39) color = '#E0A233';  // moderate
+  else if(v < 62) color = '#DB6A3B';  // strong
+  else color = '#C0392B';             // gale+
+  return `<span style="color:${color};font-weight:700;">${Math.round(v)} km/h</span>`;
+}
+
+// Wind direction (degrees, meteorological convention = direction wind blows FROM)
+// shown as a compact compass abbreviation + an arrow rotated to point where the wind blows TOWARD
+const COMPASS = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+function windDirection(deg){
+  if(deg === null || deg === undefined || Number.isNaN(deg)) return '–';
+  const label = COMPASS[Math.round(deg/22.5) % 16];
+  const arrowRotation = (deg + 180) % 360; // point toward where the wind is blowing
+  return `<span style="display:inline-flex;align-items:center;gap:3px;">
+    <svg width="13" height="13" viewBox="0 0 24 24" style="transform:rotate(${arrowRotation}deg)">
+      <path d="M12 2 L12 20 M12 2 L7 9 M12 2 L17 9" stroke="#7C93A3" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>${label}</span>`;
+}
+
+// UV Index — standard WHO categories
+function uvValue(v){
+  if(v === null || v === undefined || Number.isNaN(v)) return '–';
+  let color;
+  if(v < 3) color = '#5FA777';        // low
+  else if(v < 6) color = '#E0A233';   // moderate
+  else if(v < 8) color = '#DB6A3B';   // high
+  else if(v < 11) color = '#C0392B';  // very high
+  else color = '#8E44AD';             // extreme
+  return `<span style="color:${color};font-weight:700;">${v.toFixed(1)}</span>`;
+}
+
+// Cloud cover (%) — clear (blue) through overcast (dark grey)
+function cloudValue(v){
+  if(v === null || v === undefined || Number.isNaN(v)) return '–';
+  let color;
+  if(v < 20) color = '#2F8FCB';       // clear
+  else if(v < 50) color = '#7FB3D5';  // partly cloudy
+  else if(v < 80) color = '#8FA3B0';  // mostly cloudy
+  else color = '#5B6B76';             // overcast
+  return `<span style="color:${color};font-weight:700;">${Math.round(v)}%</span>`;
+}
+
+// --- Moonrise / moonset ---
+// Open-Meteo doesn't provide lunar data, so this computes it client-side using
+// standard low-precision lunar position formulas (geocentric ecliptic longitude/
+// latitude of the Moon, converted to local horizontal altitude), then samples
+// altitude through the day to find where it crosses the horizon.
+const DAY_MS = 1000*60*60*24;
+const J1970 = 2440588, J2000 = 2451545;
+const RAD = Math.PI/180;
+const OBLIQUITY = RAD*23.4397;
+
+function julianDay(date){ return date.valueOf()/DAY_MS - 0.5 + J1970; }
+function daysSinceJ2000(date){ return julianDay(date) - J2000; }
+function rightAscension(lon,lat){ return Math.atan2(Math.sin(lon)*Math.cos(OBLIQUITY) - Math.tan(lat)*Math.sin(OBLIQUITY), Math.cos(lon)); }
+function declination(lon,lat){ return Math.asin(Math.sin(lat)*Math.cos(OBLIQUITY) + Math.cos(lat)*Math.sin(OBLIQUITY)*Math.sin(lon)); }
+function siderealTime(d,lon){ return RAD*(280.16 + 360.9856235*d) - lon; }
+function altitudeOf(hourAngle,latRad,dec){ return Math.asin(Math.sin(latRad)*Math.sin(dec) + Math.cos(latRad)*Math.cos(dec)*Math.cos(hourAngle)); }
+
+function moonEclipticPosition(d){
+  const L = RAD*(218.316 + 13.176396*d);   // mean longitude
+  const M = RAD*(134.963 + 13.064993*d);   // mean anomaly
+  const F = RAD*(93.272 + 13.229350*d);    // argument of latitude
+  const lon = L + RAD*6.289*Math.sin(M);
+  const lat = RAD*5.128*Math.sin(F);
+  return { lon, lat };
+}
+
+function moonAltitude(date, latDeg, lonDeg){
+  const lw = RAD*-lonDeg, phi = RAD*latDeg;
+  const d = daysSinceJ2000(date);
+  const pos = moonEclipticPosition(d);
+  const ra = rightAscension(pos.lon, pos.lat);
+  const dec = declination(pos.lon, pos.lat);
+  const H = siderealTime(d, lw) - ra;
+  return altitudeOf(H, phi, dec);
+}
+
+function hoursLater(date, h){ return new Date(date.valueOf() + h*DAY_MS/24); }
+
+function getMoonTimes(date, latDeg, lonDeg){
+  const t = new Date(date); t.setHours(0,0,0,0);
+  const horizonCorrection = RAD*0.133; // moon's average horizon dip correction
+  let h0 = moonAltitude(t, latDeg, lonDeg) - horizonCorrection;
+  let rise, set, riseSet_ye;
+  for(let i=1; i<=24; i+=2){
+    const h1 = moonAltitude(hoursLater(t,i), latDeg, lonDeg) - horizonCorrection;
+    const h2 = moonAltitude(hoursLater(t,i+1), latDeg, lonDeg) - horizonCorrection;
+    const a = (h0+h2)/2 - h1;
+    const b = (h2-h0)/2;
+    const xe = -b/(2*a);
+    const ye = (a*xe+b)*xe+h1;
+    const disc = b*b - 4*a*h1;
+    let roots = 0, x1, x2;
+    if(disc >= 0){
+      const dx = Math.sqrt(disc)/(Math.abs(a)*2);
+      x1 = xe-dx; x2 = xe+dx;
+      if(Math.abs(x1) <= 1) roots++;
+      if(Math.abs(x2) <= 1) roots++;
+      if(x1 < -1) x1 = x2;
+    }
+    if(roots === 1){
+      if(h0 < 0) rise = i+x1; else set = i+x1;
+    }else if(roots === 2){
+      rise = i + (ye < 0 ? x2 : x1);
+      set = i + (ye < 0 ? x1 : x2);
+    }
+    riseSet_ye = ye;
+    if(rise !== undefined && set !== undefined) break;
+    h0 = h2;
+  }
+  const result = {};
+  if(rise !== undefined) result.rise = hoursLater(t, rise);
+  if(set !== undefined) result.set = hoursLater(t, set);
+  return result;
+}
+
+function fmtClock(date){
+  if(!date) return '–';
+  return date.toLocaleTimeString('en-GB',{hour:'2-digit', minute:'2-digit'});
+}
+
+function nearestIndex(times, now){
+  let idx = 0, best = Infinity;
+  times.forEach((t,i)=>{
+    const diff = Math.abs(new Date(t)-now);
+    if(diff<best){ best=diff; idx=i; }
+  });
+  return idx;
+}
+
 let lastUpdated = null;
+
+function renderAstroStrip(data, todayStr, now){
+  const el = document.getElementById('astroStrip');
+  const daily = data.daily;
+  let sunrise = '–', sunset = '–';
+  if(daily && daily.time){
+    let dIdx = daily.time.indexOf(todayStr);
+    if(dIdx === -1) dIdx = 0;
+    if(daily.sunrise && daily.sunrise[dIdx]) sunrise = fmtClock(new Date(daily.sunrise[dIdx]));
+    if(daily.sunset && daily.sunset[dIdx]) sunset = fmtClock(new Date(daily.sunset[dIdx]));
+  }
+
+  const moon = getMoonTimes(now, LAT, LON);
+  const moonrise = fmtClock(moon.rise);
+  const moonset = fmtClock(moon.set);
+
+  el.innerHTML = `
+    <span class="astro-chip">☀️ <b>${sunrise}</b></span>
+    <span class="astro-chip">🌇 <b>${sunset}</b></span>
+    <span class="astro-chip">🌙⬆ <b>${moonrise}</b></span>
+    <span class="astro-chip">🌙⬇ <b>${moonset}</b></span>
+  `;
+}
 
 function updateHeader(now){
   const dateStr = now.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long'});
@@ -446,6 +659,7 @@ async function load(){
 function render(data){
   const now = new Date();
   const h = data.hourly;
+  const m15 = data.minutely_15;
 
   let curIdx = 0, best = Infinity;
   h.time.forEach((t,i)=>{
@@ -455,30 +669,55 @@ function render(data){
 
   const wcode = h.weather_code[curIdx];
   const wmo = WMO[wcode] || {label:"—", icon:"cloud"};
-  const temp = roundOr(h.temperature_2m[curIdx], '');
+  const iconType = weatherIconType(wcode, h.is_day[curIdx]);
   const humidity = roundOr(h.relative_humidity_2m[curIdx], '');
-  const wind = roundOr(h.wind_speed_10m[curIdx], '');
   const pop = roundOr(h.precipitation_probability[curIdx], '');
 
-  // with past_days/forecast_days>1, restrict min/max/peak-pop to today's calendar date only
+  // current temperature & wind speed come from the 15-minute forecast — more
+  // precise/up-to-date than the hourly figure for "right now"
+  let temp = '–', wind = '–';
+  if(m15 && m15.time && m15.time.length){
+    const mNowIdx = nearestIndex(m15.time, now);
+    temp = numOr(m15.temperature_2m[mNowIdx], 1, '');
+    wind = roundOr(m15.wind_speed_10m[mNowIdx], '');
+  }
+
+  // with past_days/forecast_days>1, restrict min/max to today's calendar date only
   const todayStr = now.toLocaleDateString('en-CA'); // YYYY-MM-DD in local tz
   const todayIdxs = [];
   h.time.forEach((t,i)=>{
     if(t.slice(0,10) === todayStr) todayIdxs.push(i);
   });
   const todayTemps = todayIdxs.map(i=>h.temperature_2m[i]).filter(v=>v!==null && v!==undefined);
-  const todayPop = todayIdxs.map(i=>h.precipitation_probability[i]).filter(v=>v!==null && v!==undefined);
+
+  // "peak" precip probability only looks at hours from now onward (i.e. what's
+  // actually visible in the hourly table below) — not hours earlier today that
+  // have already passed, which would otherwise be invisible/confusing
+  const remainingTodayPop = todayIdxs
+    .filter(i=>i>=curIdx)
+    .map(i=>h.precipitation_probability[i])
+    .filter(v=>v!==null && v!==undefined);
 
   const maxTemp = todayTemps.length ? Math.round(Math.max(...todayTemps))+'°' : '–';
   const minTemp = todayTemps.length ? Math.round(Math.min(...todayTemps))+'°' : '–';
-  const maxPop = todayPop.length ? Math.max(...todayPop)+'%' : '–';
+  const maxPop = remainingTodayPop.length ? Math.max(...remainingTodayPop)+'%' : '–';
+
+  // total precipitation for today, from Open-Meteo's daily aggregate
+  let precipTotal = '–';
+  if(data.daily && data.daily.time){
+    let dIdx = data.daily.time.indexOf(todayStr);
+    if(dIdx === -1) dIdx = 0;
+    const v = data.daily.precipitation_sum ? data.daily.precipitation_sum[dIdx] : null;
+    if(v !== null && v !== undefined) precipTotal = v.toFixed(1)+' mm';
+  }
 
   updateHeader(now);
+  renderAstroStrip(data, todayStr, now);
 
   document.getElementById('nowCard').innerHTML = `
     <div class="now">
       <div class="now-left">
-        ${icon(wmo.icon, 56)}
+        ${icon(iconType, 56)}
         <div>
           <div class="now-cond">${wmo.label}</div>
           <div class="now-sub">Humidity ${humidity}% · Wind ${wind} km/h</div>
@@ -500,7 +739,10 @@ function render(data){
 
     <div class="precip-banner">
       ${icon('rain',22)}
-      <span>Precipitation probability now: <b>${pop}%</b> · peak today: <b>${maxPop}</b></span>
+      <div class="precip-lines">
+        <div>Precipitation probability now: <b>${pop}%</b> · peak later today: <b>${maxPop}</b></div>
+        <div>Total precipitation today: <b>${precipTotal}</b></div>
+      </div>
     </div>
   `;
 
@@ -514,18 +756,18 @@ function buildHourlyTable(h, curIdx){
 
   const rows = [
     {label:'Time', get:(i,n0)=> n0===0 ? 'Now' : fmtHourShort(h.time[i])},
-    {label:'Weather*', get:(i)=> icon((WMO[h.weather_code[i]]||{icon:'cloud'}).icon, 22), isIcon:true},
+    {label:'Weather*', get:(i)=> icon(weatherIconType(h.weather_code[i], h.is_day[i]), 22), isIcon:true},
     {label:'Temp', get:(i)=> roundOr(h.temperature_2m[i], '°')},
     {label:'Humidity', get:(i)=> roundOr(h.relative_humidity_2m[i], '%')},
     {label:'Precip. prob.*', get:(i)=> roundOr(h.precipitation_probability[i], '%'),
       cellClass:(i)=> (h.precipitation_probability[i]!==null && h.precipitation_probability[i]>50) ? 'high-pop' : ''},
     {label:'Precipitation', get:(i)=> numOr(h.precipitation[i], 1, ' mm')},
-    {label:'Showers*', get:(i)=> numOr(h.showers[i], 1, ' mm')},
-    {label:'Cloud cover*', get:(i)=> roundOr(h.cloud_cover[i], '%')},
-    {label:'Wind speed', get:(i)=> roundOr(h.wind_speed_10m[i], ' km/h')},
-    {label:'Wind gusts', get:(i)=> roundOr(h.wind_gusts_10m[i], ' km/h')},
-    {label:'UV index*', get:(i)=> numOr(h.uv_index[i], 1, '')},
-    {label:'CAPE', get:(i)=> capeBadge(h.cape[i])},
+    {label:'Cloud cover*', get:(i)=> cloudValue(h.cloud_cover[i])},
+    {label:'Wind speed', get:(i)=> windValue(h.wind_speed_10m[i])},
+    {label:'Wind gusts', get:(i)=> windValue(h.wind_gusts_10m[i])},
+    {label:'Wind dir.', get:(i)=> windDirection(h.wind_direction_10m[i])},
+    {label:'UV index*', get:(i)=> uvValue(h.uv_index[i])},
+    {label:'CAPE', get:(i)=> capeIcon(h.cape[i]), isIcon:true},
   ];
 
   let thead = '<thead><tr><th class="row-label"></th>';
@@ -565,12 +807,14 @@ function buildMinutelyTable(m, now){
   thead += '</tr></thead>';
 
   const rows = [
-    {label:'', get:(i)=> icon((WMO[m.weather_code[i]]||{icon:'cloud'}).icon, 20), isIcon:true},
+    {label:'Weather*', get:(i)=> icon(weatherIconType(m.weather_code[i], m.is_day[i]), 20), isIcon:true},
     {label:'Temp', get:(i)=> numOr(m.temperature_2m[i], 1, '°')},
     {label:'Precipitation', get:(i)=> numOr(m.precipitation[i], 1, ' mm')},
-    {label:'CAPE', get:(i)=> capeBadge(m.cape[i])},
+    {label:'CAPE', get:(i)=> capeIcon(m.cape[i]), isIcon:true},
     {label:'Lightning*', get:(i)=> lightningBadge(m.lightning_potential[i])},
-    {label:'Wind speed', get:(i)=> roundOr(m.wind_speed_10m[i], ' km/h')},
+    {label:'Wind speed', get:(i)=> windValue(m.wind_speed_10m[i])},
+    {label:'Wind gusts', get:(i)=> windValue(m.wind_gusts_10m[i])},
+    {label:'Wind dir.', get:(i)=> windDirection(m.wind_direction_10m[i])},
   ];
 
   let tbody = '<tbody>';
