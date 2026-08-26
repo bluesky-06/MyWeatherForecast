@@ -60,6 +60,45 @@
   }
   .astro-chip b{color:var(--ink);font-weight:600;}
 
+  .address-form{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+  }
+  .address-input{
+    flex:1;
+    min-width:0;
+    padding:9px 12px;
+    border:1px solid #DCE6EC;
+    border-radius:10px;
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    color:var(--ink);
+    background:var(--card);
+    outline:none;
+  }
+  .address-input:focus{border-color:var(--azure);}
+  .address-btn{
+    padding:9px 16px;
+    border:none;
+    border-radius:10px;
+    background:var(--azure);
+    color:#fff;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .address-btn:disabled{opacity:.6;cursor:default;}
+  .address-btn:not(:disabled):hover{background:#2679AD;}
+  .address-msg{
+    font-size:11.5px;
+    margin:6px 0 0;
+    min-height:14px;
+  }
+  .address-msg.error{color:#C0392B;}
+  .address-msg.ok{color:#5FA777;}
+
   .card{
     background:var(--card);
     border-radius:18px;
@@ -257,6 +296,12 @@
       <p id="dateLine">Loading forecast…</p>
       <div class="astro-strip" id="astroStrip"></div>
       <p id="updatedLine" class="updated-line"></p>
+
+      <form id="addressForm" class="address-form">
+        <input type="text" id="addressInput" class="address-input" placeholder="Enter a postal address…" autocomplete="off">
+        <button type="submit" class="address-btn">Go</button>
+      </form>
+      <p id="addressMsg" class="address-msg"></p>
     </header>
 
     <div class="card" id="nowCard">
@@ -289,13 +334,17 @@
 </div>
 
 <script>
-const API = "https://api.open-meteo.com/v1/forecast?latitude=43.628048&longitude=7.015687&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,weather_code,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,uv_index,cape&models=meteofrance_arome_france_hd&minutely_15=temperature_2m,precipitation,rain,cape,lightning_potential,wind_speed_10m,wind_gusts_10m,wind_direction_10m&daily=sunrise,sunset,precipitation_sum&timezone=Europe%2FParis&forecast_days=2";
+function buildApiUrl(){
+  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,weather_code,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,uv_index,cape&models=meteofrance_arome_france_hd&minutely_15=temperature_2m,precipitation,rain,cape,lightning_potential,wind_speed_10m,wind_gusts_10m,wind_direction_10m&daily=sunrise,sunset,precipitation_sum&timezone=Europe%2FParis&forecast_days=2`;
+}
 // AROME-HD doesn't output these — pulled instead from Open-Meteo's default best-match blend
-const BLEND_API = "https://api.open-meteo.com/v1/forecast?latitude=43.628048&longitude=7.015687&hourly=precipitation_probability,showers,cloud_cover,uv_index,weather_code,is_day,wind_direction_10m&minutely_15=lightning_potential,weather_code,is_day,wind_direction_10m&timezone=Europe%2FParis&forecast_days=2";
+function buildBlendUrl(){
+  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=precipitation_probability,showers,cloud_cover,uv_index,weather_code,is_day,wind_direction_10m&minutely_15=lightning_potential,weather_code,is_day,wind_direction_10m&timezone=Europe%2FParis&forecast_days=2`;
+}
 const BLENDED_FIELDS = ['precipitation_probability','showers','cloud_cover','uv_index','weather_code','is_day','wind_direction_10m'];
 const BLENDED_MINUTELY_FIELDS = ['lightning_potential','weather_code','is_day','wind_direction_10m'];
-const LAT = 43.628048;
-const LON = 7.015687;
+let LAT = 43.628048;
+let LON = 7.015687;
 
 const WMO = {
   0:{label:"Clear sky", icon:"sun"},
@@ -613,6 +662,45 @@ async function loadAddress(){
   }
 }
 
+// forward-geocode a free-text postal address to coordinates via Nominatim's
+// search endpoint, then update LAT/LON and reload everything for that location
+async function geocodeAndLoad(query){
+  const msgEl = document.getElementById('addressMsg');
+  const btnEl = document.querySelector('.address-btn');
+  msgEl.textContent = 'Looking up address…';
+  msgEl.className = 'address-msg';
+  btnEl.disabled = true;
+  try{
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(query)}&limit=1&addressdetails=1`);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const results = await res.json();
+    if(!results.length) throw new Error('No matching address found');
+
+    LAT = parseFloat(results[0].lat);
+    LON = parseFloat(results[0].lon);
+
+    msgEl.textContent = 'Address found — loading forecast…';
+    msgEl.className = 'address-msg ok';
+
+    document.getElementById('titleLine').textContent = 'Locating address…';
+    await Promise.all([ loadAddress(), load() ]);
+
+    msgEl.textContent = '';
+    msgEl.className = 'address-msg';
+  }catch(err){
+    msgEl.textContent = `Couldn't find that address (${err.message}). Try a more specific address.`;
+    msgEl.className = 'address-msg error';
+  }finally{
+    btnEl.disabled = false;
+  }
+}
+
+document.getElementById('addressForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const query = document.getElementById('addressInput').value.trim();
+  if(query) geocodeAndLoad(query);
+});
+
 function mergeByTime(mainTimes, mainArr, blendTimes, blendArr){
   const map = new Map();
   blendTimes.forEach((t,i)=> map.set(t, blendArr[i]));
@@ -648,8 +736,8 @@ let cachedData = null;
 async function load(){
   try{
     const [mainRes, blendRes] = await Promise.all([
-      fetch(API),
-      fetch(BLEND_API).catch(()=>null) // blend is a nice-to-have, don't fail the page if it errors
+      fetch(buildApiUrl()),
+      fetch(buildBlendUrl()).catch(()=>null) // blend is a nice-to-have, don't fail the page if it errors
     ]);
     if(!mainRes.ok) throw new Error("HTTP "+mainRes.status);
     const mainData = await mainRes.json();
