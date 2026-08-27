@@ -98,6 +98,20 @@
   }
   .address-msg.error{color:#C0392B;}
   .address-msg.ok{color:#5FA777;}
+  .loc-btn{
+    display:inline-block;
+    margin-top:6px;
+    background:none;
+    border:none;
+    color:var(--azure);
+    font-size:12px;
+    font-weight:600;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    padding:2px 0;
+  }
+  .loc-btn:disabled{opacity:.6;cursor:default;}
+  .loc-btn:not(:disabled):hover{text-decoration:underline;}
 
   .card{
     background:var(--card);
@@ -243,8 +257,11 @@
     background:var(--card);
     font-weight:600;
     color:var(--ink);
-    min-width:96px;
-    white-space:nowrap;
+    min-width:116px;
+    max-width:116px;
+    white-space:normal;
+    overflow-wrap:break-word;
+    line-height:1.2;
     z-index:1;
     box-shadow:2px 0 4px -2px rgba(14,42,71,.15);
   }
@@ -301,6 +318,7 @@
         <input type="text" id="addressInput" class="address-input" placeholder="Enter a postal address…" autocomplete="off">
         <button type="submit" class="address-btn">Go</button>
       </form>
+      <button type="button" id="locBtn" class="loc-btn">📍 Use my current location</button>
       <p id="addressMsg" class="address-msg"></p>
     </header>
 
@@ -433,25 +451,17 @@ function roundOr(v, suffix){
   return Math.round(v)+(suffix||'');
 }
 
-// CAPE (J/kg) — standard convective-instability thresholds, shown as a bar-meter icon
-function capeIcon(v){
+// CAPE (J/kg) — translated into a plain-language thunderstorm-probability indicator
+function thunderstormBadge(v){
   if(v === null || v === undefined || Number.isNaN(v)) return '–';
-  let level, color, label;
-  if(v < 300){ level=1; color='#B7C4CC'; label='Stable'; }
-  else if(v < 1000){ level=2; color='#5FA777'; label='Slight instability'; }
-  else if(v < 2500){ level=3; color='#E0A233'; label='Moderate instability'; }
-  else if(v < 3500){ level=4; color='#DB6A3B'; label='High instability'; }
-  else { level=5; color='#C0392B'; label='Extreme instability'; }
-  const heights = [4,8,12,16,20];
-  let bars = '';
-  for(let b=0;b<5;b++){
-    const h = heights[b];
-    const y = 22-h;
-    const fill = b < level ? color : '#E4EBF0';
-    bars += `<rect x="${b*5+1}" y="${y}" width="3.4" height="${h}" rx="1" fill="${fill}"/>`;
-  }
-  return `<svg width="24" height="22" viewBox="0 0 26 22" fill="none"><title>${label} (CAPE ${Math.round(v)} J/kg)</title>${bars}</svg>`;
+  let color, label;
+  if(v < 300){ color='#8FA3B0'; label='Unlikely'; }
+  else if(v < 1000){ color='#E0A233'; label='Possible'; }
+  else if(v < 2500){ color='#DB6A3B'; label='Risk'; }
+  else { color='#C0392B'; label='High risk'; }
+  return `<span class="badge" style="background:${color};" title="CAPE ${Math.round(v)} J/kg">${label}</span>`;
 }
+
 
 // Lightning Potential Index (J/kg) — 0 = none, higher = more likely/severe storms
 function lightningBadge(v){
@@ -639,30 +649,35 @@ function updateHeader(now){
 // keep the clock (and "last updated" text) ticking between data refreshes
 setInterval(()=> updateHeader(new Date()), 30*1000);
 
-// resolve the coordinates to a human-readable postal address, once, via
-// OpenStreetMap's Nominatim reverse-geocoding service
+// builds a "street, postcode city, country" string from a Photon address feature
+function formatPhotonAddress(props){
+  const street = [props.housenumber, props.street].filter(Boolean).join(' ');
+  const city = props.city || props.town || props.village || props.district || '';
+  const cityLine = [props.postcode, city].filter(Boolean).join(' ');
+  const country = props.country || '';
+  const parts = [street, cityLine, country].filter(Boolean);
+  if(parts.length) return parts.join(', ');
+  return props.name || null;
+}
+
+// resolve the coordinates to a human-readable postal address via Photon
+// (komoot's OSM-based geocoder — same underlying map data as Nominatim, but
+// built for interactive client-side use rather than Nominatim's strict
+// 1-request/second policy meant for occasional lookups)
 async function loadAddress(){
   try{
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${LAT}&lon=${LON}&zoom=18&addressdetails=1`);
+    const res = await fetch(`https://photon.komoot.io/reverse?lon=${LON}&lat=${LAT}`);
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data = await res.json();
-    const a = data.address || {};
-    const streetNum = a.house_number || '';
-    const streetName = a.road || a.pedestrian || a.footway || '';
-    const street = [streetNum, streetName].filter(Boolean).join(' ');
-    const city = a.city || a.town || a.village || a.municipality || '';
-    const postcode = a.postcode || '';
-    const cityLine = [postcode, city].filter(Boolean).join(' ');
-    const country = a.country || '';
-    const parts = [street, cityLine, country].filter(Boolean);
-    const title = parts.length ? parts.join(', ') : (data.display_name || `${fmtCoord(LAT,'N','S')}, ${fmtCoord(LON,'E','W')}`);
+    const props = (data.features && data.features[0] && data.features[0].properties) || {};
+    const title = formatPhotonAddress(props) || `${fmtCoord(LAT,'N','S')}, ${fmtCoord(LON,'E','W')}`;
     document.getElementById('titleLine').textContent = title;
   }catch(err){
     document.getElementById('titleLine').textContent = `${fmtCoord(LAT,'N','S')}, ${fmtCoord(LON,'E','W')}`;
   }
 }
 
-// forward-geocode a free-text postal address to coordinates via Nominatim's
+// forward-geocode a free-text postal address to coordinates via Photon's
 // search endpoint, then update LAT/LON and reload everything for that location
 async function geocodeAndLoad(query){
   const msgEl = document.getElementById('addressMsg');
@@ -671,13 +686,14 @@ async function geocodeAndLoad(query){
   msgEl.className = 'address-msg';
   btnEl.disabled = true;
   try{
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(query)}&limit=1&addressdetails=1`);
+    const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1`);
     if(!res.ok) throw new Error('HTTP '+res.status);
-    const results = await res.json();
-    if(!results.length) throw new Error('No matching address found');
+    const data = await res.json();
+    const feat = data.features && data.features[0];
+    if(!feat) throw new Error('No matching address found');
 
-    LAT = parseFloat(results[0].lat);
-    LON = parseFloat(results[0].lon);
+    LON = feat.geometry.coordinates[0];
+    LAT = feat.geometry.coordinates[1];
 
     msgEl.textContent = 'Address found — loading forecast…';
     msgEl.className = 'address-msg ok';
@@ -697,8 +713,12 @@ async function geocodeAndLoad(query){
 
 document.getElementById('addressForm').addEventListener('submit', (e)=>{
   e.preventDefault();
-  const query = document.getElementById('addressInput').value.trim();
-  if(query) geocodeAndLoad(query);
+  const inputEl = document.getElementById('addressInput');
+  const query = inputEl.value.trim();
+  if(query){
+    geocodeAndLoad(query);
+    inputEl.value = '';
+  }
 });
 
 function mergeByTime(mainTimes, mainArr, blendTimes, blendArr){
@@ -865,16 +885,16 @@ function buildHourlyTable(h, curIdx){
     {label:'Time', get:(i,n0)=> n0===0 ? 'Now' : fmtHourShort(h.time[i])},
     {label:'Weather*', get:(i)=> icon(weatherIconType(h.weather_code[i], h.is_day[i]), 22), isIcon:true},
     {label:'Temp', get:(i)=> roundOr(h.temperature_2m[i], '°')},
-    {label:'Humidity', get:(i)=> roundOr(h.relative_humidity_2m[i], '%')},
     {label:'Precip. prob.*', get:(i)=> roundOr(h.precipitation_probability[i], '%'),
       cellClass:(i)=> (h.precipitation_probability[i]!==null && h.precipitation_probability[i]>50) ? 'high-pop' : ''},
     {label:'Precipitation', get:(i)=> numOr(h.precipitation[i], 1, ' mm')},
     {label:'Cloud cover*', get:(i)=> cloudValue(h.cloud_cover[i])},
+    {label:'Humidity', get:(i)=> roundOr(h.relative_humidity_2m[i], '%')},
     {label:'Wind speed', get:(i)=> windValue(h.wind_speed_10m[i])},
     {label:'Wind gusts', get:(i)=> windValue(h.wind_gusts_10m[i])},
     {label:'Wind dir.', get:(i)=> windDirection(h.wind_direction_10m[i])},
     {label:'UV index*', get:(i)=> uvValue(h.uv_index[i])},
-    {label:'CAPE', get:(i)=> capeIcon(h.cape[i]), isIcon:true},
+    {label:'Thunderstorm', get:(i)=> thunderstormBadge(h.cape[i])},
   ];
 
   let thead = '<thead><tr><th class="row-label"></th>';
@@ -917,7 +937,7 @@ function buildMinutelyTable(m, now){
     {label:'Weather*', get:(i)=> icon(weatherIconType(m.weather_code[i], m.is_day[i]), 20), isIcon:true},
     {label:'Temp', get:(i)=> numOr(m.temperature_2m[i], 1, '°')},
     {label:'Precipitation', get:(i)=> numOr(m.precipitation[i], 1, ' mm')},
-    {label:'CAPE', get:(i)=> capeIcon(m.cape[i]), isIcon:true},
+    {label:'Thunderstorm', get:(i)=> thunderstormBadge(m.cape[i])},
     {label:'Lightning*', get:(i)=> lightningBadge(m.lightning_potential[i])},
     {label:'Wind speed', get:(i)=> windValue(m.wind_speed_10m[i])},
     {label:'Wind gusts', get:(i)=> windValue(m.wind_gusts_10m[i])},
@@ -939,8 +959,70 @@ function buildMinutelyTable(m, now){
   document.getElementById('minutelyTable').innerHTML = thead + tbody;
 }
 
-loadAddress();
-load();
+// try device GPS first (most accurate), fall back to IP-based geolocation,
+// and finally fall back to the hardcoded default coordinates if both fail
+function detectDeviceLocation(){
+  return new Promise(resolve=>{
+    if(!navigator.geolocation){ resolve(null); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos=> resolve({lat: pos.coords.latitude, lon: pos.coords.longitude}),
+      ()=> resolve(null),
+      {timeout: 8000, maximumAge: 10*60*1000}
+    );
+  });
+}
+
+async function detectIpLocation(){
+  try{
+    const res = await fetch('https://get.geojs.io/v1/ip/geo.json');
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    if(data.latitude && data.longitude){
+      return { lat: parseFloat(data.latitude), lon: parseFloat(data.longitude) };
+    }
+    return null;
+  }catch(e){
+    return null;
+  }
+}
+
+async function initLocation(){
+  const loc = (await detectDeviceLocation()) || (await detectIpLocation());
+  if(loc && !Number.isNaN(loc.lat) && !Number.isNaN(loc.lon)){
+    LAT = loc.lat;
+    LON = loc.lon;
+  }
+  loadAddress();
+  load();
+}
+
+// re-detects the device's current location on demand (e.g. after the person
+// has searched a different address and wants to jump back to where they are)
+async function useMyLocation(){
+  const msgEl = document.getElementById('addressMsg');
+  const btnEl = document.getElementById('locBtn');
+  msgEl.textContent = 'Getting your current location…';
+  msgEl.className = 'address-msg';
+  btnEl.disabled = true;
+  try{
+    const loc = (await detectDeviceLocation()) || (await detectIpLocation());
+    if(!loc) throw new Error('location unavailable');
+    LAT = loc.lat;
+    LON = loc.lon;
+    document.getElementById('titleLine').textContent = 'Locating address…';
+    await Promise.all([ loadAddress(), load() ]);
+    msgEl.textContent = '';
+    msgEl.className = 'address-msg';
+  }catch(err){
+    msgEl.textContent = `Couldn't get your current location (${err.message}). Check your browser's location permission.`;
+    msgEl.className = 'address-msg error';
+  }finally{
+    btnEl.disabled = false;
+  }
+}
+document.getElementById('locBtn').addEventListener('click', useMyLocation);
+
+initLocation();
 setInterval(load, 60*60*1000); // auto-refresh forecast data every hour — matches the
                                 // minutely_15 update cadence (hourly); the AROME-HD
                                 // hourly run itself only refreshes every 3h anyway
