@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  html{scroll-behavior:smooth;}
   :root{
     --ink:#0E2A47;
     --azure:#2F8FCB;
@@ -112,6 +113,49 @@
   }
   .loc-btn:disabled{opacity:.6;cursor:default;}
   .loc-btn:not(:disabled):hover{text-decoration:underline;}
+
+  .lang-switch{
+    display:flex;
+    justify-content:center;
+    gap:4px;
+    margin-top:10px;
+  }
+  .lang-btn{
+    padding:4px 8px;
+    border:1px solid #DCE6EC;
+    background:var(--card);
+    font-size:20px;
+    line-height:1;
+    border-radius:8px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .lang-btn.active{
+    border-color:var(--azure);
+    box-shadow:0 0 0 2px rgba(47,143,203,.35);
+  }
+
+  .toc{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin:16px 0 4px;
+  }
+  .toc a{
+    font-size:12px;
+    font-weight:600;
+    color:var(--azure);
+    background:#EAF4FB;
+    padding:7px 14px;
+    border-radius:20px;
+    text-decoration:none;
+  }
+  .toc a:hover{background:#DCEEFA;}
+
+  .card[id]{scroll-margin-top:16px;}
+
+  .dot-none{color:#B7C4CC;font-size:16px;}
 
   .card{
     background:var(--card);
@@ -314,30 +358,42 @@
       <div class="astro-strip" id="astroStrip"></div>
       <p id="updatedLine" class="updated-line"></p>
 
+      <div class="lang-switch">
+        <button type="button" class="lang-btn" data-lang="en" title="English" aria-label="English">🇺🇸</button>
+        <button type="button" class="lang-btn" data-lang="fr" title="Français" aria-label="Français">🇫🇷</button>
+        <button type="button" class="lang-btn" data-lang="be" title="Français (Bruxelles)" aria-label="Français (Bruxelles)">🇧🇪</button>
+        <button type="button" class="lang-btn" data-lang="sk" title="Slovenčina" aria-label="Slovenčina">🇸🇰</button>
+      </div>
+
       <form id="addressForm" class="address-form">
         <input type="text" id="addressInput" class="address-input" placeholder="Enter a postal address…" autocomplete="off">
-        <button type="submit" class="address-btn">Go</button>
+        <button type="submit" class="address-btn" id="goBtn">Go</button>
       </form>
       <button type="button" id="locBtn" class="loc-btn">📍 Use my current location</button>
       <p id="addressMsg" class="address-msg"></p>
     </header>
 
     <div class="card" id="nowCard">
-      <div class="state-msg">Fetching current conditions…</div>
+      <div class="state-msg" id="fetchingMsg">Fetching current conditions…</div>
     </div>
+
+    <nav class="toc">
+      <a href="#hourlyCard" id="tocHourly">Hourly forecast</a>
+      <a href="#minutelyCard" id="tocMinutely">15-minute forecast</a>
+    </nav>
   </div>
 
-  <div class="card">
-    <div class="section-title"><span>Hourly forecast — next 24h</span><span class="swipe-hint">swipe →</span></div>
-    <div class="section-sub">AROME-HD model data updates every 3 hours</div>
+  <div class="card" id="hourlyCard">
+    <div class="section-title"><span id="hourlyTitleText">Hourly forecast — next 24h</span><span class="swipe-hint" id="swipeHint1">swipe →</span></div>
+    <div class="section-sub" id="hourlySubText">AROME-HD model data updates every 3 hours</div>
     <div class="table-scroll">
       <table class="data-table" id="hourlyTable"></table>
     </div>
   </div>
 
-  <div class="card">
-    <div class="section-title"><span>15-minute forecast — next 6h</span><span class="swipe-hint">swipe →</span></div>
-    <div class="section-sub">Nowcast data updates every hour</div>
+  <div class="card" id="minutelyCard">
+    <div class="section-title"><span id="minutelyTitleText">15-minute forecast — next 6h</span><span class="swipe-hint" id="swipeHint2">swipe →</span></div>
+    <div class="section-sub" id="minutelySubText">Nowcast data updates every hour</div>
     <div class="table-scroll">
       <table class="data-table" id="minutelyTable"></table>
     </div>
@@ -345,8 +401,8 @@
 
   <div class="wrap-narrow">
     <footer>
-      * Not provided by AROME-HD — sourced from Open-Meteo's default best-match blend.<br>
-      Data from <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>
+      <span id="footnoteText">* Not provided by AROME-HD — sourced from Open-Meteo's default best-match blend.</span><br>
+      <span id="dataFromText">Data from</span> <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>
     </footer>
   </div>
 </div>
@@ -361,25 +417,225 @@ function buildBlendUrl(){
 }
 const BLENDED_FIELDS = ['precipitation_probability','showers','cloud_cover','uv_index','weather_code','is_day','wind_direction_10m'];
 const BLENDED_MINUTELY_FIELDS = ['lightning_potential','weather_code','is_day','wind_direction_10m'];
-let LAT = 43.628048;
-let LON = 7.015687;
+let LANG = localStorage.getItem('weatherLang') || 'en';
 
-const WMO = {
-  0:{label:"Clear sky", icon:"sun"},
-  1:{label:"Mainly clear", icon:"sun-cloud"},
-  2:{label:"Partly cloudy", icon:"sun-cloud"},
-  3:{label:"Overcast", icon:"cloud"},
-  45:{label:"Fog", icon:"fog"}, 48:{label:"Rime fog", icon:"fog"},
-  51:{label:"Light drizzle", icon:"rain"}, 53:{label:"Drizzle", icon:"rain"}, 55:{label:"Dense drizzle", icon:"rain"},
-  56:{label:"Freezing drizzle", icon:"rain"}, 57:{label:"Freezing drizzle", icon:"rain"},
-  61:{label:"Light rain", icon:"rain"}, 63:{label:"Rain", icon:"rain"}, 65:{label:"Heavy rain", icon:"rain"},
-  66:{label:"Freezing rain", icon:"rain"}, 67:{label:"Freezing rain", icon:"rain"},
-  71:{label:"Light snow", icon:"snow"}, 73:{label:"Snow", icon:"snow"}, 75:{label:"Heavy snow", icon:"snow"},
-  77:{label:"Snow grains", icon:"snow"},
-  80:{label:"Rain showers", icon:"rain"}, 81:{label:"Rain showers", icon:"rain"}, 82:{label:"Violent showers", icon:"rain"},
-  85:{label:"Snow showers", icon:"snow"}, 86:{label:"Snow showers", icon:"snow"},
-  95:{label:"Thunderstorm", icon:"storm"}, 96:{label:"Thunderstorm + hail", icon:"storm"}, 99:{label:"Thunderstorm + hail", icon:"storm"},
+const I18N = {
+  en: {
+    titleLoading: 'Locating address…',
+    dateLoading: 'Loading forecast…',
+    fetchingNow: 'Fetching current conditions…',
+    addressPlaceholder: 'Enter a postal address…',
+    goBtn: 'Go',
+    useMyLocation: '📍 Use my current location',
+    gettingLocation: 'Getting your current location…',
+    lookingUpAddress: 'Looking up address…',
+    addressFound: 'Address found — loading forecast…',
+    couldntFindAddress: (m)=> `Couldn't find that address (${m}). Try a more specific address.`,
+    couldntGetLocation: (m)=> `Couldn't get your current location (${m}). Check your browser's location permission.`,
+    couldntLoadForecast: (m)=> `Couldn't load forecast (${m}).`,
+    swipeHint: 'swipe →',
+    hourlyTitle: 'Hourly forecast — next 24h',
+    hourlySub: 'AROME-HD model data updates every 3 hours',
+    minutelyTitle: '15-minute forecast — next 6h',
+    minutelySub: 'Nowcast data updates every hour',
+    footnote: "* Not provided by AROME-HD — sourced from Open-Meteo's default best-match blend.",
+    dataFrom: 'Data from',
+    refreshedAt: (t)=> `Data refreshed at ${t} · auto-refreshes hourly`,
+    humidityWind: (h,w)=> `Humidity ${h}% · Wind ${w} km/h`,
+    maxToday: 'Max today',
+    minToday: 'Min today',
+    precipNow: (p,peak)=> `Precipitation probability now: <b>${p}%</b> · peak later today: <b>${peak}</b>`,
+    precipTotalToday: (v)=> `Total precipitation today: <b>${v}</b>`,
+    noLightningRisk: 'No lightning risk',
+    lightningLow: 'Low', lightningModerate: 'Moderate', lightningHigh: 'High', lightningExtreme: 'Extreme',
+    thunderUnlikely: 'Unlikely', thunderPossible: 'Possible', thunderRisk: 'Risk', thunderHighRisk: 'High risk',
+    minutelyUnavailable: '15-minute data not available',
+    rowTime: 'Time', rowWeather: 'Weather*', rowTemp: 'Temp', rowPrecipProb: 'Precip. prob.*',
+    rowPrecipitation: 'Precipitation', rowCloudCover: 'Cloud cover*', rowHumidity: 'Humidity',
+    rowWindSpeed: 'Wind speed', rowWindGusts: 'Wind gusts', rowWindDir: 'Wind dir.',
+    rowUvIndex: 'UV index*', rowThunderstorm: 'Thunderstorm', rowLightning: 'Lightning*',
+    now: 'Now',
+    jumpHourly: 'Hourly forecast',
+    jumpMinutely: '15-minute forecast',
+    localeCode: 'en-US',
+  },
+  fr: {
+    titleLoading: 'Localisation de l\u2019adresse…',
+    dateLoading: 'Chargement des prévisions…',
+    fetchingNow: 'Récupération des conditions actuelles…',
+    addressPlaceholder: 'Saisissez une adresse postale…',
+    goBtn: 'OK',
+    useMyLocation: '📍 Utiliser ma position actuelle',
+    gettingLocation: 'Récupération de votre position actuelle…',
+    lookingUpAddress: 'Recherche de l\u2019adresse…',
+    addressFound: 'Adresse trouvée — chargement des prévisions…',
+    couldntFindAddress: (m)=> `Adresse introuvable (${m}). Essayez une adresse plus précise.`,
+    couldntGetLocation: (m)=> `Impossible d\u2019obtenir votre position (${m}). Vérifiez l\u2019autorisation de localisation de votre navigateur.`,
+    couldntLoadForecast: (m)=> `Impossible de charger les prévisions (${m}).`,
+    swipeHint: 'glisser →',
+    hourlyTitle: 'Prévisions horaires — 24 prochaines heures',
+    hourlySub: 'Les données du modèle AROME-HD sont mises à jour toutes les 3 heures',
+    minutelyTitle: 'Prévisions 15 minutes — 6 prochaines heures',
+    minutelySub: 'Les données de nowcasting sont mises à jour toutes les heures',
+    footnote: "* Non fourni par AROME-HD — provient du modèle par défaut d'Open-Meteo (best-match).",
+    dataFrom: 'Données de',
+    refreshedAt: (t)=> `Données actualisées à ${t} · actualisation automatique toutes les heures`,
+    humidityWind: (h,w)=> `Humidité ${h}% · Vent ${w} km/h`,
+    maxToday: 'Max aujourd\u2019hui',
+    minToday: 'Min aujourd\u2019hui',
+    precipNow: (p,peak)=> `Probabilité de précipitations actuelle : <b>${p}%</b> · pic plus tard aujourd\u2019hui : <b>${peak}</b>`,
+    precipTotalToday: (v)=> `Précipitations totales aujourd\u2019hui : <b>${v}</b>`,
+    noLightningRisk: 'Aucun risque de foudre',
+    lightningLow: 'Faible', lightningModerate: 'Modéré', lightningHigh: 'Élevé', lightningExtreme: 'Extrême',
+    thunderUnlikely: 'Improbable', thunderPossible: 'Possible', thunderRisk: 'Risque', thunderHighRisk: 'Risque élevé',
+    minutelyUnavailable: 'Données 15 minutes indisponibles',
+    rowTime: 'Heure', rowWeather: 'Météo*', rowTemp: 'Temp.', rowPrecipProb: 'Prob. précip.*',
+    rowPrecipitation: 'Précipitations', rowCloudCover: 'Couverture nuageuse*', rowHumidity: 'Humidité',
+    rowWindSpeed: 'Vitesse du vent', rowWindGusts: 'Rafales', rowWindDir: 'Direction du vent',
+    rowUvIndex: 'Indice UV*', rowThunderstorm: 'Orage', rowLightning: 'Foudre*',
+    now: 'Maint.',
+    jumpHourly: 'Prévisions horaires',
+    jumpMinutely: 'Prévisions 15 min',
+    localeCode: 'fr-FR',
+  },
+  // Belgian French (Brussels) — practically identical vocabulary to standard
+  // French for weather-app terminology; kept as its own entry mainly for its
+  // own flag/locale (fr-BE affects some date/number formatting conventions).
+  be: {
+    titleLoading: 'Localisation de l\u2019adresse…',
+    dateLoading: 'Chargement des prévisions…',
+    fetchingNow: 'Récupération des conditions actuelles…',
+    addressPlaceholder: 'Introduisez une adresse postale…',
+    goBtn: 'OK',
+    useMyLocation: '📍 Utiliser ma position actuelle',
+    gettingLocation: 'Récupération de votre position actuelle…',
+    lookingUpAddress: 'Recherche de l\u2019adresse…',
+    addressFound: 'Adresse trouvée — chargement des prévisions…',
+    couldntFindAddress: (m)=> `Adresse introuvable (${m}). Essayez une adresse plus précise.`,
+    couldntGetLocation: (m)=> `Impossible d\u2019obtenir votre position (${m}). Vérifiez l\u2019autorisation de localisation de votre navigateur.`,
+    couldntLoadForecast: (m)=> `Impossible de charger les prévisions (${m}).`,
+    swipeHint: 'glisser →',
+    hourlyTitle: 'Prévisions horaires — 24 prochaines heures',
+    hourlySub: 'Les données du modèle AROME-HD sont mises à jour toutes les 3 heures',
+    minutelyTitle: 'Prévisions 15 minutes — 6 prochaines heures',
+    minutelySub: 'Les données de nowcasting sont mises à jour toutes les heures',
+    footnote: "* Non fourni par AROME-HD — provient du modèle par défaut d'Open-Meteo (best-match).",
+    dataFrom: 'Données de',
+    refreshedAt: (t)=> `Données actualisées à ${t} · actualisation automatique toutes les heures`,
+    humidityWind: (h,w)=> `Humidité ${h}% · Vent ${w} km/h`,
+    maxToday: 'Max aujourd\u2019hui',
+    minToday: 'Min aujourd\u2019hui',
+    precipNow: (p,peak)=> `Probabilité de précipitations actuelle : <b>${p}%</b> · pic plus tard aujourd\u2019hui : <b>${peak}</b>`,
+    precipTotalToday: (v)=> `Précipitations totales aujourd\u2019hui : <b>${v}</b>`,
+    noLightningRisk: 'Aucun risque de foudre',
+    lightningLow: 'Faible', lightningModerate: 'Modéré', lightningHigh: 'Élevé', lightningExtreme: 'Extrême',
+    thunderUnlikely: 'Improbable', thunderPossible: 'Possible', thunderRisk: 'Risque', thunderHighRisk: 'Risque élevé',
+    minutelyUnavailable: 'Données 15 minutes indisponibles',
+    rowTime: 'Heure', rowWeather: 'Météo*', rowTemp: 'Temp.', rowPrecipProb: 'Prob. précip.*',
+    rowPrecipitation: 'Précipitations', rowCloudCover: 'Couverture nuageuse*', rowHumidity: 'Humidité',
+    rowWindSpeed: 'Vitesse du vent', rowWindGusts: 'Rafales', rowWindDir: 'Direction du vent',
+    rowUvIndex: 'Indice UV*', rowThunderstorm: 'Orage', rowLightning: 'Foudre*',
+    now: 'Maint.',
+    jumpHourly: 'Prévisions horaires',
+    jumpMinutely: 'Prévisions 15 min',
+    localeCode: 'fr-BE',
+  },
+  sk: {
+    titleLoading: 'Vyhľadávanie adresy…',
+    dateLoading: 'Načítavanie predpovede…',
+    fetchingNow: 'Načítavanie aktuálnych podmienok…',
+    addressPlaceholder: 'Zadajte poštovú adresu…',
+    goBtn: 'Ísť',
+    useMyLocation: '📍 Použiť moju aktuálnu polohu',
+    gettingLocation: 'Zisťovanie vašej aktuálnej polohy…',
+    lookingUpAddress: 'Vyhľadávanie adresy…',
+    addressFound: 'Adresa nájdená — načítavam predpoveď…',
+    couldntFindAddress: (m)=> `Adresu sa nepodarilo nájsť (${m}). Skúste presnejšiu adresu.`,
+    couldntGetLocation: (m)=> `Nepodarilo sa zistiť vašu polohu (${m}). Skontrolujte povolenie polohy v prehliadači.`,
+    couldntLoadForecast: (m)=> `Nepodarilo sa načítať predpoveď (${m}).`,
+    swipeHint: 'potiahnite →',
+    hourlyTitle: 'Hodinová predpoveď — nasledujúcich 24 h',
+    hourlySub: 'Údaje modelu AROME-HD sa aktualizujú každé 3 hodiny',
+    minutelyTitle: '15-minútová predpoveď — nasledujúcich 6 h',
+    minutelySub: 'Údaje nowcastingu sa aktualizujú každú hodinu',
+    footnote: "* Neposkytuje AROME-HD — pochádza z predvoleného modelu Open-Meteo (best-match).",
+    dataFrom: 'Údaje z',
+    refreshedAt: (t)=> `Údaje aktualizované o ${t} · automatická aktualizácia každú hodinu`,
+    humidityWind: (h,w)=> `Vlhkosť ${h}% · Vietor ${w} km/h`,
+    maxToday: 'Max. dnes',
+    minToday: 'Min. dnes',
+    precipNow: (p,peak)=> `Pravdepodobnosť zrážok teraz: <b>${p}%</b> · vrchol neskôr dnes: <b>${peak}</b>`,
+    precipTotalToday: (v)=> `Celkové zrážky dnes: <b>${v}</b>`,
+    noLightningRisk: 'Žiadne riziko blesku',
+    lightningLow: 'Nízke', lightningModerate: 'Stredné', lightningHigh: 'Vysoké', lightningExtreme: 'Extrémne',
+    thunderUnlikely: 'Nepravdepodobné', thunderPossible: 'Možné', thunderRisk: 'Riziko', thunderHighRisk: 'Vysoké riziko',
+    minutelyUnavailable: '15-minútové údaje nie sú k dispozícii',
+    rowTime: 'Čas', rowWeather: 'Počasie*', rowTemp: 'Teplota', rowPrecipProb: 'Prav. zrážok*',
+    rowPrecipitation: 'Zrážky', rowCloudCover: 'Oblačnosť*', rowHumidity: 'Vlhkosť',
+    rowWindSpeed: 'Rýchlosť vetra', rowWindGusts: 'Nárazy vetra', rowWindDir: 'Smer vetra',
+    rowUvIndex: 'UV index*', rowThunderstorm: 'Búrka', rowLightning: 'Blesk*',
+    now: 'Teraz',
+    jumpHourly: 'Hodinová predpoveď',
+    jumpMinutely: '15-minútová predpoveď',
+    localeCode: 'sk-SK',
+  }
 };
+
+function t(key, ...args){
+  const dict = I18N[LANG] || I18N.en;
+  const entry = dict[key] !== undefined ? dict[key] : I18N.en[key];
+  return typeof entry === 'function' ? entry(...args) : entry;
+}
+
+
+
+const WMO_ICON = {
+  0:"sun", 1:"sun-cloud", 2:"sun-cloud", 3:"cloud",
+  45:"fog", 48:"fog",
+  51:"rain", 53:"rain", 55:"rain", 56:"rain", 57:"rain",
+  61:"rain", 63:"rain", 65:"rain", 66:"rain", 67:"rain",
+  71:"snow", 73:"snow", 75:"snow", 77:"snow",
+  80:"rain", 81:"rain", 82:"rain", 85:"snow", 86:"snow",
+  95:"storm", 96:"storm", 99:"storm",
+};
+
+const WMO_LABEL = {
+  en: {
+    0:"Clear sky", 1:"Mainly clear", 2:"Partly cloudy", 3:"Overcast",
+    45:"Fog", 48:"Rime fog",
+    51:"Light drizzle", 53:"Drizzle", 55:"Dense drizzle", 56:"Freezing drizzle", 57:"Freezing drizzle",
+    61:"Light rain", 63:"Rain", 65:"Heavy rain", 66:"Freezing rain", 67:"Freezing rain",
+    71:"Light snow", 73:"Snow", 75:"Heavy snow", 77:"Snow grains",
+    80:"Rain showers", 81:"Rain showers", 82:"Violent showers", 85:"Snow showers", 86:"Snow showers",
+    95:"Thunderstorm", 96:"Thunderstorm + hail", 99:"Thunderstorm + hail",
+  },
+  fr: {
+    0:"Ciel dégagé", 1:"Généralement dégagé", 2:"Partiellement nuageux", 3:"Couvert",
+    45:"Brouillard", 48:"Brouillard givrant",
+    51:"Bruine légère", 53:"Bruine", 55:"Bruine dense", 56:"Bruine verglaçante", 57:"Bruine verglaçante",
+    61:"Pluie légère", 63:"Pluie", 65:"Pluie forte", 66:"Pluie verglaçante", 67:"Pluie verglaçante",
+    71:"Neige légère", 73:"Neige", 75:"Neige forte", 77:"Grains de neige",
+    80:"Averses de pluie", 81:"Averses de pluie", 82:"Averses violentes", 85:"Averses de neige", 86:"Averses de neige",
+    95:"Orage", 96:"Orage avec grêle", 99:"Orage avec grêle",
+  },
+  sk: {
+    0:"Jasná obloha", 1:"Prevažne jasno", 2:"Polooblačno", 3:"Zamračené",
+    45:"Hmla", 48:"Namŕzajúca hmla",
+    51:"Slabé mrholenie", 53:"Mrholenie", 55:"Husté mrholenie", 56:"Mrznúce mrholenie", 57:"Mrznúce mrholenie",
+    61:"Slabý dážď", 63:"Dážď", 65:"Silný dážď", 66:"Mrznúci dážď", 67:"Mrznúci dážď",
+    71:"Slabé sneženie", 73:"Sneženie", 75:"Silné sneženie", 77:"Snehové zrná",
+    80:"Prehánky", 81:"Prehánky", 82:"Silné prehánky", 85:"Snehové prehánky", 86:"Snehové prehánky",
+    95:"Búrka", 96:"Búrka s krupobitím", 99:"Búrka s krupobitím",
+  }
+};
+// Belgian French uses the same meteorological vocabulary as standard French
+WMO_LABEL.be = WMO_LABEL.fr;
+
+function wmoIcon(code){ return WMO_ICON[code] || 'cloud'; }
+function wmoLabel(code){
+  const set = WMO_LABEL[LANG] || WMO_LABEL.en;
+  return set[code] || '—';
+}
 
 function icon(type, size=28){
   const cloudGrey = "#8FA3B0";
@@ -417,8 +673,7 @@ function icon(type, size=28){
 // picks the right icon variant for a weather_code, swapping sunny icons for
 // moon icons when it's night (isDay: 1=day, 0=night, null/undefined=unknown → assume day)
 function weatherIconType(code, isDay){
-  const wmo = WMO[code] || {icon:'cloud'};
-  let type = wmo.icon;
+  let type = wmoIcon(code);
   if(isDay === 0){
     if(type === 'sun') type = 'moon';
     else if(type === 'sun-cloud') type = 'moon-cloud';
@@ -455,10 +710,10 @@ function roundOr(v, suffix){
 function thunderstormBadge(v){
   if(v === null || v === undefined || Number.isNaN(v)) return '–';
   let color, label;
-  if(v < 300){ color='#8FA3B0'; label='Unlikely'; }
-  else if(v < 1000){ color='#E0A233'; label='Possible'; }
-  else if(v < 2500){ color='#DB6A3B'; label='Risk'; }
-  else { color='#C0392B'; label='High risk'; }
+  if(v < 300){ color='#8FA3B0'; label=t('thunderUnlikely'); }
+  else if(v < 1000){ color='#E0A233'; label=t('thunderPossible'); }
+  else if(v < 2500){ color='#DB6A3B'; label=t('thunderRisk'); }
+  else { color='#C0392B'; label=t('thunderHighRisk'); }
   return `<span class="badge" style="background:${color};" title="CAPE ${Math.round(v)} J/kg">${label}</span>`;
 }
 
@@ -466,12 +721,12 @@ function thunderstormBadge(v){
 // Lightning Potential Index (J/kg) — 0 = none, higher = more likely/severe storms
 function lightningBadge(v){
   if(v === null || v === undefined || Number.isNaN(v)) return '–';
-  if(v <= 0) return ''; // nothing to show when there's no lightning risk
+  if(v <= 0) return `<span class="dot-none" title="${t('noLightningRisk')}">•</span>`;
   let cls, label;
-  if(v < 2){ cls='badge-low'; label='⚡ Low'; }
-  else if(v < 5){ cls='badge-moderate'; label='⚡ Moderate'; }
-  else if(v < 10){ cls='badge-high'; label='⚡ High'; }
-  else { cls='badge-extreme'; label='⚡ Extreme'; }
+  if(v < 2){ cls='badge-low'; label='⚡ '+t('lightningLow'); }
+  else if(v < 5){ cls='badge-moderate'; label='⚡ '+t('lightningModerate'); }
+  else if(v < 10){ cls='badge-high'; label='⚡ '+t('lightningHigh'); }
+  else { cls='badge-extreme'; label='⚡ '+t('lightningExtreme'); }
   return `<span class="badge ${cls}">${label}</span>`;
 }
 
@@ -637,14 +892,50 @@ function renderAstroStrip(data, todayStr, now){
 }
 
 function updateHeader(now){
-  const dateStr = now.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long'});
-  const timeStr = now.toLocaleTimeString('en-GB',{hour:'2-digit', minute:'2-digit'});
+  const locale = t('localeCode');
+  const dateStr = now.toLocaleDateString(locale,{weekday:'long', day:'numeric', month:'long'});
+  const timeStr = now.toLocaleTimeString(locale,{hour:'2-digit', minute:'2-digit'});
   document.getElementById('dateLine').textContent = `${dateStr} · ${timeStr}`;
   if(lastUpdated){
-    const upd = lastUpdated.toLocaleTimeString('en-GB',{hour:'2-digit', minute:'2-digit'});
-    document.getElementById('updatedLine').textContent = `Data refreshed at ${upd} · auto-refreshes hourly`;
+    const upd = lastUpdated.toLocaleTimeString(locale,{hour:'2-digit', minute:'2-digit'});
+    document.getElementById('updatedLine').textContent = t('refreshedAt', upd);
   }
 }
+
+// applies every static (non-data-dependent) piece of UI text for the current LANG
+function applyStaticTranslations(){
+  document.documentElement.lang = LANG;
+  document.getElementById('addressInput').placeholder = t('addressPlaceholder');
+  document.getElementById('goBtn').textContent = t('goBtn');
+  document.getElementById('locBtn').textContent = t('useMyLocation');
+  document.getElementById('hourlyTitleText').textContent = t('hourlyTitle');
+  document.getElementById('hourlySubText').textContent = t('hourlySub');
+  document.getElementById('minutelyTitleText').textContent = t('minutelyTitle');
+  document.getElementById('minutelySubText').textContent = t('minutelySub');
+  document.getElementById('swipeHint1').textContent = t('swipeHint');
+  document.getElementById('swipeHint2').textContent = t('swipeHint');
+  document.getElementById('footnoteText').textContent = t('footnote');
+  document.getElementById('dataFromText').textContent = t('dataFrom');
+  document.getElementById('tocHourly').textContent = t('jumpHourly');
+  document.getElementById('tocMinutely').textContent = t('jumpMinutely');
+  const fetchingEl = document.getElementById('fetchingMsg');
+  if(fetchingEl) fetchingEl.textContent = t('fetchingNow');
+  document.querySelectorAll('.lang-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.lang === LANG);
+  });
+}
+
+function setLanguage(lang){
+  LANG = lang;
+  localStorage.setItem('weatherLang', lang);
+  applyStaticTranslations();
+  updateHeader(new Date());
+  if(cachedData) render(cachedData);
+}
+document.querySelectorAll('.lang-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> setLanguage(btn.dataset.lang));
+});
+applyStaticTranslations();
 
 // keep the clock (and "last updated" text) ticking between data refreshes
 setInterval(()=> updateHeader(new Date()), 30*1000);
@@ -682,7 +973,7 @@ async function loadAddress(){
 async function geocodeAndLoad(query){
   const msgEl = document.getElementById('addressMsg');
   const btnEl = document.querySelector('.address-btn');
-  msgEl.textContent = 'Looking up address…';
+  msgEl.textContent = t('lookingUpAddress');
   msgEl.className = 'address-msg';
   btnEl.disabled = true;
   try{
@@ -695,16 +986,16 @@ async function geocodeAndLoad(query){
     LON = feat.geometry.coordinates[0];
     LAT = feat.geometry.coordinates[1];
 
-    msgEl.textContent = 'Address found — loading forecast…';
+    msgEl.textContent = t('addressFound');
     msgEl.className = 'address-msg ok';
 
-    document.getElementById('titleLine').textContent = 'Locating address…';
+    document.getElementById('titleLine').textContent = t('titleLoading');
     await Promise.all([ loadAddress(), load() ]);
 
     msgEl.textContent = '';
     msgEl.className = 'address-msg';
   }catch(err){
-    msgEl.textContent = `Couldn't find that address (${err.message}). Try a more specific address.`;
+    msgEl.textContent = t('couldntFindAddress', err.message);
     msgEl.className = 'address-msg error';
   }finally{
     btnEl.disabled = false;
@@ -770,7 +1061,7 @@ async function load(){
     cachedData = data;
     render(data);
   }catch(err){
-    document.getElementById('nowCard').innerHTML = `<div class="state-msg">Couldn't load forecast (${err.message}).</div>`;
+    document.getElementById('nowCard').innerHTML = `<div class="state-msg">${t('couldntLoadForecast', err.message)}</div>`;
   }
 }
 
@@ -795,7 +1086,7 @@ function render(data){
   });
 
   const wcode = h.weather_code[curIdx];
-  const wmo = WMO[wcode] || {label:"—", icon:"cloud"};
+  const condLabel = wmoLabel(wcode);
   const iconType = weatherIconType(wcode, h.is_day[curIdx]);
   const humidity = roundOr(h.relative_humidity_2m[curIdx], '');
   const pop = roundOr(h.precipitation_probability[curIdx], '');
@@ -846,8 +1137,8 @@ function render(data){
       <div class="now-left">
         ${icon(iconType, 56)}
         <div>
-          <div class="now-cond">${wmo.label}</div>
-          <div class="now-sub">Humidity ${humidity}% · Wind ${wind} km/h</div>
+          <div class="now-cond">${condLabel}</div>
+          <div class="now-sub">${t('humidityWind', humidity, wind)}</div>
         </div>
       </div>
       <div class="now-temp">${temp}°</div>
@@ -856,19 +1147,19 @@ function render(data){
     <div class="minmax">
       <div class="max">
         <div class="val">${maxTemp}</div>
-        <div class="lbl">Max today</div>
+        <div class="lbl">${t('maxToday')}</div>
       </div>
       <div class="min">
         <div class="val">${minTemp}</div>
-        <div class="lbl">Min today</div>
+        <div class="lbl">${t('minToday')}</div>
       </div>
     </div>
 
     <div class="precip-banner">
       ${icon('rain',22)}
       <div class="precip-lines">
-        <div>Precipitation probability now: <b>${pop}%</b> · peak later today: <b>${maxPop}</b></div>
-        <div>Total precipitation today: <b>${precipTotal}</b></div>
+        <div>${t('precipNow', pop, maxPop)}</div>
+        <div>${t('precipTotalToday', precipTotal)}</div>
       </div>
     </div>
   `;
@@ -882,23 +1173,23 @@ function buildHourlyTable(h, curIdx){
   const idxs = Array.from({length:n}, (_,i)=>curIdx+i).filter(i=>i<h.time.length);
 
   const rows = [
-    {label:'Time', get:(i,n0)=> n0===0 ? 'Now' : fmtHourShort(h.time[i])},
-    {label:'Weather*', get:(i)=> icon(weatherIconType(h.weather_code[i], h.is_day[i]), 22), isIcon:true},
-    {label:'Temp', get:(i)=> roundOr(h.temperature_2m[i], '°')},
-    {label:'Precip. prob.*', get:(i)=> roundOr(h.precipitation_probability[i], '%'),
+    {label:t('rowTime'), get:(i,n0)=> n0===0 ? t('now') : fmtHourShort(h.time[i])},
+    {label:t('rowWeather'), get:(i)=> icon(weatherIconType(h.weather_code[i], h.is_day[i]), 22), isIcon:true},
+    {label:t('rowTemp'), get:(i)=> roundOr(h.temperature_2m[i], '°')},
+    {label:t('rowPrecipProb'), get:(i)=> roundOr(h.precipitation_probability[i], '%'),
       cellClass:(i)=> (h.precipitation_probability[i]!==null && h.precipitation_probability[i]>50) ? 'high-pop' : ''},
-    {label:'Precipitation', get:(i)=> numOr(h.precipitation[i], 1, ' mm')},
-    {label:'Cloud cover*', get:(i)=> cloudValue(h.cloud_cover[i])},
-    {label:'Humidity', get:(i)=> roundOr(h.relative_humidity_2m[i], '%')},
-    {label:'Wind speed', get:(i)=> windValue(h.wind_speed_10m[i])},
-    {label:'Wind gusts', get:(i)=> windValue(h.wind_gusts_10m[i])},
-    {label:'Wind dir.', get:(i)=> windDirection(h.wind_direction_10m[i])},
-    {label:'UV index*', get:(i)=> uvValue(h.uv_index[i])},
-    {label:'Thunderstorm', get:(i)=> thunderstormBadge(h.cape[i])},
+    {label:t('rowPrecipitation'), get:(i)=> numOr(h.precipitation[i], 1, ' mm')},
+    {label:t('rowCloudCover'), get:(i)=> cloudValue(h.cloud_cover[i])},
+    {label:t('rowHumidity'), get:(i)=> roundOr(h.relative_humidity_2m[i], '%')},
+    {label:t('rowWindSpeed'), get:(i)=> windValue(h.wind_speed_10m[i])},
+    {label:t('rowWindGusts'), get:(i)=> windValue(h.wind_gusts_10m[i])},
+    {label:t('rowWindDir'), get:(i)=> windDirection(h.wind_direction_10m[i])},
+    {label:t('rowUvIndex'), get:(i)=> uvValue(h.uv_index[i])},
+    {label:t('rowThunderstorm'), get:(i)=> thunderstormBadge(h.cape[i])},
   ];
 
   let thead = '<thead><tr><th class="row-label"></th>';
-  idxs.forEach((i,n0)=>{ thead += `<th class="${n0===0?'now-col':''}">${n0===0?'Now':fmtHourShort(h.time[i])}</th>`; });
+  idxs.forEach((i,n0)=>{ thead += `<th class="${n0===0?'now-col':''}">${n0===0?t('now'):fmtHourShort(h.time[i])}</th>`; });
   thead += '</tr></thead>';
 
   let tbody = '<tbody>';
@@ -918,7 +1209,7 @@ function buildHourlyTable(h, curIdx){
 
 function buildMinutelyTable(m, now){
   if(!m){
-    document.getElementById('minutelyTable').innerHTML = '<tbody><tr><td>15-minute data not available</td></tr></tbody>';
+    document.getElementById('minutelyTable').innerHTML = `<tbody><tr><td>${t('minutelyUnavailable')}</td></tr></tbody>`;
     return;
   }
   let mIdx = 0, best = Infinity;
@@ -930,18 +1221,18 @@ function buildMinutelyTable(m, now){
   const idxs = Array.from({length:n}, (_,i)=>mIdx+i).filter(i=>i<m.time.length);
 
   let thead = '<thead><tr><th class="row-label"></th>';
-  idxs.forEach((i,n0)=>{ thead += `<th class="${n0===0?'now-col':''}">${n0===0?'Now':fmtTime(m.time[i])}</th>`; });
+  idxs.forEach((i,n0)=>{ thead += `<th class="${n0===0?'now-col':''}">${n0===0?t('now'):fmtTime(m.time[i])}</th>`; });
   thead += '</tr></thead>';
 
   const rows = [
-    {label:'Weather*', get:(i)=> icon(weatherIconType(m.weather_code[i], m.is_day[i]), 20), isIcon:true},
-    {label:'Temp', get:(i)=> numOr(m.temperature_2m[i], 1, '°')},
-    {label:'Precipitation', get:(i)=> numOr(m.precipitation[i], 1, ' mm')},
-    {label:'Thunderstorm', get:(i)=> thunderstormBadge(m.cape[i])},
-    {label:'Lightning*', get:(i)=> lightningBadge(m.lightning_potential[i])},
-    {label:'Wind speed', get:(i)=> windValue(m.wind_speed_10m[i])},
-    {label:'Wind gusts', get:(i)=> windValue(m.wind_gusts_10m[i])},
-    {label:'Wind dir.', get:(i)=> windDirection(m.wind_direction_10m[i])},
+    {label:t('rowWeather'), get:(i)=> icon(weatherIconType(m.weather_code[i], m.is_day[i]), 20), isIcon:true},
+    {label:t('rowTemp'), get:(i)=> numOr(m.temperature_2m[i], 1, '°')},
+    {label:t('rowPrecipitation'), get:(i)=> numOr(m.precipitation[i], 1, ' mm')},
+    {label:t('rowThunderstorm'), get:(i)=> thunderstormBadge(m.cape[i])},
+    {label:t('rowLightning'), get:(i)=> lightningBadge(m.lightning_potential[i])},
+    {label:t('rowWindSpeed'), get:(i)=> windValue(m.wind_speed_10m[i])},
+    {label:t('rowWindGusts'), get:(i)=> windValue(m.wind_gusts_10m[i])},
+    {label:t('rowWindDir'), get:(i)=> windDirection(m.wind_direction_10m[i])},
   ];
 
   let tbody = '<tbody>';
@@ -1001,7 +1292,7 @@ async function initLocation(){
 async function useMyLocation(){
   const msgEl = document.getElementById('addressMsg');
   const btnEl = document.getElementById('locBtn');
-  msgEl.textContent = 'Getting your current location…';
+  msgEl.textContent = t('gettingLocation');
   msgEl.className = 'address-msg';
   btnEl.disabled = true;
   try{
@@ -1009,12 +1300,12 @@ async function useMyLocation(){
     if(!loc) throw new Error('location unavailable');
     LAT = loc.lat;
     LON = loc.lon;
-    document.getElementById('titleLine').textContent = 'Locating address…';
+    document.getElementById('titleLine').textContent = t('titleLoading');
     await Promise.all([ loadAddress(), load() ]);
     msgEl.textContent = '';
     msgEl.className = 'address-msg';
   }catch(err){
-    msgEl.textContent = `Couldn't get your current location (${err.message}). Check your browser's location permission.`;
+    msgEl.textContent = t('couldntGetLocation', err.message);
     msgEl.className = 'address-msg error';
   }finally{
     btnEl.disabled = false;
