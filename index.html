@@ -361,7 +361,7 @@
       <div class="lang-switch">
         <button type="button" class="lang-btn" data-lang="en" title="English" aria-label="English">🇺🇸</button>
         <button type="button" class="lang-btn" data-lang="fr" title="Français" aria-label="Français">🇫🇷</button>
-        <button type="button" class="lang-btn" data-lang="be" title="Français (Bruxelles)" aria-label="Français (Bruxelles)">🇧🇪</button>
+        <button type="button" class="lang-btn" data-lang="be" title="Nederlands (België)" aria-label="Nederlands (België)">🇧🇪</button>
         <button type="button" class="lang-btn" data-lang="sk" title="Slovenčina" aria-label="Slovenčina">🇸🇰</button>
       </div>
 
@@ -457,6 +457,7 @@ const I18N = {
     now: 'Now',
     jumpHourly: 'Hourly forecast',
     jumpMinutely: '15-minute forecast',
+    spatialResolution: '~1.5 km resolution',
     localeCode: 'en-US',
   },
   fr: {
@@ -496,49 +497,50 @@ const I18N = {
     now: 'Maint.',
     jumpHourly: 'Prévisions horaires',
     jumpMinutely: 'Prévisions 15 min',
+    spatialResolution: 'résolution ~1,5 km',
     localeCode: 'fr-FR',
   },
-  // Belgian French (Brussels) — practically identical vocabulary to standard
-  // French for weather-app terminology; kept as its own entry mainly for its
-  // own flag/locale (fr-BE affects some date/number formatting conventions).
+  // Dutch (Belgium) — Brussels is officially bilingual French/Dutch; this
+  // entry uses Belgian Dutch (nl-BE) under the Belgian flag.
   be: {
-    titleLoading: 'Localisation de l\u2019adresse…',
-    dateLoading: 'Chargement des prévisions…',
-    fetchingNow: 'Récupération des conditions actuelles…',
-    addressPlaceholder: 'Introduisez une adresse postale…',
+    titleLoading: 'Adres opzoeken…',
+    dateLoading: 'Voorspelling laden…',
+    fetchingNow: 'Huidige omstandigheden ophalen…',
+    addressPlaceholder: 'Voer een postadres in…',
     goBtn: 'OK',
-    useMyLocation: '📍 Utiliser ma position actuelle',
-    gettingLocation: 'Récupération de votre position actuelle…',
-    lookingUpAddress: 'Recherche de l\u2019adresse…',
-    addressFound: 'Adresse trouvée — chargement des prévisions…',
-    couldntFindAddress: (m)=> `Adresse introuvable (${m}). Essayez une adresse plus précise.`,
-    couldntGetLocation: (m)=> `Impossible d\u2019obtenir votre position (${m}). Vérifiez l\u2019autorisation de localisation de votre navigateur.`,
-    couldntLoadForecast: (m)=> `Impossible de charger les prévisions (${m}).`,
-    swipeHint: 'glisser →',
-    hourlyTitle: 'Prévisions horaires — 24 prochaines heures',
-    hourlySub: 'Les données du modèle AROME-HD sont mises à jour toutes les 3 heures',
-    minutelyTitle: 'Prévisions 15 minutes — 6 prochaines heures',
-    minutelySub: 'Les données de nowcasting sont mises à jour toutes les heures',
-    footnote: "* Non fourni par AROME-HD — provient du modèle par défaut d'Open-Meteo (best-match).",
-    dataFrom: 'Données de',
-    refreshedAt: (t)=> `Données actualisées à ${t} · actualisation automatique toutes les heures`,
-    humidityWind: (h,w)=> `Humidité ${h}% · Vent ${w} km/h`,
-    maxToday: 'Max aujourd\u2019hui',
-    minToday: 'Min aujourd\u2019hui',
-    precipNow: (p,peak)=> `Probabilité de précipitations actuelle : <b>${p}%</b> · pic plus tard aujourd\u2019hui : <b>${peak}</b>`,
-    precipTotalToday: (v)=> `Précipitations totales aujourd\u2019hui : <b>${v}</b>`,
-    noLightningRisk: 'Aucun risque de foudre',
-    lightningLow: 'Faible', lightningModerate: 'Modéré', lightningHigh: 'Élevé', lightningExtreme: 'Extrême',
-    thunderUnlikely: 'Improbable', thunderPossible: 'Possible', thunderRisk: 'Risque', thunderHighRisk: 'Risque élevé',
-    minutelyUnavailable: 'Données 15 minutes indisponibles',
-    rowTime: 'Heure', rowWeather: 'Météo*', rowTemp: 'Temp.', rowPrecipProb: 'Prob. précip.*',
-    rowPrecipitation: 'Précipitations', rowCloudCover: 'Couverture nuageuse*', rowHumidity: 'Humidité',
-    rowWindSpeed: 'Vitesse du vent', rowWindGusts: 'Rafales', rowWindDir: 'Direction du vent',
-    rowUvIndex: 'Indice UV*', rowThunderstorm: 'Orage', rowLightning: 'Foudre*',
-    now: 'Maint.',
-    jumpHourly: 'Prévisions horaires',
-    jumpMinutely: 'Prévisions 15 min',
-    localeCode: 'fr-BE',
+    useMyLocation: '📍 Mijn huidige locatie gebruiken',
+    gettingLocation: 'Uw huidige locatie ophalen…',
+    lookingUpAddress: 'Adres opzoeken…',
+    addressFound: 'Adres gevonden — voorspelling laden…',
+    couldntFindAddress: (m)=> `Adres niet gevonden (${m}). Probeer een preciezer adres.`,
+    couldntGetLocation: (m)=> `Kon uw locatie niet bepalen (${m}). Controleer de locatietoestemming van uw browser.`,
+    couldntLoadForecast: (m)=> `Kon de voorspelling niet laden (${m}).`,
+    swipeHint: 'veeg →',
+    hourlyTitle: 'Uurlijkse voorspelling — komende 24 u',
+    hourlySub: 'AROME-HD modelgegevens worden om de 3 uur bijgewerkt',
+    minutelyTitle: '15-minutenvoorspelling — komende 6 u',
+    minutelySub: 'Nowcastgegevens worden elk uur bijgewerkt',
+    footnote: "* Niet geleverd door AROME-HD — afkomstig van Open-Meteo's standaard best-match model.",
+    dataFrom: 'Gegevens van',
+    refreshedAt: (t)=> `Gegevens bijgewerkt om ${t} · automatische update elk uur`,
+    humidityWind: (h,w)=> `Vochtigheid ${h}% · Wind ${w} km/h`,
+    maxToday: 'Max. vandaag',
+    minToday: 'Min. vandaag',
+    precipNow: (p,peak)=> `Neerslagkans nu: <b>${p}%</b> · piek later vandaag: <b>${peak}</b>`,
+    precipTotalToday: (v)=> `Totale neerslag vandaag: <b>${v}</b>`,
+    noLightningRisk: 'Geen bliksemrisico',
+    lightningLow: 'Laag', lightningModerate: 'Matig', lightningHigh: 'Hoog', lightningExtreme: 'Extreem',
+    thunderUnlikely: 'Onwaarschijnlijk', thunderPossible: 'Mogelijk', thunderRisk: 'Risico', thunderHighRisk: 'Hoog risico',
+    minutelyUnavailable: '15-minutengegevens niet beschikbaar',
+    rowTime: 'Tijd', rowWeather: 'Weer*', rowTemp: 'Temp.', rowPrecipProb: 'Neerslagkans*',
+    rowPrecipitation: 'Neerslag', rowCloudCover: 'Bewolking*', rowHumidity: 'Vochtigheid',
+    rowWindSpeed: 'Windsnelheid', rowWindGusts: 'Windstoten', rowWindDir: 'Windrichting',
+    rowUvIndex: 'UV-index*', rowThunderstorm: 'Onweer', rowLightning: 'Bliksem*',
+    now: 'Nu',
+    jumpHourly: 'Uurlijkse voorspelling',
+    jumpMinutely: '15-minutenvoorspelling',
+    spatialResolution: '~1,5 km resolutie',
+    localeCode: 'nl-BE',
   },
   sk: {
     titleLoading: 'Vyhľadávanie adresy…',
@@ -577,6 +579,7 @@ const I18N = {
     now: 'Teraz',
     jumpHourly: 'Hodinová predpoveď',
     jumpMinutely: '15-minútová predpoveď',
+    spatialResolution: 'rozlíšenie ~1,5 km',
     localeCode: 'sk-SK',
   }
 };
@@ -629,7 +632,15 @@ const WMO_LABEL = {
   }
 };
 // Belgian French uses the same meteorological vocabulary as standard French
-WMO_LABEL.be = WMO_LABEL.fr;
+WMO_LABEL.be = {
+  0:"Heldere hemel", 1:"Overwegend helder", 2:"Gedeeltelijk bewolkt", 3:"Zwaar bewolkt",
+  45:"Mist", 48:"Aanvriezende mist",
+  51:"Lichte motregen", 53:"Motregen", 55:"Dichte motregen", 56:"Aanvriezende motregen", 57:"Aanvriezende motregen",
+  61:"Lichte regen", 63:"Regen", 65:"Zware regen", 66:"Aanvriezende regen", 67:"Aanvriezende regen",
+  71:"Lichte sneeuw", 73:"Sneeuw", 75:"Zware sneeuwval", 77:"Sneeuwkorrels",
+  80:"Regenbuien", 81:"Regenbuien", 82:"Hevige buien", 85:"Sneeuwbuien", 86:"Sneeuwbuien",
+  95:"Onweer", 96:"Onweer met hagel", 99:"Onweer met hagel",
+};
 
 function wmoIcon(code){ return WMO_ICON[code] || 'cloud'; }
 function wmoLabel(code){
@@ -909,9 +920,9 @@ function applyStaticTranslations(){
   document.getElementById('goBtn').textContent = t('goBtn');
   document.getElementById('locBtn').textContent = t('useMyLocation');
   document.getElementById('hourlyTitleText').textContent = t('hourlyTitle');
-  document.getElementById('hourlySubText').textContent = t('hourlySub');
+  document.getElementById('hourlySubText').textContent = `${t('hourlySub')} · ${t('spatialResolution')}`;
   document.getElementById('minutelyTitleText').textContent = t('minutelyTitle');
-  document.getElementById('minutelySubText').textContent = t('minutelySub');
+  document.getElementById('minutelySubText').textContent = `${t('minutelySub')} · ${t('spatialResolution')}`;
   document.getElementById('swipeHint1').textContent = t('swipeHint');
   document.getElementById('swipeHint2').textContent = t('swipeHint');
   document.getElementById('footnoteText').textContent = t('footnote');
