@@ -380,6 +380,7 @@
     <nav class="toc">
       <a href="#hourlyCard" id="tocHourly">Hourly forecast</a>
       <a href="#minutelyCard" id="tocMinutely">15-minute forecast</a>
+      <a href="#ecmwfCard" id="tocEcmwf">15-day forecast</a>
     </nav>
   </div>
 
@@ -396,6 +397,14 @@
     <div class="section-sub" id="minutelySubText">Nowcast data updates every hour</div>
     <div class="table-scroll">
       <table class="data-table" id="minutelyTable"></table>
+    </div>
+  </div>
+
+  <div class="card" id="ecmwfCard">
+    <div class="section-title"><span id="ecmwfTitleText">15-day forecast</span><span class="swipe-hint" id="swipeHint3">swipe →</span></div>
+    <div class="section-sub" id="ecmwfSubText">ECMWF IFS HRES model data updates every 6 hours</div>
+    <div class="table-scroll">
+      <table class="data-table" id="ecmwfTable"></table>
     </div>
   </div>
 
@@ -417,6 +426,12 @@ function buildBlendUrl(){
 }
 const BLENDED_FIELDS = ['precipitation_probability','showers','cloud_cover','uv_index','weather_code','is_day','wind_direction_10m'];
 const BLENDED_MINUTELY_FIELDS = ['lightning_potential','weather_code','is_day','wind_direction_10m'];
+
+// ECMWF IFS HRES (0.25° / ~25 km, open-data, 15-day horizon, updates every 6h)
+function buildEcmwfUrl(){
+  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=weather_code,temperature_2m,precipitation,sunshine_duration,cloud_cover,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cape,is_day&models=ecmwf_ifs&timezone=Europe%2FParis&forecast_days=15`;
+}
+
 let LANG = localStorage.getItem('weatherLang') || 'en';
 
 const I18N = {
@@ -454,9 +469,15 @@ const I18N = {
     rowPrecipitation: 'Precipitation', rowCloudCover: 'Cloud cover*', rowHumidity: 'Humidity',
     rowWindSpeed: 'Wind speed', rowWindGusts: 'Wind gusts', rowWindDir: 'Wind dir.',
     rowUvIndex: 'UV index*', rowThunderstorm: 'Thunderstorm', rowLightning: 'Lightning*',
+    rowTotalPrecip: 'Total precipitation', rowSunshine: 'Sunshine duration', rowWindSpeedDir: 'Wind', rowCape: 'CAPE',
+    morning: 'Morning', afternoon: 'Afternoon',
     now: 'Now',
     jumpHourly: 'Hourly forecast',
     jumpMinutely: '15-minute forecast',
+    jumpEcmwf: '15-day forecast',
+    ecmwfTitle: '15-day forecast',
+    ecmwfSub: 'ECMWF IFS HRES model data updates every 6 hours',
+    ecmwfResolution: '~9 km resolution',
     spatialResolution: '~1.5 km resolution',
     localeCode: 'en-US',
   },
@@ -494,9 +515,15 @@ const I18N = {
     rowPrecipitation: 'Précipitations', rowCloudCover: 'Couverture nuageuse*', rowHumidity: 'Humidité',
     rowWindSpeed: 'Vitesse du vent', rowWindGusts: 'Rafales', rowWindDir: 'Direction du vent',
     rowUvIndex: 'Indice UV*', rowThunderstorm: 'Orage', rowLightning: 'Foudre*',
+    rowTotalPrecip: 'Précipitations totales', rowSunshine: 'Durée d\u2019ensoleillement', rowWindSpeedDir: 'Vent', rowCape: 'CAPE',
+    morning: 'Matin', afternoon: 'Après-midi',
     now: 'Maint.',
     jumpHourly: 'Prévisions horaires',
     jumpMinutely: 'Prévisions 15 min',
+    jumpEcmwf: 'Prévisions 15 jours',
+    ecmwfTitle: 'Prévisions 15 jours',
+    ecmwfSub: 'Les données du modèle ECMWF IFS HRES sont mises à jour toutes les 6 heures',
+    ecmwfResolution: 'résolution ~9 km',
     spatialResolution: 'résolution ~1,5 km',
     localeCode: 'fr-FR',
   },
@@ -536,9 +563,15 @@ const I18N = {
     rowPrecipitation: 'Neerslag', rowCloudCover: 'Bewolking*', rowHumidity: 'Vochtigheid',
     rowWindSpeed: 'Windsnelheid', rowWindGusts: 'Windstoten', rowWindDir: 'Windrichting',
     rowUvIndex: 'UV-index*', rowThunderstorm: 'Onweer', rowLightning: 'Bliksem*',
+    rowTotalPrecip: 'Totale neerslag', rowSunshine: 'Zonneschijnduur', rowWindSpeedDir: 'Wind', rowCape: 'CAPE',
+    morning: 'Voormiddag', afternoon: 'Namiddag',
     now: 'Nu',
     jumpHourly: 'Uurlijkse voorspelling',
     jumpMinutely: '15-minutenvoorspelling',
+    jumpEcmwf: '15-dagenvoorspelling',
+    ecmwfTitle: '15-dagenvoorspelling',
+    ecmwfSub: 'ECMWF IFS HRES modelgegevens worden om de 6 uur bijgewerkt',
+    ecmwfResolution: '~9 km resolutie',
     spatialResolution: '~1,5 km resolutie',
     localeCode: 'nl-BE',
   },
@@ -576,9 +609,15 @@ const I18N = {
     rowPrecipitation: 'Zrážky', rowCloudCover: 'Oblačnosť*', rowHumidity: 'Vlhkosť',
     rowWindSpeed: 'Rýchlosť vetra', rowWindGusts: 'Nárazy vetra', rowWindDir: 'Smer vetra',
     rowUvIndex: 'UV index*', rowThunderstorm: 'Búrka', rowLightning: 'Blesk*',
+    rowTotalPrecip: 'Celkové zrážky', rowSunshine: 'Trvanie slnečného svitu', rowWindSpeedDir: 'Vietor', rowCape: 'CAPE',
+    morning: 'Ráno', afternoon: 'Popoludní',
     now: 'Teraz',
     jumpHourly: 'Hodinová predpoveď',
     jumpMinutely: '15-minútová predpoveď',
+    jumpEcmwf: '15-dňová predpoveď',
+    ecmwfTitle: '15-dňová predpoveď',
+    ecmwfSub: 'Údaje modelu ECMWF IFS HRES sa aktualizujú každých 6 hodín',
+    ecmwfResolution: 'rozlíšenie ~9 km',
     spatialResolution: 'rozlíšenie ~1,5 km',
     localeCode: 'sk-SK',
   }
@@ -923,12 +962,16 @@ function applyStaticTranslations(){
   document.getElementById('hourlySubText').textContent = `${t('hourlySub')} · ${t('spatialResolution')}`;
   document.getElementById('minutelyTitleText').textContent = t('minutelyTitle');
   document.getElementById('minutelySubText').textContent = `${t('minutelySub')} · ${t('spatialResolution')}`;
+  document.getElementById('ecmwfTitleText').textContent = t('ecmwfTitle');
+  document.getElementById('ecmwfSubText').textContent = `${t('ecmwfSub')} · ${t('ecmwfResolution')}`;
   document.getElementById('swipeHint1').textContent = t('swipeHint');
   document.getElementById('swipeHint2').textContent = t('swipeHint');
+  document.getElementById('swipeHint3').textContent = t('swipeHint');
   document.getElementById('footnoteText').textContent = t('footnote');
   document.getElementById('dataFromText').textContent = t('dataFrom');
   document.getElementById('tocHourly').textContent = t('jumpHourly');
   document.getElementById('tocMinutely').textContent = t('jumpMinutely');
+  document.getElementById('tocEcmwf').textContent = t('jumpEcmwf');
   const fetchingEl = document.getElementById('fetchingMsg');
   if(fetchingEl) fetchingEl.textContent = t('fetchingNow');
   document.querySelectorAll('.lang-btn').forEach(btn=>{
@@ -1057,9 +1100,10 @@ let cachedData = null;
 
 async function load(){
   try{
-    const [mainRes, blendRes] = await Promise.all([
+    const [mainRes, blendRes, ecmwfRes] = await Promise.all([
       fetch(buildApiUrl()),
-      fetch(buildBlendUrl()).catch(()=>null) // blend is a nice-to-have, don't fail the page if it errors
+      fetch(buildBlendUrl()).catch(()=>null), // blend is a nice-to-have, don't fail the page if it errors
+      fetch(buildEcmwfUrl()).catch(()=>null)  // 15-day ECMWF table is also a nice-to-have
     ]);
     if(!mainRes.ok) throw new Error("HTTP "+mainRes.status);
     const mainData = await mainRes.json();
@@ -1067,7 +1111,12 @@ async function load(){
     if(blendRes && blendRes.ok){
       try{ blendData = await blendRes.json(); }catch(e){ blendData = null; }
     }
+    let ecmwfData = null;
+    if(ecmwfRes && ecmwfRes.ok){
+      try{ ecmwfData = await ecmwfRes.json(); }catch(e){ ecmwfData = null; }
+    }
     const data = mergeData(mainData, blendData);
+    data.ecmwf = ecmwfData;
     lastUpdated = new Date();
     cachedData = data;
     render(data);
@@ -1177,6 +1226,7 @@ function render(data){
 
   buildHourlyTable(h, curIdx);
   buildMinutelyTable(data.minutely_15, now);
+  buildEcmwfTable(data.ecmwf, now);
 }
 
 function buildHourlyTable(h, curIdx){
@@ -1259,6 +1309,136 @@ function buildMinutelyTable(m, now){
   tbody += '</tbody>';
 
   document.getElementById('minutelyTable').innerHTML = thead + tbody;
+}
+
+// weather-icon "severity" used to pick a representative worst-case icon
+// when summarizing several hours into one morning/afternoon cell
+const ICON_SEVERITY = {sun:0, moon:0, 'sun-cloud':1, 'moon-cloud':1, cloud:2, fog:2, rain:4, snow:4, storm:6};
+
+function aggAvg(idxs, arr){
+  const vals = idxs.map(i=>arr[i]).filter(v=>v!==null && v!==undefined);
+  if(!vals.length) return null;
+  return vals.reduce((a,b)=>a+b,0)/vals.length;
+}
+function aggSum(idxs, arr){
+  const vals = idxs.map(i=>arr[i]).filter(v=>v!==null && v!==undefined);
+  if(!vals.length) return null;
+  return vals.reduce((a,b)=>a+b,0);
+}
+function aggMax(idxs, arr){
+  const vals = idxs.map(i=>arr[i]).filter(v=>v!==null && v!==undefined);
+  if(!vals.length) return null;
+  return Math.max(...vals);
+}
+function aggDominantWeatherCode(idxs, codes){
+  let best = null, bestSeverity = -1;
+  idxs.forEach(i=>{
+    const c = codes[i];
+    if(c===null || c===undefined) return;
+    const sev = ICON_SEVERITY[wmoIcon(c)] ?? 0;
+    if(sev > bestSeverity){ bestSeverity = sev; best = c; }
+  });
+  return best;
+}
+// circular (vector) average of wind speed+direction, so opposing directions
+// don't cancel out into a meaningless number
+function aggWindVector(idxs, speeds, dirs){
+  let u = 0, v = 0, n = 0;
+  idxs.forEach(i=>{
+    const s = speeds[i], d = dirs[i];
+    if(s===null || s===undefined || d===null || d===undefined) return;
+    const rad = d*Math.PI/180;
+    u += -s*Math.sin(rad);
+    v += -s*Math.cos(rad);
+    n++;
+  });
+  if(!n) return {speed:null, dir:null};
+  u/=n; v/=n;
+  const speed = Math.sqrt(u*u+v*v);
+  let dir = Math.atan2(-u,-v)*180/Math.PI;
+  if(dir<0) dir+=360;
+  return {speed, dir};
+}
+
+function fmtDateHeader(dateStr){
+  const d = new Date(dateStr+'T12:00:00');
+  const wd = d.toLocaleDateString(t('localeCode'), {weekday:'short'}).toUpperCase();
+  const mo = d.toLocaleDateString(t('localeCode'), {month:'short'}).toUpperCase();
+  return `${wd} ${mo} ${d.getDate()}`;
+}
+
+function buildEcmwfTable(ecmwf, now){
+  const tableEl = document.getElementById('ecmwfTable');
+  if(!ecmwf || !ecmwf.hourly){
+    tableEl.innerHTML = `<tbody><tr><td>${t('minutelyUnavailable')}</td></tr></tbody>`;
+    return;
+  }
+  const h = ecmwf.hourly;
+  const todayStr = now.toLocaleDateString('en-CA');
+
+  // group hour indices by calendar date, keeping only days after today
+  const byDate = new Map();
+  h.time.forEach((iso,i)=>{
+    const dateStr = iso.slice(0,10);
+    if(dateStr <= todayStr) return; // skip today — table starts tomorrow
+    if(!byDate.has(dateStr)) byDate.set(dateStr, []);
+    byDate.get(dateStr).push(i);
+  });
+
+  const days = Array.from(byDate.keys()).sort();
+  if(!days.length){
+    tableEl.innerHTML = `<tbody><tr><td>${t('minutelyUnavailable')}</td></tr></tbody>`;
+    return;
+  }
+
+  // build morning (06:00–11:59) / afternoon (12:00–17:59) index buckets per day
+  const halfDays = []; // [{dateStr, part:'morning'|'afternoon', idxs:[...]}]
+  days.forEach(dateStr=>{
+    const dayIdxs = byDate.get(dateStr);
+    const morning = dayIdxs.filter(i=>{ const hr = new Date(h.time[i]).getHours(); return hr>=6 && hr<12; });
+    const afternoon = dayIdxs.filter(i=>{ const hr = new Date(h.time[i]).getHours(); return hr>=12 && hr<18; });
+    halfDays.push({dateStr, part:'morning', idxs:morning});
+    halfDays.push({dateStr, part:'afternoon', idxs:afternoon});
+  });
+
+  // header row 1: date, spanning both morning+afternoon columns
+  let theadRow1 = '<tr><th class="row-label" rowspan="2"></th>';
+  days.forEach(dateStr=>{ theadRow1 += `<th colspan="2">${fmtDateHeader(dateStr)}</th>`; });
+  theadRow1 += '</tr>';
+  // header row 2: Morning / Afternoon labels
+  let theadRow2 = '<tr>';
+  halfDays.forEach(hd=>{ theadRow2 += `<th>${t(hd.part)}</th>`; });
+  theadRow2 += '</tr>';
+  const thead = `<thead>${theadRow1}${theadRow2}</thead>`;
+
+  const rows = [
+    {label:t('rowWeather'), get:(idxs)=> {
+      const code = aggDominantWeatherCode(idxs, h.weather_code);
+      return icon(weatherIconType(code, 1), 20);
+    }, isIcon:true},
+    {label:t('rowTemp'), get:(idxs)=> roundOr(aggAvg(idxs, h.temperature_2m), '°')},
+    {label:t('rowPrecipitation'), get:(idxs)=> numOr(aggSum(idxs, h.precipitation), 1, ' mm')},
+    {label:t('rowSunshine'), get:(idxs)=> { const s = aggSum(idxs, h.sunshine_duration); return s===null ? '–' : Math.round(s/60)+' min'; }},
+    {label:t('rowCloudCover'), get:(idxs)=> cloudValue(aggAvg(idxs, h.cloud_cover))},
+    {label:t('rowHumidity'), get:(idxs)=> roundOr(aggAvg(idxs, h.relative_humidity_2m), '%')},
+    {label:t('rowWindSpeedDir'), get:(idxs)=> { const w = aggWindVector(idxs, h.wind_speed_10m, h.wind_direction_10m); return `${windValue(w.speed)} ${windDirection(w.dir)}`; }},
+    {label:t('rowWindGusts'), get:(idxs)=> windValue(aggMax(idxs, h.wind_gusts_10m))},
+    {label:t('rowThunderstorm'), get:(idxs)=> thunderstormBadge(aggMax(idxs, h.cape))},
+  ];
+
+  let tbody = '<tbody>';
+  rows.forEach(row=>{
+    tbody += '<tr>';
+    tbody += `<td class="row-label">${row.label}</td>`;
+    halfDays.forEach(hd=>{
+      const cell = row.get(hd.idxs);
+      tbody += `<td class="${row.isIcon?'icon-cell':''}">${cell}</td>`;
+    });
+    tbody += '</tr>';
+  });
+  tbody += '</tbody>';
+
+  tableEl.innerHTML = thead + tbody;
 }
 
 // try device GPS first (most accurate), fall back to IP-based geolocation,
