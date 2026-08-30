@@ -178,6 +178,11 @@
     outline:none;
   }
   .day-picker-row input[type="date"]:focus{border-color:var(--azure);}
+  .day-selected-label{
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--azure);
+  }
 
   .dot-none{color:#B7C4CC;font-size:16px;}
 
@@ -270,7 +275,14 @@
     text-transform:none;
     color:var(--azure);
     font-weight:400;
+    background:none;
+    border:none;
+    padding:2px 4px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
   }
+  .swipe-hint:hover{text-decoration:underline;}
+  .swipe-hint:active{color:#2679AD;}
 
   .table-scroll{
     width:100%;
@@ -410,7 +422,7 @@
   </div>
 
   <div class="card" id="minutelyCard">
-    <div class="section-title"><span id="minutelyTitleText">15-minute forecast — next 6h</span><span class="swipe-hint" id="swipeHint2">swipe →</span></div>
+    <div class="section-title"><span id="minutelyTitleText">15-minute forecast — next 6h</span><button type="button" class="swipe-hint" id="swipeHint2">swipe →</button></div>
     <div class="section-sub" id="minutelySubText">Nowcast data updates every hour</div>
     <div class="table-scroll">
       <table class="data-table" id="minutelyTable"></table>
@@ -418,7 +430,7 @@
   </div>
 
   <div class="card" id="hourlyCard">
-    <div class="section-title"><span id="hourlyTitleText">Hourly forecast — next 24h</span><span class="swipe-hint" id="swipeHint1">swipe →</span></div>
+    <div class="section-title"><span id="hourlyTitleText">Hourly forecast — next 24h</span><button type="button" class="swipe-hint" id="swipeHint1">swipe →</button></div>
     <div class="section-sub" id="hourlySubText">AROME-HD model data updates every 3 hours</div>
     <div class="table-scroll">
       <table class="data-table" id="hourlyTable"></table>
@@ -426,7 +438,7 @@
   </div>
 
   <div class="card" id="ecmwfCard">
-    <div class="section-title"><span id="ecmwfTitleText">15-day forecast</span><span class="swipe-hint" id="swipeHint3">swipe →</span></div>
+    <div class="section-title"><span id="ecmwfTitleText">15-day forecast</span><button type="button" class="swipe-hint" id="swipeHint3">swipe →</button></div>
     <div class="section-sub" id="ecmwfSubText">ECMWF IFS HRES model data updates every 6 hours</div>
     <div class="table-scroll">
       <table class="data-table" id="ecmwfTable"></table>
@@ -434,11 +446,12 @@
   </div>
 
   <div class="card" id="dayCard">
-    <div class="section-title"><span id="dayTitleText">Selected day forecast</span><span class="swipe-hint" id="swipeHint4">swipe →</span></div>
+    <div class="section-title"><span id="dayTitleText">Selected day forecast</span><button type="button" class="swipe-hint" id="swipeHint4">swipe →</button></div>
     <div class="section-sub" id="daySubText">ECMWF IFS HRES model data — hourly detail for one day</div>
     <div class="day-picker-row">
       <label for="dayPicker" id="dayPickerLabel">Choose a date:</label>
       <input type="date" id="dayPicker">
+      <span id="daySelectedLabel" class="day-selected-label"></span>
     </div>
     <div class="table-scroll">
       <table class="data-table" id="dayTable"></table>
@@ -466,7 +479,7 @@ const BLENDED_MINUTELY_FIELDS = ['lightning_potential','weather_code','is_day','
 
 // ECMWF IFS HRES (0.25° / ~25 km, open-data, 15-day horizon, updates every 6h)
 function buildEcmwfUrl(){
-  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=weather_code,temperature_2m,precipitation,direct_radiation,cloud_cover,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cape,is_day&models=ecmwf_ifs&timezone=Europe%2FParis&forecast_days=15`;
+  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=weather_code,temperature_2m,precipitation,cloud_cover,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cape,is_day&models=ecmwf_ifs&timezone=Europe%2FParis&forecast_days=15`;
 }
 
 let LANG = localStorage.getItem('weatherLang') || 'en';
@@ -519,6 +532,7 @@ const I18N = {
     dayTitle: 'Selected day forecast',
     daySub: 'ECMWF IFS HRES model data — hourly detail for one day',
     dayPickerLabel: 'Choose a date:',
+    dayUnavailable: 'No forecast data available for this date. Please pick a date within the next 15 days.',
     spatialResolution: '~1.5 km resolution',
     localeCode: 'en-US',
   },
@@ -569,6 +583,7 @@ const I18N = {
     dayTitle: 'Prévisions du jour sélectionné',
     daySub: 'Données du modèle ECMWF IFS HRES — détail horaire pour un jour',
     dayPickerLabel: 'Choisissez une date :',
+    dayUnavailable: 'Aucune donnée de prévision pour cette date. Veuillez choisir une date dans les 15 prochains jours.',
     spatialResolution: 'résolution ~1,5 km',
     localeCode: 'fr-FR',
   },
@@ -621,6 +636,7 @@ const I18N = {
     dayTitle: 'Voorspelling voor gekozen dag',
     daySub: 'ECMWF IFS HRES modelgegevens — uurlijks detail voor één dag',
     dayPickerLabel: 'Kies een datum:',
+    dayUnavailable: 'Geen voorspellingsgegevens voor deze datum. Kies een datum binnen de komende 15 dagen.',
     spatialResolution: '~1,5 km resolutie',
     localeCode: 'nl-BE',
   },
@@ -671,6 +687,7 @@ const I18N = {
     dayTitle: 'Predpoveď pre vybraný deň',
     daySub: 'Údaje modelu ECMWF IFS HRES — hodinové detaily pre jeden deň',
     dayPickerLabel: 'Vyberte dátum:',
+    dayUnavailable: 'Pre tento dátum nie sú k dispozícii žiadne predpovedné údaje. Vyberte dátum v rámci nasledujúcich 15 dní.',
     spatialResolution: 'rozlíšenie ~1,5 km',
     localeCode: 'sk-SK',
   }
@@ -1020,6 +1037,7 @@ function applyStaticTranslations(){
   document.getElementById('dayTitleText').textContent = t('dayTitle');
   document.getElementById('daySubText').textContent = `${t('daySub')} · ${t('ecmwfResolution')}`;
   document.getElementById('dayPickerLabel').textContent = t('dayPickerLabel');
+  updateDaySelectedLabel();
   document.getElementById('swipeHint1').textContent = t('swipeHint');
   document.getElementById('swipeHint2').textContent = t('swipeHint');
   document.getElementById('swipeHint3').textContent = t('swipeHint');
@@ -1374,15 +1392,19 @@ function buildMinutelyTable(m, now){
 // when summarizing several hours into one morning/afternoon cell
 const ICON_SEVERITY = {sun:0, moon:0, 'sun-cloud':1, 'moon-cloud':1, cloud:2, fog:2, rain:4, snow:4, storm:6};
 
-// estimate sunshine duration ourselves from direct_radiation (native to IFS
-// HRES 9km), using the WMO standard threshold of 120 W/m² direct irradiance —
-// Open-Meteo's own precomputed sunshine_duration field for this model turned
-// out to be unreliable at longer lead times (always maxed out regardless of
-// actual cloud cover), so we derive it from the raw radiation ourselves
-const SUNSHINE_THRESHOLD_WM2 = 120;
-function sunshineMinutesForHour(directRadiation){
-  if(directRadiation === null || directRadiation === undefined) return null;
-  return directRadiation >= SUNSHINE_THRESHOLD_WM2 ? 60 : 0;
+// Both Open-Meteo's precomputed sunshine_duration AND the raw direct_radiation
+// field turned out to be unreliable for this model at longer lead times
+// (interpolated data beyond IFS HRES's native ~90h hourly window doesn't
+// vary sensibly — it stays maxed-out regardless of actual cloud cover).
+// Rather than keep chasing an unreliable radiation-derived source, we
+// estimate sunshine directly from cloud cover (the same value already shown
+// in the Cloud cover row), which guarantees the two rows never contradict
+// each other — e.g. 85% cloud cover can no longer show 100% sunshine.
+function sunshineMinutesFromCloud(cloudCoverPct, isDay){
+  if(cloudCoverPct === null || cloudCoverPct === undefined) return null;
+  if(isDay === 0) return 0; // no sunshine possible at night, however clear the sky
+  const clearFraction = Math.max(0, Math.min(1, 1 - cloudCoverPct/100));
+  return clearFraction * 60; // per-hour estimate, in minutes
 }
 function fmtDuration(totalMin){
   if(totalMin === null || totalMin === undefined) return '–';
@@ -1496,9 +1518,9 @@ function buildEcmwfTable(ecmwf, now){
     {label:t('rowTemp'), get:(idxs)=> roundOr(aggAvg(idxs, h.temperature_2m), '°')},
     {label:t('rowPrecipitation'), get:(idxs)=> numOr(aggSum(idxs, h.precipitation), 1, ' mm')},
     {label:t('rowSunshine'), get:(idxs)=> {
-      const vals = idxs.map(i=> sunshineMinutesForHour(h.direct_radiation[i])).filter(v=>v!==null);
+      const vals = idxs.map(i=> sunshineMinutesFromCloud(h.cloud_cover[i], h.is_day[i])).filter(v=>v!==null);
       if(!vals.length) return '–';
-      return fmtDuration(vals.reduce((a,b)=>a+b,0));
+      return fmtDuration(Math.round(vals.reduce((a,b)=>a+b,0)));
     }},
     {label:t('rowCloudCover'), get:(idxs)=> cloudValue(aggAvg(idxs, h.cloud_cover))},
     {label:t('rowHumidity'), get:(idxs)=> roundOr(aggAvg(idxs, h.relative_humidity_2m), '%')},
@@ -1526,7 +1548,7 @@ function buildDayTable(ecmwf, dateStr){
   const tableEl = document.getElementById('dayTable');
   if(!tableEl) return;
   if(!ecmwf || !ecmwf.hourly || !dateStr){
-    tableEl.innerHTML = `<tbody><tr><td>${t('minutelyUnavailable')}</td></tr></tbody>`;
+    tableEl.innerHTML = `<tbody><tr><td>${t('dayUnavailable')}</td></tr></tbody>`;
     return;
   }
   const h = ecmwf.hourly;
@@ -1534,7 +1556,7 @@ function buildDayTable(ecmwf, dateStr){
   h.time.forEach((iso,i)=>{ if(iso.slice(0,10) === dateStr) idxs.push(i); });
 
   if(!idxs.length){
-    tableEl.innerHTML = `<tbody><tr><td>${t('minutelyUnavailable')}</td></tr></tbody>`;
+    tableEl.innerHTML = `<tbody><tr><td>${t('dayUnavailable')}</td></tr></tbody>`;
     return;
   }
 
@@ -1546,7 +1568,10 @@ function buildDayTable(ecmwf, dateStr){
     {label:t('rowWeather'), get:(i)=> icon(weatherIconType(h.weather_code[i], h.is_day[i]), 20), isIcon:true},
     {label:t('rowTemp'), get:(i)=> roundOr(h.temperature_2m[i], '°')},
     {label:t('rowPrecipitation'), get:(i)=> numOr(h.precipitation[i], 1, ' mm')},
-    {label:t('rowSunshine'), get:(i)=> fmtDuration(sunshineMinutesForHour(h.direct_radiation[i]))},
+    {label:t('rowSunshine'), get:(i)=> {
+      const mins = sunshineMinutesFromCloud(h.cloud_cover[i], h.is_day[i]);
+      return mins===null ? '–' : fmtDuration(Math.round(mins));
+    }},
     {label:t('rowCloudCover'), get:(i)=> cloudValue(h.cloud_cover[i])},
     {label:t('rowHumidity'), get:(i)=> roundOr(h.relative_humidity_2m[i], '%')},
     {label:t('rowWindSpeedDir'), get:(i)=> `${windValue(h.wind_speed_10m[i])} ${windDirection(h.wind_direction_10m[i])}`},
@@ -1569,20 +1594,45 @@ function buildDayTable(ecmwf, dateStr){
   tableEl.innerHTML = thead + tbody;
 }
 
+function updateDaySelectedLabel(){
+  const picker = document.getElementById('dayPicker');
+  const labelEl = document.getElementById('daySelectedLabel');
+  if(!picker || !labelEl || !picker.value) return;
+  const d = new Date(picker.value+'T12:00:00');
+  labelEl.textContent = d.toLocaleDateString(t('localeCode'), {weekday:'long', day:'numeric', month:'long'});
+}
+
 function setupDayPicker(now){
   const picker = document.getElementById('dayPicker');
   if(!picker) return;
   const todayStr = now.toLocaleDateString('en-CA');
   const maxDate = new Date(now); maxDate.setDate(maxDate.getDate()+14);
+  const maxStr = maxDate.toLocaleDateString('en-CA');
   const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate()+1);
   picker.min = todayStr;
-  picker.max = maxDate.toLocaleDateString('en-CA');
+  picker.max = maxStr;
   if(!picker.value) picker.value = tomorrow.toLocaleDateString('en-CA');
+  updateDaySelectedLabel();
   picker.addEventListener('change', ()=>{
+    // iOS Safari's native date-picker wheel doesn't always strictly enforce
+    // min/max, so clamp defensively here rather than trust the browser
+    if(picker.value < todayStr) picker.value = todayStr;
+    if(picker.value > maxStr) picker.value = maxStr;
+    updateDaySelectedLabel();
     if(cachedData) buildDayTable(cachedData.ecmwf, picker.value);
   });
 }
 setupDayPicker(new Date());
+
+// clicking "swipe →" scrolls that table's horizontal container by one
+// full viewport-width step, so it's a usable control, not just a hint
+document.querySelectorAll('.swipe-hint').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const card = btn.closest('.card');
+    const scrollEl = card ? card.querySelector('.table-scroll') : null;
+    if(scrollEl) scrollEl.scrollBy({left: scrollEl.clientWidth, behavior:'smooth'});
+  });
+});
 
 // try device GPS first (most accurate), fall back to IP-based geolocation,
 // and finally fall back to the hardcoded default coordinates if both fail
