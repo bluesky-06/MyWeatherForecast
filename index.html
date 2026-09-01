@@ -568,18 +568,24 @@
 
 <script>
 function buildApiUrl(){
-  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,weather_code,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,uv_index,cape&models=meteofrance_arome_france_hd&minutely_15=temperature_2m,precipitation,rain,cape,lightning_potential,wind_speed_10m,wind_gusts_10m,wind_direction_10m&daily=sunrise,sunset,precipitation_sum&timezone=Europe%2FParis&forecast_days=2`;
+  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,weather_code,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,uv_index,cape,soil_temperature_0cm&models=meteofrance_arome_france_hd&minutely_15=temperature_2m,precipitation,rain,cape,lightning_potential,wind_speed_10m,wind_gusts_10m,wind_direction_10m&daily=sunrise,sunset,precipitation_sum&timezone=Europe%2FParis&forecast_days=2`;
 }
 // AROME-HD doesn't output these — pulled instead from Open-Meteo's default best-match blend
 function buildBlendUrl(){
-  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=precipitation_probability,showers,cloud_cover,uv_index,weather_code,is_day,wind_direction_10m&minutely_15=lightning_potential,weather_code,is_day,wind_direction_10m&timezone=Europe%2FParis&forecast_days=2`;
+  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=precipitation_probability,showers,cloud_cover,uv_index,weather_code,is_day,wind_direction_10m,soil_temperature_0cm&minutely_15=lightning_potential,weather_code,is_day,wind_direction_10m&timezone=Europe%2FParis&forecast_days=2`;
 }
-const BLENDED_FIELDS = ['precipitation_probability','showers','cloud_cover','uv_index','weather_code','is_day','wind_direction_10m'];
+const BLENDED_FIELDS = ['precipitation_probability','showers','cloud_cover','uv_index','weather_code','is_day','wind_direction_10m','soil_temperature_0cm'];
 const BLENDED_MINUTELY_FIELDS = ['lightning_potential','weather_code','is_day','wind_direction_10m'];
 
 // ECMWF IFS HRES (0.25° / ~25 km, open-data, 15-day horizon, updates every 6h)
 function buildEcmwfUrl(){
-  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=weather_code,temperature_2m,precipitation,cloud_cover,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cape,is_day&models=ecmwf_ifs&timezone=Europe%2FParis&forecast_days=15`;
+  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=weather_code,temperature_2m,precipitation,cloud_cover,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cape,is_day,soil_temperature_0cm&models=ecmwf_ifs&timezone=Europe%2FParis&forecast_days=15`;
+}
+
+// Open-Meteo's separate Air Quality API (CAMS-based) — capped at 7 days,
+// so tables reaching further than that will show a dash for those cells
+function buildAirQualityUrl(){
+  return `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${LAT}&longitude=${LON}&hourly=european_aqi&timezone=Europe%2FParis&forecast_days=7`;
 }
 
 let LANG = localStorage.getItem('weatherLang') || 'en';
@@ -638,6 +644,9 @@ const I18N = {
     installStepsIOS: 'In Safari, tap the Share icon (square with an arrow ↑), then tap "Add to Home Screen".',
     installStepsGeneric: 'Open your browser\u2019s menu and choose "Add to Home Screen" or "Install app".',
     noAddressResults: 'No matches found',
+    rowGroundTemp: 'Ground temp',
+    rowAirQuality: 'Air quality',
+    aqiGood: 'Good', aqiFair: 'Fair', aqiModerate: 'Moderate', aqiPoor: 'Poor', aqiVeryPoor: 'Very poor', aqiExtremelyPoor: 'Extremely poor',
     spatialResolution: '~1.5 km resolution',
     localeCode: 'en-US',
   },
@@ -694,6 +703,9 @@ const I18N = {
     installStepsIOS: 'Dans Safari, appuyez sur l\u2019icône Partager (carré avec une flèche ↑), puis sur « Sur l\u2019écran d\u2019accueil ».',
     installStepsGeneric: 'Ouvrez le menu de votre navigateur et choisissez « Ajouter à l\u2019écran d\u2019accueil » ou « Installer l\u2019application ».',
     noAddressResults: 'Aucun résultat',
+    rowGroundTemp: 'Temp. au sol',
+    rowAirQuality: 'Qualité de l\u2019air',
+    aqiGood: 'Bon', aqiFair: 'Moyen', aqiModerate: 'Dégradé', aqiPoor: 'Mauvais', aqiVeryPoor: 'Très mauvais', aqiExtremelyPoor: 'Extrêmement mauvais',
     spatialResolution: 'résolution ~1,5 km',
     localeCode: 'fr-FR',
   },
@@ -752,6 +764,9 @@ const I18N = {
     installStepsIOS: 'Tik in Safari op het deelicoon (vierkant met pijl ↑), en kies dan "Zet op beginscherm".',
     installStepsGeneric: 'Open het menu van je browser en kies "Toevoegen aan beginscherm" of "App installeren".',
     noAddressResults: 'Geen resultaten gevonden',
+    rowGroundTemp: 'Bodemtemp.',
+    rowAirQuality: 'Luchtkwaliteit',
+    aqiGood: 'Goed', aqiFair: 'Matig', aqiModerate: 'Onvoldoende', aqiPoor: 'Slecht', aqiVeryPoor: 'Zeer slecht', aqiExtremelyPoor: 'Extreem slecht',
     spatialResolution: '~1,5 km resolutie',
     localeCode: 'nl-BE',
   },
@@ -808,6 +823,9 @@ const I18N = {
     installStepsIOS: 'V Safari ťuknite na ikonu Zdieľať (štvorec so šípkou ↑) a potom na "Pridať na plochu".',
     installStepsGeneric: 'Otvorte ponuku prehliadača a vyberte "Pridať na plochu" alebo "Inštalovať aplikáciu".',
     noAddressResults: 'Žiadne výsledky',
+    rowGroundTemp: 'Teplota pôdy',
+    rowAirQuality: 'Kvalita ovzdušia',
+    aqiGood: 'Dobrá', aqiFair: 'Priemerná', aqiModerate: 'Zhoršená', aqiPoor: 'Zlá', aqiVeryPoor: 'Veľmi zlá', aqiExtremelyPoor: 'Extrémne zlá',
     spatialResolution: 'rozlíšenie ~1,5 km',
     localeCode: 'sk-SK',
   }
@@ -963,6 +981,19 @@ function thunderstormBadge(v){
   else if(v < 2500){ color='#DB6A3B'; label=t('thunderRisk'); }
   else { color='#C0392B'; label=t('thunderHighRisk'); }
   return `<span class="badge" style="background:${color};" title="CAPE ${Math.round(v)} J/kg">${label}</span>`;
+}
+
+// European Air Quality Index (EEA six-band scale)
+function airQualityBadge(v){
+  if(v === null || v === undefined || Number.isNaN(v)) return '–';
+  let color, label;
+  if(v <= 20){ color='#5FA777'; label=t('aqiGood'); }
+  else if(v <= 40){ color='#A8C24C'; label=t('aqiFair'); }
+  else if(v <= 60){ color='#E0A233'; label=t('aqiModerate'); }
+  else if(v <= 80){ color='#DB6A3B'; label=t('aqiPoor'); }
+  else if(v <= 100){ color='#9B4F96'; label=t('aqiVeryPoor'); }
+  else { color='#7A1F3D'; label=t('aqiExtremelyPoor'); }
+  return `<span class="badge" style="background:${color};" title="European AQI ${Math.round(v)}">${label}</span>`;
 }
 
 
@@ -1416,10 +1447,11 @@ let cachedData = null;
 
 async function load(){
   try{
-    const [mainRes, blendRes, ecmwfRes] = await Promise.all([
+    const [mainRes, blendRes, ecmwfRes, aqiRes] = await Promise.all([
       fetch(buildApiUrl()),
       fetch(buildBlendUrl()).catch(()=>null), // blend is a nice-to-have, don't fail the page if it errors
-      fetch(buildEcmwfUrl()).catch(()=>null)  // 15-day ECMWF table is also a nice-to-have
+      fetch(buildEcmwfUrl()).catch(()=>null), // 15-day ECMWF table is also a nice-to-have
+      fetch(buildAirQualityUrl()).catch(()=>null) // ditto for air quality
     ]);
     if(!mainRes.ok) throw new Error("HTTP "+mainRes.status);
     const mainData = await mainRes.json();
@@ -1431,14 +1463,34 @@ async function load(){
     if(ecmwfRes && ecmwfRes.ok){
       try{ ecmwfData = await ecmwfRes.json(); }catch(e){ ecmwfData = null; }
     }
+    let aqiData = null;
+    if(aqiRes && aqiRes.ok){
+      try{ aqiData = await aqiRes.json(); }catch(e){ aqiData = null; }
+    }
     const data = mergeData(mainData, blendData);
     data.ecmwf = ecmwfData;
+    data.aqiMap = buildAqiMap(aqiData);
     lastUpdated = new Date();
     cachedData = data;
     render(data);
   }catch(err){
     document.getElementById('nowCard').innerHTML = `<div class="state-msg">${t('couldntLoadForecast', err.message)}</div>`;
   }
+}
+
+// looks up European AQI by exact hour timestamp (both this and the weather
+// APIs are requested with the same timezone, so the ISO strings line up)
+function buildAqiMap(aqiData){
+  const map = new Map();
+  if(aqiData && aqiData.hourly && aqiData.hourly.time){
+    aqiData.hourly.time.forEach((t,i)=> map.set(t, aqiData.hourly.european_aqi[i]));
+  }
+  return map;
+}
+function aqiAt(aqiMap, iso){
+  if(!aqiMap) return null;
+  const v = aqiMap.get(iso);
+  return v===undefined ? null : v;
 }
 
 // re-render using the already-fetched data, purely to move the "Now" column/
@@ -1540,13 +1592,13 @@ function render(data){
     </div>
   `;
 
-  buildHourlyTable(h, curIdx);
+  buildHourlyTable(h, curIdx, data.aqiMap);
   buildMinutelyTable(data.minutely_15, now);
-  buildEcmwfTable(data.ecmwf, now);
-  buildDayTable(data.ecmwf, document.getElementById('dayPicker').value);
+  buildEcmwfTable(data.ecmwf, now, data.aqiMap);
+  buildDayTable(data.ecmwf, document.getElementById('dayPicker').value, data.aqiMap);
 }
 
-function buildHourlyTable(h, curIdx){
+function buildHourlyTable(h, curIdx, aqiMap){
   const n = 24;
   const idxs = Array.from({length:n}, (_,i)=>curIdx+i).filter(i=>i<h.time.length);
 
@@ -1554,6 +1606,7 @@ function buildHourlyTable(h, curIdx){
     {label:t('rowTime'), get:(i,n0)=> n0===0 ? t('now') : fmtHourShort(h.time[i])},
     {label:t('rowWeather'), get:(i)=> icon(weatherIconType(h.weather_code[i], h.is_day[i]), 22), isIcon:true},
     {label:t('rowTemp'), get:(i)=> tempCell(h.temperature_2m[i])},
+    {label:t('rowGroundTemp'), get:(i)=> tempCell(h.soil_temperature_0cm[i])},
     {label:t('rowPrecipProb'), get:(i)=> roundOr(h.precipitation_probability[i], '%'),
       cellClass:(i)=> (h.precipitation_probability[i]!==null && h.precipitation_probability[i]>50) ? 'high-pop' : ''},
     {label:t('rowPrecipitation'), get:(i)=> numOr(h.precipitation[i], 1, ' mm')},
@@ -1564,6 +1617,7 @@ function buildHourlyTable(h, curIdx){
     {label:t('rowWindDir'), get:(i)=> windDirection(h.wind_direction_10m[i])},
     {label:t('rowUvIndex'), get:(i)=> uvValue(h.uv_index[i])},
     {label:t('rowThunderstorm'), get:(i)=> thunderstormBadge(h.cape[i])},
+    {label:t('rowAirQuality'), get:(i)=> airQualityBadge(aqiAt(aqiMap, h.time[i]))},
   ];
 
   let thead = '<thead><tr><th class="row-label"></th>';
@@ -1706,7 +1760,7 @@ function fmtDateHeader(dateStr){
   return s.replace(/,/g, '').toUpperCase();
 }
 
-function buildEcmwfTable(ecmwf, now){
+function buildEcmwfTable(ecmwf, now, aqiMap){
   const tableEl = document.getElementById('ecmwfTable');
   if(!ecmwf || !ecmwf.hourly){
     tableEl.innerHTML = `<tbody><tr><td>${t('minutelyUnavailable')}</td></tr></tbody>`;
@@ -1756,6 +1810,7 @@ function buildEcmwfTable(ecmwf, now){
       return icon(weatherIconType(code, 1), 20);
     }, isIcon:true},
     {label:t('rowTemp'), get:(idxs)=> tempCell(aggAvg(idxs, h.temperature_2m))},
+    {label:t('rowGroundTemp'), get:(idxs)=> tempCell(aggAvg(idxs, h.soil_temperature_0cm))},
     {label:t('rowPrecipitation'), get:(idxs)=> numOr(aggSum(idxs, h.precipitation), 1, ' mm')},
     {label:t('rowSunshine'), get:(idxs)=> {
       const vals = idxs.map(i=> sunshineMinutesFromCloud(h.cloud_cover[i], h.is_day[i])).filter(v=>v!==null);
@@ -1767,6 +1822,11 @@ function buildEcmwfTable(ecmwf, now){
     {label:t('rowWindSpeedDir'), get:(idxs)=> { const w = aggWindVector(idxs, h.wind_speed_10m, h.wind_direction_10m); return `${windValue(w.speed)} ${windDirection(w.dir)}`; }},
     {label:t('rowWindGusts'), get:(idxs)=> windValue(aggMax(idxs, h.wind_gusts_10m))},
     {label:t('rowThunderstorm'), get:(idxs)=> thunderstormBadge(aggMax(idxs, h.cape))},
+    {label:t('rowAirQuality'), get:(idxs)=> {
+      const vals = idxs.map(i=> aqiAt(aqiMap, h.time[i])).filter(v=>v!==null && v!==undefined);
+      if(!vals.length) return '–';
+      return airQualityBadge(Math.max(...vals));
+    }},
   ];
 
   let tbody = '<tbody>';
@@ -1784,7 +1844,7 @@ function buildEcmwfTable(ecmwf, now){
   tableEl.innerHTML = thead + tbody;
 }
 
-function buildDayTable(ecmwf, dateStr){
+function buildDayTable(ecmwf, dateStr, aqiMap){
   const tableEl = document.getElementById('dayTable');
   if(!tableEl) return;
   if(!ecmwf || !ecmwf.hourly || !dateStr){
@@ -1807,6 +1867,7 @@ function buildDayTable(ecmwf, dateStr){
   const rows = [
     {label:t('rowWeather'), get:(i)=> icon(weatherIconType(h.weather_code[i], h.is_day[i]), 20), isIcon:true},
     {label:t('rowTemp'), get:(i)=> tempCell(h.temperature_2m[i])},
+    {label:t('rowGroundTemp'), get:(i)=> tempCell(h.soil_temperature_0cm[i])},
     {label:t('rowPrecipitation'), get:(i)=> numOr(h.precipitation[i], 1, ' mm')},
     {label:t('rowSunshine'), get:(i)=> {
       const mins = sunshineMinutesFromCloud(h.cloud_cover[i], h.is_day[i]);
@@ -1817,6 +1878,7 @@ function buildDayTable(ecmwf, dateStr){
     {label:t('rowWindSpeedDir'), get:(i)=> `${windValue(h.wind_speed_10m[i])} ${windDirection(h.wind_direction_10m[i])}`},
     {label:t('rowWindGusts'), get:(i)=> windValue(h.wind_gusts_10m[i])},
     {label:t('rowThunderstorm'), get:(i)=> thunderstormBadge(h.cape[i])},
+    {label:t('rowAirQuality'), get:(i)=> airQualityBadge(aqiAt(aqiMap, h.time[i]))},
   ];
 
   let tbody = '<tbody>';
@@ -1871,7 +1933,7 @@ function setupDayPicker(now){
     if(picker.value > maxStr){ picker.value = maxStr; wasClamped = true; }
     if(rangeMsgEl) rangeMsgEl.textContent = wasClamped ? t('dayUnavailable') : '';
     updateDaySelectedLabel();
-    if(cachedData) buildDayTable(cachedData.ecmwf, picker.value);
+    if(cachedData) buildDayTable(cachedData.ecmwf, picker.value, cachedData.aqiMap);
   });
 }
 setupDayPicker(new Date());
