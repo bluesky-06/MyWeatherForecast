@@ -76,6 +76,7 @@
   .address-input{
     flex:1;
     min-width:0;
+    width:100%;
     padding:9px 12px;
     border:1px solid #DCE6EC;
     border-radius:10px;
@@ -86,6 +87,52 @@
     outline:none;
   }
   .address-input:focus{border-color:var(--azure);}
+
+  .address-input-wrap{
+    position:relative;
+    flex:1;
+    min-width:0;
+  }
+  .address-suggestions{
+    position:absolute;
+    left:0;
+    right:0;
+    top:calc(100% + 4px);
+    z-index:20;
+    margin:0;
+    padding:4px;
+    list-style:none;
+    background:var(--card);
+    border:1px solid #DCE6EC;
+    border-radius:12px;
+    box-shadow:0 12px 28px -12px rgba(14,42,71,.28);
+    max-height:260px;
+    overflow-y:auto;
+    text-align:left;
+  }
+  .address-suggestions li{
+    padding:9px 10px;
+    border-radius:8px;
+    font-size:12.5px;
+    line-height:1.35;
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .address-suggestions li:hover,
+  .address-suggestions li.active{
+    background:#EAF4FB;
+  }
+  .address-suggestions li .sugg-secondary{
+    display:block;
+    font-size:11px;
+    color:var(--grey);
+    margin-top:1px;
+  }
+  .address-suggestions li.no-results{
+    color:var(--grey);
+    cursor:default;
+  }
+  .address-suggestions li.no-results:hover{background:none;}
   .address-btn{
     padding:9px 16px;
     border:none;
@@ -444,7 +491,10 @@
       </div>
 
       <form id="addressForm" class="address-form">
-        <input type="text" id="addressInput" class="address-input" placeholder="Enter a postal address…" autocomplete="off">
+        <div class="address-input-wrap">
+          <input type="text" id="addressInput" class="address-input" placeholder="Enter a postal address…" autocomplete="off">
+          <ul id="addressSuggestions" class="address-suggestions" hidden></ul>
+        </div>
         <button type="submit" class="address-btn" id="goBtn">Go</button>
       </form>
       <button type="button" id="locBtn" class="loc-btn">📍 Use my current location</button>
@@ -587,6 +637,7 @@ const I18N = {
     installBtnText: 'Add to Home Screen',
     installStepsIOS: 'In Safari, tap the Share icon (square with an arrow ↑), then tap "Add to Home Screen".',
     installStepsGeneric: 'Open your browser\u2019s menu and choose "Add to Home Screen" or "Install app".',
+    noAddressResults: 'No matches found',
     spatialResolution: '~1.5 km resolution',
     localeCode: 'en-US',
   },
@@ -642,6 +693,7 @@ const I18N = {
     installBtnText: 'Ajouter à l\u2019écran d\u2019accueil',
     installStepsIOS: 'Dans Safari, appuyez sur l\u2019icône Partager (carré avec une flèche ↑), puis sur « Sur l\u2019écran d\u2019accueil ».',
     installStepsGeneric: 'Ouvrez le menu de votre navigateur et choisissez « Ajouter à l\u2019écran d\u2019accueil » ou « Installer l\u2019application ».',
+    noAddressResults: 'Aucun résultat',
     spatialResolution: 'résolution ~1,5 km',
     localeCode: 'fr-FR',
   },
@@ -699,6 +751,7 @@ const I18N = {
     installBtnText: 'Toevoegen aan beginscherm',
     installStepsIOS: 'Tik in Safari op het deelicoon (vierkant met pijl ↑), en kies dan "Zet op beginscherm".',
     installStepsGeneric: 'Open het menu van je browser en kies "Toevoegen aan beginscherm" of "App installeren".',
+    noAddressResults: 'Geen resultaten gevonden',
     spatialResolution: '~1,5 km resolutie',
     localeCode: 'nl-BE',
   },
@@ -754,6 +807,7 @@ const I18N = {
     installBtnText: 'Pridať na plochu',
     installStepsIOS: 'V Safari ťuknite na ikonu Zdieľať (štvorec so šípkou ↑) a potom na "Pridať na plochu".',
     installStepsGeneric: 'Otvorte ponuku prehliadača a vyberte "Pridať na plochu" alebo "Inštalovať aplikáciu".',
+    noAddressResults: 'Žiadne výsledky',
     spatialResolution: 'rozlíšenie ~1,5 km',
     localeCode: 'sk-SK',
   }
@@ -1212,10 +1266,116 @@ async function geocodeAndLoad(query){
   }
 }
 
+// --- address autocomplete dropdown ---
+let suggestDebounceTimer = null;
+let suggestAbortController = null;
+let currentSuggestions = [];
+let activeSuggestionIndex = -1;
+
+function hideSuggestions(){
+  const listEl = document.getElementById('addressSuggestions');
+  listEl.hidden = true;
+  listEl.innerHTML = '';
+  currentSuggestions = [];
+  activeSuggestionIndex = -1;
+}
+
+function renderSuggestions(){
+  const listEl = document.getElementById('addressSuggestions');
+  activeSuggestionIndex = -1;
+  if(!currentSuggestions.length){
+    listEl.innerHTML = `<li class="no-results">${t('noAddressResults')}</li>`;
+    listEl.hidden = false;
+    return;
+  }
+  listEl.innerHTML = currentSuggestions.map((feat,i)=>{
+    const props = feat.properties || {};
+    const full = formatPhotonAddress(props) || props.name || '';
+    const parts = full.split(', ');
+    const main = parts[0] || full;
+    const secondary = parts.slice(1).join(', ');
+    return `<li data-index="${i}">${main}${secondary ? `<span class="sugg-secondary">${secondary}</span>` : ''}</li>`;
+  }).join('');
+  listEl.hidden = false;
+
+  listEl.querySelectorAll('li[data-index]').forEach(li=>{
+    // mousedown (not click) fires before the input's blur event, so the
+    // selection registers before the dropdown gets hidden by blur
+    li.addEventListener('mousedown', (e)=>{
+      e.preventDefault();
+      selectSuggestion(currentSuggestions[parseInt(li.dataset.index, 10)]);
+    });
+  });
+}
+
+async function fetchSuggestions(query){
+  if(!query || query.trim().length < 3){ hideSuggestions(); return; }
+  if(suggestAbortController) suggestAbortController.abort();
+  suggestAbortController = new AbortController();
+  try{
+    const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`, {signal: suggestAbortController.signal});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    currentSuggestions = (data.features || []).slice(0,5);
+    renderSuggestions();
+  }catch(err){
+    if(err.name === 'AbortError') return; // superseded by a newer keystroke
+    currentSuggestions = [];
+    renderSuggestions();
+  }
+}
+
+function selectSuggestion(feat){
+  if(!feat) return;
+  hideSuggestions();
+  document.getElementById('addressInput').value = '';
+  LON = feat.geometry.coordinates[0];
+  LAT = feat.geometry.coordinates[1];
+  document.getElementById('titleLine').textContent = t('titleLoading');
+  Promise.all([ loadAddress(), load() ]);
+}
+
+const addressInputEl = document.getElementById('addressInput');
+addressInputEl.addEventListener('input', ()=>{
+  clearTimeout(suggestDebounceTimer);
+  const query = addressInputEl.value;
+  suggestDebounceTimer = setTimeout(()=> fetchSuggestions(query), 300);
+});
+addressInputEl.addEventListener('keydown', (e)=>{
+  const listEl = document.getElementById('addressSuggestions');
+  if(listEl.hidden || !currentSuggestions.length) return;
+  const items = Array.from(listEl.querySelectorAll('li[data-index]'));
+  if(e.key === 'ArrowDown'){
+    e.preventDefault();
+    activeSuggestionIndex = Math.min(activeSuggestionIndex+1, items.length-1);
+    items.forEach((li,i)=> li.classList.toggle('active', i===activeSuggestionIndex));
+  }else if(e.key === 'ArrowUp'){
+    e.preventDefault();
+    activeSuggestionIndex = Math.max(activeSuggestionIndex-1, 0);
+    items.forEach((li,i)=> li.classList.toggle('active', i===activeSuggestionIndex));
+  }else if(e.key === 'Enter'){
+    if(activeSuggestionIndex >= 0){
+      e.preventDefault();
+      selectSuggestion(currentSuggestions[activeSuggestionIndex]);
+    }
+    // otherwise let the form's normal submit handler run as a fallback
+  }else if(e.key === 'Escape'){
+    hideSuggestions();
+  }
+});
+addressInputEl.addEventListener('blur', ()=>{
+  // slight delay so a suggestion's mousedown can still register first
+  setTimeout(hideSuggestions, 150);
+});
+addressInputEl.addEventListener('focus', ()=>{
+  if(currentSuggestions.length) document.getElementById('addressSuggestions').hidden = false;
+});
+
 document.getElementById('addressForm').addEventListener('submit', (e)=>{
   e.preventDefault();
   const inputEl = document.getElementById('addressInput');
   const query = inputEl.value.trim();
+  hideSuggestions();
   if(query){
     geocodeAndLoad(query);
     inputEl.value = '';
