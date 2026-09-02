@@ -237,6 +237,24 @@
     font-weight:600;
     color:var(--azure);
   }
+  .day-selected-minmax{
+    font-size:11px;
+    font-weight:600;
+    color:var(--grey);
+  }
+  .day-selected-minmax .dmin{color:var(--azure);}
+  .day-selected-minmax .dmax{color:#D46B3C;}
+
+  .date-minmax{
+    display:block;
+    font-size:9.5px;
+    font-weight:600;
+    margin-top:2px;
+    text-transform:none;
+    letter-spacing:0;
+  }
+  .date-minmax .dmin{color:var(--azure);}
+  .date-minmax .dmax{color:#D46B3C;}
 
   .dot-none{color:#B7C4CC;font-size:16px;}
 
@@ -544,6 +562,7 @@
       <label for="dayPicker" id="dayPickerLabel">Choose a date:</label>
       <input type="date" id="dayPicker">
       <span id="daySelectedLabel" class="day-selected-label"></span>
+      <span id="daySelectedMinMax" class="day-selected-minmax"></span>
     </div>
     <p id="dayRangeMsg" class="address-msg error"></p>
     <div class="table-scroll">
@@ -560,7 +579,6 @@
     </div>
 
     <footer>
-      <span id="footnoteText">* Not provided by AROME-HD — sourced from Open-Meteo's default best-match blend.</span><br>
       <span id="dataFromText">Data from</span> <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>
     </footer>
   </div>
@@ -609,7 +627,6 @@ const I18N = {
     hourlySub: 'AROME-HD model data updates every 3 hours',
     minutelyTitle: '15-minute forecast — next 6h',
     minutelySub: 'Nowcast data updates every hour',
-    footnote: "* Not provided by AROME-HD — sourced from Open-Meteo's default best-match blend.",
     dataFrom: 'Data from',
     refreshedAt: (t)=> `Data refreshed at ${t} · auto-refreshes hourly`,
     humidityWind: (h,w)=> `Humidity ${h}% · Wind ${w} km/h`,
@@ -621,10 +638,10 @@ const I18N = {
     lightningLow: 'Low', lightningModerate: 'Moderate', lightningHigh: 'High', lightningExtreme: 'Extreme',
     thunderUnlikely: 'Unlikely', thunderPossible: 'Possible', thunderRisk: 'Risk', thunderHighRisk: 'High risk',
     minutelyUnavailable: '15-minute data not available',
-    rowTime: 'Time', rowWeather: 'Weather*', rowTemp: 'Temp', rowPrecipProb: 'Precip. prob.*',
-    rowPrecipitation: 'Precipitation', rowCloudCover: 'Cloud cover*', rowHumidity: 'Humidity',
+    rowTime: 'Time', rowWeather: 'Weather', rowTemp: 'Temperature 2m', rowPrecipProb: 'Precip. prob.',
+    rowPrecipitation: 'Precipitation', rowCloudCover: 'Cloud cover', rowHumidity: 'Humidity',
     rowWindSpeed: 'Wind speed', rowWindGusts: 'Wind gusts', rowWindDir: 'Wind dir.',
-    rowUvIndex: 'UV index*', rowThunderstorm: 'Thunderstorm', rowLightning: 'Lightning*',
+    rowUvIndex: 'UV index', rowThunderstorm: 'Thunderstorm', rowLightning: 'Lightning',
     rowTotalPrecip: 'Total precipitation', rowSunshine: 'Sunshine duration', rowWindSpeedDir: 'Wind', rowCape: 'CAPE',
     morning: 'Morning', afternoon: 'Afternoon',
     now: 'Now',
@@ -668,7 +685,6 @@ const I18N = {
     hourlySub: 'Les données du modèle AROME-HD sont mises à jour toutes les 3 heures',
     minutelyTitle: 'Prévisions 15 minutes — 6 prochaines heures',
     minutelySub: 'Les données de nowcasting sont mises à jour toutes les heures',
-    footnote: "* Non fourni par AROME-HD — provient du modèle par défaut d'Open-Meteo (best-match).",
     dataFrom: 'Données de',
     refreshedAt: (t)=> `Données actualisées à ${t} · actualisation automatique toutes les heures`,
     humidityWind: (h,w)=> `Humidité ${h}% · Vent ${w} km/h`,
@@ -680,10 +696,10 @@ const I18N = {
     lightningLow: 'Faible', lightningModerate: 'Modéré', lightningHigh: 'Élevé', lightningExtreme: 'Extrême',
     thunderUnlikely: 'Improbable', thunderPossible: 'Possible', thunderRisk: 'Risque', thunderHighRisk: 'Risque élevé',
     minutelyUnavailable: 'Données 15 minutes indisponibles',
-    rowTime: 'Heure', rowWeather: 'Météo*', rowTemp: 'Temp.', rowPrecipProb: 'Prob. précip.*',
-    rowPrecipitation: 'Précipitations', rowCloudCover: 'Couverture nuageuse*', rowHumidity: 'Humidité',
+    rowTime: 'Heure', rowWeather: 'Météo', rowTemp: 'Température 2m', rowPrecipProb: 'Prob. précip.',
+    rowPrecipitation: 'Précipitations', rowCloudCover: 'Couverture nuageuse', rowHumidity: 'Humidité',
     rowWindSpeed: 'Vitesse du vent', rowWindGusts: 'Rafales', rowWindDir: 'Direction du vent',
-    rowUvIndex: 'Indice UV*', rowThunderstorm: 'Orage', rowLightning: 'Foudre*',
+    rowUvIndex: 'Indice UV', rowThunderstorm: 'Orage', rowLightning: 'Foudre',
     rowTotalPrecip: 'Précipitations totales', rowSunshine: 'Durée d\u2019ensoleillement', rowWindSpeedDir: 'Vent', rowCape: 'CAPE',
     morning: 'Matin', afternoon: 'Après-midi',
     now: 'Maint.',
@@ -729,7 +745,6 @@ const I18N = {
     hourlySub: 'AROME-HD modelgegevens worden om de 3 uur bijgewerkt',
     minutelyTitle: '15-minutenvoorspelling — komende 6 u',
     minutelySub: 'Nowcastgegevens worden elk uur bijgewerkt',
-    footnote: "* Niet geleverd door AROME-HD — afkomstig van Open-Meteo's standaard best-match model.",
     dataFrom: 'Gegevens van',
     refreshedAt: (t)=> `Gegevens bijgewerkt om ${t} · automatische update elk uur`,
     humidityWind: (h,w)=> `Vochtigheid ${h}% · Wind ${w} km/h`,
@@ -741,10 +756,10 @@ const I18N = {
     lightningLow: 'Laag', lightningModerate: 'Matig', lightningHigh: 'Hoog', lightningExtreme: 'Extreem',
     thunderUnlikely: 'Onwaarschijnlijk', thunderPossible: 'Mogelijk', thunderRisk: 'Risico', thunderHighRisk: 'Hoog risico',
     minutelyUnavailable: '15-minutengegevens niet beschikbaar',
-    rowTime: 'Tijd', rowWeather: 'Weer*', rowTemp: 'Temp.', rowPrecipProb: 'Neerslagkans*',
-    rowPrecipitation: 'Neerslag', rowCloudCover: 'Bewolking*', rowHumidity: 'Vochtigheid',
+    rowTime: 'Tijd', rowWeather: 'Weer', rowTemp: 'Temperatuur 2m', rowPrecipProb: 'Neerslagkans',
+    rowPrecipitation: 'Neerslag', rowCloudCover: 'Bewolking', rowHumidity: 'Vochtigheid',
     rowWindSpeed: 'Windsnelheid', rowWindGusts: 'Windstoten', rowWindDir: 'Windrichting',
-    rowUvIndex: 'UV-index*', rowThunderstorm: 'Onweer', rowLightning: 'Bliksem*',
+    rowUvIndex: 'UV-index', rowThunderstorm: 'Onweer', rowLightning: 'Bliksem',
     rowTotalPrecip: 'Totale neerslag', rowSunshine: 'Zonneschijnduur', rowWindSpeedDir: 'Wind', rowCape: 'CAPE',
     morning: 'Voormiddag', afternoon: 'Namiddag',
     now: 'Nu',
@@ -788,7 +803,6 @@ const I18N = {
     hourlySub: 'Údaje modelu AROME-HD sa aktualizujú každé 3 hodiny',
     minutelyTitle: '15-minútová predpoveď — nasledujúcich 6 h',
     minutelySub: 'Údaje nowcastingu sa aktualizujú každú hodinu',
-    footnote: "* Neposkytuje AROME-HD — pochádza z predvoleného modelu Open-Meteo (best-match).",
     dataFrom: 'Údaje z',
     refreshedAt: (t)=> `Údaje aktualizované o ${t} · automatická aktualizácia každú hodinu`,
     humidityWind: (h,w)=> `Vlhkosť ${h}% · Vietor ${w} km/h`,
@@ -800,10 +814,10 @@ const I18N = {
     lightningLow: 'Nízke', lightningModerate: 'Stredné', lightningHigh: 'Vysoké', lightningExtreme: 'Extrémne',
     thunderUnlikely: 'Nepravdepodobné', thunderPossible: 'Možné', thunderRisk: 'Riziko', thunderHighRisk: 'Vysoké riziko',
     minutelyUnavailable: '15-minútové údaje nie sú k dispozícii',
-    rowTime: 'Čas', rowWeather: 'Počasie*', rowTemp: 'Teplota', rowPrecipProb: 'Prav. zrážok*',
-    rowPrecipitation: 'Zrážky', rowCloudCover: 'Oblačnosť*', rowHumidity: 'Vlhkosť',
+    rowTime: 'Čas', rowWeather: 'Počasie', rowTemp: 'Teplota 2m', rowPrecipProb: 'Prav. zrážok',
+    rowPrecipitation: 'Zrážky', rowCloudCover: 'Oblačnosť', rowHumidity: 'Vlhkosť',
     rowWindSpeed: 'Rýchlosť vetra', rowWindGusts: 'Nárazy vetra', rowWindDir: 'Smer vetra',
-    rowUvIndex: 'UV index*', rowThunderstorm: 'Búrka', rowLightning: 'Blesk*',
+    rowUvIndex: 'UV index', rowThunderstorm: 'Búrka', rowLightning: 'Blesk',
     rowTotalPrecip: 'Celkové zrážky', rowSunshine: 'Trvanie slnečného svitu', rowWindSpeedDir: 'Vietor', rowCape: 'CAPE',
     morning: 'Ráno', afternoon: 'Popoludní',
     now: 'Teraz',
@@ -1201,7 +1215,6 @@ function applyStaticTranslations(){
   document.getElementById('swipeHint2').textContent = t('swipeHint');
   document.getElementById('swipeHint3').textContent = t('swipeHint');
   document.getElementById('swipeHint4').textContent = t('swipeHint');
-  document.getElementById('footnoteText').textContent = t('footnote');
   document.getElementById('dataFromText').textContent = t('dataFrom');
   const installBtnTextEl = document.getElementById('installBtnText');
   if(installBtnTextEl) installBtnTextEl.textContent = t('installBtnText');
@@ -1573,13 +1586,13 @@ function render(data){
     </div>
 
     <div class="minmax">
-      <div class="max">
-        <div class="val">${maxTemp}</div>
-        <div class="lbl">${t('maxToday')}</div>
-      </div>
       <div class="min">
         <div class="val">${minTemp}</div>
         <div class="lbl">${t('minToday')}</div>
+      </div>
+      <div class="max">
+        <div class="val">${maxTemp}</div>
+        <div class="lbl">${t('maxToday')}</div>
       </div>
     </div>
 
@@ -1760,6 +1773,15 @@ function fmtDateHeader(dateStr){
   return s.replace(/,/g, '').toUpperCase();
 }
 
+// small "min° / max°" label, colored consistently with the title's min/max display
+function minMaxLabel(idxs, tempsArr, cssClass){
+  const vals = idxs.map(i=>tempsArr[i]).filter(v=>v!==null && v!==undefined);
+  if(!vals.length) return '';
+  const mn = Math.round(Math.min(...vals));
+  const mx = Math.round(Math.max(...vals));
+  return `<span class="${cssClass}"><span class="dmin">${mn}°</span> / <span class="dmax">${mx}°</span></span>`;
+}
+
 function buildEcmwfTable(ecmwf, now, aqiMap){
   const tableEl = document.getElementById('ecmwfTable');
   if(!ecmwf || !ecmwf.hourly){
@@ -1796,7 +1818,10 @@ function buildEcmwfTable(ecmwf, now, aqiMap){
 
   // header row 1: date, spanning both morning+afternoon columns
   let theadRow1 = '<tr><th class="row-label" rowspan="2"></th>';
-  days.forEach(dateStr=>{ theadRow1 += `<th colspan="2">${fmtDateHeader(dateStr)}</th>`; });
+  days.forEach(dateStr=>{
+    const mmLabel = minMaxLabel(byDate.get(dateStr), h.temperature_2m, 'date-minmax');
+    theadRow1 += `<th colspan="2">${fmtDateHeader(dateStr)}${mmLabel}</th>`;
+  });
   theadRow1 += '</tr>';
   // header row 2: Morning / Afternoon labels
   let theadRow2 = '<tr>';
@@ -1847,8 +1872,10 @@ function buildEcmwfTable(ecmwf, now, aqiMap){
 function buildDayTable(ecmwf, dateStr, aqiMap){
   const tableEl = document.getElementById('dayTable');
   if(!tableEl) return;
+  const minMaxEl = document.getElementById('daySelectedMinMax');
   if(!ecmwf || !ecmwf.hourly || !dateStr){
     tableEl.innerHTML = `<tbody><tr><td>${t('dayUnavailable')}</td></tr></tbody>`;
+    if(minMaxEl) minMaxEl.innerHTML = '';
     return;
   }
   const h = ecmwf.hourly;
@@ -1857,8 +1884,11 @@ function buildDayTable(ecmwf, dateStr, aqiMap){
 
   if(!idxs.length){
     tableEl.innerHTML = `<tbody><tr><td>${t('dayUnavailable')}</td></tr></tbody>`;
+    if(minMaxEl) minMaxEl.innerHTML = '';
     return;
   }
+
+  if(minMaxEl) minMaxEl.innerHTML = minMaxLabel(idxs, h.temperature_2m, 'day-selected-minmax-inner');
 
   let thead = '<thead><tr><th class="row-label"></th>';
   idxs.forEach(i=>{ thead += `<th>${fmtHourShort(h.time[i])}</th>`; });
