@@ -535,36 +535,6 @@
     line-height:1.5;
   }
 
-  .meteoalarm-banner{padding:16px 18px;}
-  .meteoalarm-heading{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    font-weight:700;
-    font-size:13px;
-    color:var(--ink);
-    margin-bottom:10px;
-  }
-  .meteoalarm-item{
-    display:flex;
-    flex-direction:column;
-    gap:2px;
-    padding:9px 12px;
-    border-radius:8px;
-    margin-bottom:8px;
-    font-size:13px;
-    line-height:1.4;
-  }
-  .meteoalarm-item:last-child{margin-bottom:0;}
-  .meteoalarm-item-title{font-weight:700;}
-  .meteoalarm-item-meta{font-size:12px; opacity:.85;}
-  .meteoalarm-color-yellow{background:#FDF3D0; border-left:4px solid #E8B93E; color:#6b5300;}
-  .meteoalarm-color-orange{background:#FCE3D2; border-left:4px solid #DB6A3B; color:#7a3410;}
-  .meteoalarm-color-red{background:#F8D4D4; border-left:4px solid #C0392B; color:#7a1414;}
-  .meteoalarm-color-green{background:#E3F1E8; border-left:4px solid #5FA777; color:#245c3a;}
-  .meteoalarm-color-fallback{background:#EAF4FB; border-left:4px solid #2F8FCB; color:var(--ink);}
-  .meteoalarm-color-fallback a{color:var(--azure); font-weight:600;}
-
   .badge{
     display:inline-flex;
     align-items:center;
@@ -618,8 +588,6 @@
       <button type="button" id="locBtn" class="loc-btn">📍 Use my current location</button>
       <p id="addressMsg" class="address-msg"></p>
     </header>
-
-    <div class="card meteoalarm-banner" id="meteoAlarmBanner" hidden></div>
 
     <div class="card" id="nowCard">
       <div class="state-msg" id="fetchingMsg">Fetching current conditions…</div>
@@ -797,11 +765,6 @@ const I18N = {
     alertsStatusUnsupported: 'This browser doesn\u2019t support notifications — alerts will show as on-screen popups instead.',
     alertsStatusIOSNotInstalled: '📲 On iPhone, notifications only work once this app is added to your Home Screen (see below) and opened from there — not from a Safari tab.',
     alertsStatusDesktop: 'On this device, alerts appear as an on-screen popup in the corner of the page.',
-    meteoAlarmHeading: (dept)=> `Météo-France Vigilance — ${dept}`,
-    meteoAlarmValidUntil: (date)=> `Valid until ${date}`,
-    meteoAlarmColorYellow: 'Yellow', meteoAlarmColorOrange: 'Orange', meteoAlarmColorRed: 'Red', meteoAlarmColorGreen: 'Green',
-    meteoAlarmFallbackTitle: (dept)=> `Couldn't load live Météo-France Vigilance alerts for ${dept} in this browser.`,
-    meteoAlarmFallbackLink: 'Check the official Vigilance map →',
     noAddressResults: 'No matches found',
     rowGroundTemp: 'Ground temp',
     rowAirQuality: 'Air quality',
@@ -880,11 +843,6 @@ const I18N = {
     alertsStatusUnsupported: 'Ce navigateur ne prend pas en charge les notifications — les alertes s\u2019afficheront sous forme de popup à l\u2019écran.',
     alertsStatusIOSNotInstalled: '📲 Sur iPhone, les notifications ne fonctionnent qu\u2019une fois cette application ajoutée à l\u2019écran d\u2019accueil (voir ci-dessous) et ouverte depuis celui-ci — pas depuis un onglet Safari.',
     alertsStatusDesktop: 'Sur cet appareil, les alertes s\u2019affichent sous forme de popup dans un coin de la page.',
-    meteoAlarmHeading: (dept)=> `Vigilance Météo-France — ${dept}`,
-    meteoAlarmValidUntil: (date)=> `Valable jusqu\u2019au ${date}`,
-    meteoAlarmColorYellow: 'Jaune', meteoAlarmColorOrange: 'Orange', meteoAlarmColorRed: 'Rouge', meteoAlarmColorGreen: 'Vert',
-    meteoAlarmFallbackTitle: (dept)=> `Impossible de charger les alertes Vigilance Météo-France en direct pour ${dept} dans ce navigateur.`,
-    meteoAlarmFallbackLink: 'Consulter la carte de Vigilance officielle →',
     noAddressResults: 'Aucun résultat',
     rowGroundTemp: 'Temp. au sol',
     rowAirQuality: 'Qualité de l\u2019air',
@@ -965,11 +923,6 @@ const I18N = {
     alertsStatusUnsupported: 'Deze browser ondersteunt geen meldingen — waarschuwingen worden als pop-up op het scherm getoond.',
     alertsStatusIOSNotInstalled: '📲 Op iPhone werken meldingen alleen als deze app aan je beginscherm is toegevoegd (zie hieronder) en van daaruit is geopend — niet vanuit een Safari-tabblad.',
     alertsStatusDesktop: 'Op dit apparaat verschijnen waarschuwingen als pop-up in een hoek van de pagina.',
-    meteoAlarmHeading: (dept)=> `Météo-France Vigilance — ${dept}`,
-    meteoAlarmValidUntil: (date)=> `Geldig tot ${date}`,
-    meteoAlarmColorYellow: 'Geel', meteoAlarmColorOrange: 'Oranje', meteoAlarmColorRed: 'Rood', meteoAlarmColorGreen: 'Groen',
-    meteoAlarmFallbackTitle: (dept)=> `Kon live Météo-France Vigilance-waarschuwingen voor ${dept} niet laden in deze browser.`,
-    meteoAlarmFallbackLink: 'Bekijk de officiële Vigilance-kaart →',
     noAddressResults: 'Geen resultaten gevonden',
     rowGroundTemp: 'Bodemtemp.',
     rowAirQuality: 'Luchtkwaliteit',
@@ -1048,11 +1001,6 @@ const I18N = {
     alertsStatusUnsupported: 'Tento prehliadač nepodporuje upozornenia — upozornenia sa namiesto toho zobrazia ako kontextové okno na obrazovke.',
     alertsStatusIOSNotInstalled: '📲 Na iPhone fungujú upozornenia až po pridaní tejto aplikácie na plochu (pozri nižšie) a jej otvorení odtiaľ — nie z karty Safari.',
     alertsStatusDesktop: 'Na tomto zariadení sa upozornenia zobrazujú ako kontextové okno v rohu stránky.',
-    meteoAlarmHeading: (dept)=> `Météo-France Vigilance — ${dept}`,
-    meteoAlarmValidUntil: (date)=> `Platí do ${date}`,
-    meteoAlarmColorYellow: 'Žltá', meteoAlarmColorOrange: 'Oranžová', meteoAlarmColorRed: 'Červená', meteoAlarmColorGreen: 'Zelená',
-    meteoAlarmFallbackTitle: (dept)=> `Nepodarilo sa načítať upozornenia Météo-France Vigilance naživo pre ${dept} v tomto prehliadači.`,
-    meteoAlarmFallbackLink: 'Zobraziť oficiálnu mapu Vigilance →',
     noAddressResults: 'Žiadne výsledky',
     rowGroundTemp: 'Teplota pôdy',
     rowAirQuality: 'Kvalita ovzdušia',
@@ -1068,174 +1016,6 @@ function t(key, ...args){
   return typeof entry === 'function' ? entry(...args) : entry;
 }
 
-// ---- Météo-France Vigilance, via the public MeteoAlarm CAP feed ----
-// The feed is per-country and lists bulletins per French department
-// (cap:areaDesc). It has no query params for filtering, so we fetch the
-// whole France feed and filter client-side to the department matching the
-// currently viewed location (resolved via Photon's reverse-geocode "county"
-// field, which is the French department for addresses in France).
-let currentDepartment = null;
-let isFranceLocation = false;
-let meteoAlarmSeenKeys = new Set(); // for edge-triggered notifications, cleared per location
-
-function buildMeteoAlarmUrl(){
-  return 'https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-atom-france/';
-}
-
-function normalizeDeptName(s){
-  return (s||'').toString().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
-    .toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
-}
-
-const METEOALARM_COLOR_RANK = {green:0, yellow:1, orange:2, red:3};
-
-// Fixed, small vocabulary of French Vigilance hazard categories, translated.
-// Matched against the English event phrase MeteoAlarm publishes in its
-// entry titles (e.g. "High-temperature warning"); falls back to that raw
-// English phrase if a hazard doesn't match anything in this table.
-const METEOALARM_EVENT_LABELS = {
-  'high-temperature warning': {en:'Heat warning', fr:'Canicule', be:'Hittegolf', sk:'Upozornenie na horúčavy'},
-  'low-temperature warning': {en:'Cold warning', fr:'Grand froid', be:'Strenge kou', sk:'Upozornenie na mráz'},
-  'wind warning': {en:'Wind warning', fr:'Vent violent', be:'Windwaarschuwing', sk:'Upozornenie na silný vietor'},
-  'thunderstorm warning': {en:'Thunderstorm warning', fr:'Orages', be:'Onweerswaarschuwing', sk:'Upozornenie na búrky'},
-  'rain-flood warning': {en:'Rain-flood warning', fr:'Pluie-inondation', be:'Regen-overstroming', sk:'Upozornenie na dážď a povodne'},
-  'flood warning': {en:'Flood warning', fr:'Inondation', be:'Overstromingswaarschuwing', sk:'Upozornenie na povodne'},
-  'snow-ice warning': {en:'Snow-ice warning', fr:'Neige-verglas', be:'Sneeuw-ijzel', sk:'Upozornenie na sneh a poľadovicu'},
-  'avalanche warning': {en:'Avalanche warning', fr:'Avalanches', be:'Lawinewaarschuwing', sk:'Upozornenie na laviny'},
-  'coastal event warning': {en:'Coastal event warning', fr:'Vagues-submersion', be:'Kustwaarschuwing', sk:'Upozornenie na pobrežné javy'},
-  'forest fire warning': {en:'Forest fire warning', fr:'Feux de forêt', be:'Bosbrandwaarschuwing', sk:'Upozornenie na lesné požiare'},
-};
-function translateMeteoAlarmEvent(englishPhrase){
-  const key = (englishPhrase||'').trim().toLowerCase();
-  const entry = METEOALARM_EVENT_LABELS[key];
-  if(!entry) return englishPhrase; // unknown hazard phrase — show the raw English rather than nothing
-  return entry[LANG] || entry.en;
-}
-function meteoAlarmColorLabel(color){
-  const key = 'meteoAlarmColor' + color.charAt(0).toUpperCase() + color.slice(1).toLowerCase();
-  return t(key);
-}
-
-// Parses the CAP/Atom feed, keeps only the department's entries, keeps just
-// the newest bulletin per hazard (the feed periodically reissues the same
-// active warning, so entries repeat), drops anything already expired, and
-// sorts most severe first.
-function parseMeteoAlarmEntries(xmlText, departmentName){
-  const doc = new DOMParser().parseFromString(xmlText, 'application/xml');
-  if(doc.querySelector('parsererror')) throw new Error('MeteoAlarm feed parse error');
-
-  const wantedDept = normalizeDeptName(departmentName);
-  const now = new Date();
-  const capNS = 'urn:oasis:names:tc:emergency:cap:1.2';
-  const entries = Array.from(doc.getElementsByTagName('entry'));
-  const byEvent = new Map();
-
-  entries.forEach(entry=>{
-    const areaDescEl = entry.getElementsByTagNameNS(capNS, 'areaDesc')[0];
-    const areaDesc = areaDescEl ? areaDescEl.textContent : '';
-    if(normalizeDeptName(areaDesc) !== wantedDept) return;
-
-    const expiresEl = entry.getElementsByTagNameNS(capNS, 'expires')[0];
-    const expires = expiresEl ? new Date(expiresEl.textContent) : null;
-    if(expires && expires < now) return; // already expired, skip
-
-    const titleEl = entry.getElementsByTagName('title')[0];
-    const titleText = titleEl ? titleEl.textContent : '';
-    const m = titleText.match(/^(Yellow|Orange|Red|Green)\s+(.+?)\s+issued for France/i);
-    const eventEl = entry.getElementsByTagNameNS(capNS, 'event')[0];
-    const color = m ? m[1].toLowerCase() : 'yellow';
-    const eventPhrase = m ? m[2] : (eventEl ? eventEl.textContent : titleText);
-
-    // feed lists newest-first, so the first entry seen per hazard is current
-    if(byEvent.has(eventPhrase)) return;
-    const effectiveEl = entry.getElementsByTagNameNS(capNS, 'effective')[0];
-    byEvent.set(eventPhrase, {
-      color,
-      eventPhrase,
-      effective: effectiveEl ? effectiveEl.textContent : null,
-      expires: expiresEl ? expiresEl.textContent : null,
-    });
-  });
-
-  return Array.from(byEvent.values()).sort((a,b)=>
-    (METEOALARM_COLOR_RANK[b.color]||0) - (METEOALARM_COLOR_RANK[a.color]||0)
-  );
-}
-
-function renderMeteoAlarmBanner(alerts){
-  const el = document.getElementById('meteoAlarmBanner');
-  if(!el) return;
-  if(!alerts.length){ el.hidden = true; el.innerHTML = ''; return; }
-
-  const locale = t('localeCode');
-  let html = `<div class="meteoalarm-heading">⚠️ ${t('meteoAlarmHeading', currentDepartment)}</div>`;
-  alerts.forEach(a=>{
-    const untilStr = a.expires ? new Date(a.expires).toLocaleString(locale, {weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}) : '';
-    html += `<div class="meteoalarm-item meteoalarm-color-${a.color}">
-      <div class="meteoalarm-item-title">${meteoAlarmColorLabel(a.color)} — ${translateMeteoAlarmEvent(a.eventPhrase)}</div>
-      ${untilStr ? `<div class="meteoalarm-item-meta">${t('meteoAlarmValidUntil', untilStr)}</div>` : ''}
-    </div>`;
-  });
-  el.innerHTML = html;
-  el.hidden = false;
-}
-
-// Shown when the live feed can't be fetched from this browser (most likely
-// a CORS restriction on MeteoAlarm's side, which client-side JS can't work
-// around without a backend proxy this app doesn't have). Rather than fail
-// silently, this points the person to the same data on the official site.
-function renderMeteoAlarmFallback(){
-  const el = document.getElementById('meteoAlarmBanner');
-  if(!el) return;
-  el.innerHTML = `<div class="meteoalarm-item meteoalarm-color-fallback">
-    <div class="meteoalarm-item-title">${t('meteoAlarmFallbackTitle', currentDepartment)}</div>
-    <div class="meteoalarm-item-meta"><a href="https://meteoalarm.org?region=FR" target="_blank" rel="noopener">${t('meteoAlarmFallbackLink')}</a></div>
-  </div>`;
-  el.hidden = false;
-}
-
-// Fires a device alert (same notification/popup pipeline as the forecast
-// thresholds) the first time an Orange or Red warning appears for this
-// department; re-showing every hourly refresh while it's still active would
-// just be noise, and Yellow is common enough to skip alerting on entirely.
-function evaluateMeteoAlarmAlerts(alerts){
-  const currentKeys = new Set(
-    alerts.filter(a=> a.color==='orange' || a.color==='red').map(a=> a.color+':'+a.eventPhrase)
-  );
-  currentKeys.forEach(key=>{
-    if(!meteoAlarmSeenKeys.has(key)){
-      const [color, eventPhrase] = key.split(':');
-      triggerWeatherAlert(
-        `${meteoAlarmColorLabel(color)} ${t('meteoAlarmHeading', currentDepartment)}`,
-        translateMeteoAlarmEvent(eventPhrase)
-      );
-    }
-  });
-  meteoAlarmSeenKeys = currentKeys;
-}
-
-async function loadMeteoAlarmAlerts(){
-  const el = document.getElementById('meteoAlarmBanner');
-  if(!isFranceLocation || !currentDepartment){
-    if(el){ el.hidden = true; el.innerHTML = ''; }
-    meteoAlarmSeenKeys = new Set();
-    return;
-  }
-  try{
-    const res = await fetch(buildMeteoAlarmUrl());
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const xmlText = await res.text();
-    const alerts = parseMeteoAlarmEntries(xmlText, currentDepartment);
-    renderMeteoAlarmBanner(alerts);
-    evaluateMeteoAlarmAlerts(alerts);
-  }catch(err){
-    // Vigilance data is a nice-to-have layered on top of the forecast, not
-    // something that should ever break the rest of the app (e.g. if the
-    // feed is unreachable due to a CORS restriction from this browser).
-    console.warn('MeteoAlarm alerts unavailable:', err);
-    renderMeteoAlarmFallback();
-  }
-}
 
 
 
@@ -1676,16 +1456,9 @@ async function loadAddress(){
     const props = (data.features && data.features[0] && data.features[0].properties) || {};
     const title = formatPhotonAddress(props) || `${fmtCoord(LAT,'N','S')}, ${fmtCoord(LON,'E','W')}`;
     document.getElementById('titleLine').textContent = title;
-    // Météo-France Vigilance (via MeteoAlarm) is issued per French department —
-    // Photon's "county" field is that department for French addresses.
-    isFranceLocation = (props.countrycode === 'FR') || /france/i.test(props.country || '');
-    currentDepartment = isFranceLocation ? (props.county || null) : null;
   }catch(err){
     document.getElementById('titleLine').textContent = `${fmtCoord(LAT,'N','S')}, ${fmtCoord(LON,'E','W')}`;
-    isFranceLocation = false;
-    currentDepartment = null;
   }
-  loadMeteoAlarmAlerts();
 }
 
 // forward-geocode a free-text postal address to coordinates via Photon's
