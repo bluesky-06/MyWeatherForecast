@@ -562,6 +562,8 @@
   .meteoalarm-color-orange{background:#FCE3D2; border-left:4px solid #DB6A3B; color:#7a3410;}
   .meteoalarm-color-red{background:#F8D4D4; border-left:4px solid #C0392B; color:#7a1414;}
   .meteoalarm-color-green{background:#E3F1E8; border-left:4px solid #5FA777; color:#245c3a;}
+  .meteoalarm-color-fallback{background:#EAF4FB; border-left:4px solid #2F8FCB; color:var(--ink);}
+  .meteoalarm-color-fallback a{color:var(--azure); font-weight:600;}
 
   .badge{
     display:inline-flex;
@@ -798,6 +800,8 @@ const I18N = {
     meteoAlarmHeading: (dept)=> `Météo-France Vigilance — ${dept}`,
     meteoAlarmValidUntil: (date)=> `Valid until ${date}`,
     meteoAlarmColorYellow: 'Yellow', meteoAlarmColorOrange: 'Orange', meteoAlarmColorRed: 'Red', meteoAlarmColorGreen: 'Green',
+    meteoAlarmFallbackTitle: (dept)=> `Couldn't load live Météo-France Vigilance alerts for ${dept} in this browser.`,
+    meteoAlarmFallbackLink: 'Check the official Vigilance map →',
     noAddressResults: 'No matches found',
     rowGroundTemp: 'Ground temp',
     rowAirQuality: 'Air quality',
@@ -879,6 +883,8 @@ const I18N = {
     meteoAlarmHeading: (dept)=> `Vigilance Météo-France — ${dept}`,
     meteoAlarmValidUntil: (date)=> `Valable jusqu\u2019au ${date}`,
     meteoAlarmColorYellow: 'Jaune', meteoAlarmColorOrange: 'Orange', meteoAlarmColorRed: 'Rouge', meteoAlarmColorGreen: 'Vert',
+    meteoAlarmFallbackTitle: (dept)=> `Impossible de charger les alertes Vigilance Météo-France en direct pour ${dept} dans ce navigateur.`,
+    meteoAlarmFallbackLink: 'Consulter la carte de Vigilance officielle →',
     noAddressResults: 'Aucun résultat',
     rowGroundTemp: 'Temp. au sol',
     rowAirQuality: 'Qualité de l\u2019air',
@@ -962,6 +968,8 @@ const I18N = {
     meteoAlarmHeading: (dept)=> `Météo-France Vigilance — ${dept}`,
     meteoAlarmValidUntil: (date)=> `Geldig tot ${date}`,
     meteoAlarmColorYellow: 'Geel', meteoAlarmColorOrange: 'Oranje', meteoAlarmColorRed: 'Rood', meteoAlarmColorGreen: 'Groen',
+    meteoAlarmFallbackTitle: (dept)=> `Kon live Météo-France Vigilance-waarschuwingen voor ${dept} niet laden in deze browser.`,
+    meteoAlarmFallbackLink: 'Bekijk de officiële Vigilance-kaart →',
     noAddressResults: 'Geen resultaten gevonden',
     rowGroundTemp: 'Bodemtemp.',
     rowAirQuality: 'Luchtkwaliteit',
@@ -1043,6 +1051,8 @@ const I18N = {
     meteoAlarmHeading: (dept)=> `Météo-France Vigilance — ${dept}`,
     meteoAlarmValidUntil: (date)=> `Platí do ${date}`,
     meteoAlarmColorYellow: 'Žltá', meteoAlarmColorOrange: 'Oranžová', meteoAlarmColorRed: 'Červená', meteoAlarmColorGreen: 'Zelená',
+    meteoAlarmFallbackTitle: (dept)=> `Nepodarilo sa načítať upozornenia Météo-France Vigilance naživo pre ${dept} v tomto prehliadači.`,
+    meteoAlarmFallbackLink: 'Zobraziť oficiálnu mapu Vigilance →',
     noAddressResults: 'Žiadne výsledky',
     rowGroundTemp: 'Teplota pôdy',
     rowAirQuality: 'Kvalita ovzdušia',
@@ -1170,6 +1180,20 @@ function renderMeteoAlarmBanner(alerts){
   el.hidden = false;
 }
 
+// Shown when the live feed can't be fetched from this browser (most likely
+// a CORS restriction on MeteoAlarm's side, which client-side JS can't work
+// around without a backend proxy this app doesn't have). Rather than fail
+// silently, this points the person to the same data on the official site.
+function renderMeteoAlarmFallback(){
+  const el = document.getElementById('meteoAlarmBanner');
+  if(!el) return;
+  el.innerHTML = `<div class="meteoalarm-item meteoalarm-color-fallback">
+    <div class="meteoalarm-item-title">${t('meteoAlarmFallbackTitle', currentDepartment)}</div>
+    <div class="meteoalarm-item-meta"><a href="https://meteoalarm.org?region=FR" target="_blank" rel="noopener">${t('meteoAlarmFallbackLink')}</a></div>
+  </div>`;
+  el.hidden = false;
+}
+
 // Fires a device alert (same notification/popup pipeline as the forecast
 // thresholds) the first time an Orange or Red warning appears for this
 // department; re-showing every hourly refresh while it's still active would
@@ -1209,7 +1233,7 @@ async function loadMeteoAlarmAlerts(){
     // something that should ever break the rest of the app (e.g. if the
     // feed is unreachable due to a CORS restriction from this browser).
     console.warn('MeteoAlarm alerts unavailable:', err);
-    if(el){ el.hidden = true; el.innerHTML = ''; }
+    renderMeteoAlarmFallback();
   }
 }
 
