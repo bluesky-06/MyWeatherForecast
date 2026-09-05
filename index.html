@@ -4,9 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Weather Forecast — 43.628048°N, 7.015687°E</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<meta name="theme-color" content="#2F8FCB">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Weather">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  html{scroll-behavior:smooth;}
   :root{
     --ink:#0E2A47;
     --azure:#2F8FCB;
@@ -59,6 +67,196 @@
     color:var(--grey);
   }
   .astro-chip b{color:var(--ink);font-weight:600;}
+
+  .address-form{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+  }
+  .address-input{
+    flex:1;
+    min-width:0;
+    width:100%;
+    padding:9px 12px;
+    border:1px solid #DCE6EC;
+    border-radius:10px;
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    color:var(--ink);
+    background:var(--card);
+    outline:none;
+  }
+  .address-input:focus{border-color:var(--azure);}
+
+  .address-input-wrap{
+    position:relative;
+    flex:1;
+    min-width:0;
+  }
+  .address-suggestions{
+    position:absolute;
+    left:0;
+    right:0;
+    top:calc(100% + 4px);
+    z-index:20;
+    margin:0;
+    padding:4px;
+    list-style:none;
+    background:var(--card);
+    border:1px solid #DCE6EC;
+    border-radius:12px;
+    box-shadow:0 12px 28px -12px rgba(14,42,71,.28);
+    max-height:260px;
+    overflow-y:auto;
+    text-align:left;
+  }
+  .address-suggestions li{
+    padding:9px 10px;
+    border-radius:8px;
+    font-size:12.5px;
+    line-height:1.35;
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .address-suggestions li:hover,
+  .address-suggestions li.active{
+    background:#EAF4FB;
+  }
+  .address-suggestions li .sugg-secondary{
+    display:block;
+    font-size:11px;
+    color:var(--grey);
+    margin-top:1px;
+  }
+  .address-suggestions li.no-results{
+    color:var(--grey);
+    cursor:default;
+  }
+  .address-suggestions li.no-results:hover{background:none;}
+  .address-btn{
+    padding:9px 16px;
+    border:none;
+    border-radius:10px;
+    background:var(--azure);
+    color:#fff;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .address-btn:disabled{opacity:.6;cursor:default;}
+  .address-btn:not(:disabled):hover{background:#2679AD;}
+  .address-msg{
+    font-size:11.5px;
+    margin:6px 0 0;
+    min-height:14px;
+  }
+  .address-msg.error{color:#C0392B;}
+  .address-msg.ok{color:#5FA777;}
+  .loc-btn{
+    display:inline-block;
+    margin-top:6px;
+    background:none;
+    border:none;
+    color:var(--azure);
+    font-size:12px;
+    font-weight:600;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    padding:2px 0;
+  }
+  .loc-btn:disabled{opacity:.6;cursor:default;}
+  .loc-btn:not(:disabled):hover{text-decoration:underline;}
+
+  .lang-switch{
+    display:flex;
+    justify-content:center;
+    gap:4px;
+    margin-top:10px;
+  }
+  .lang-btn{
+    padding:4px 8px;
+    border:1px solid #DCE6EC;
+    background:var(--card);
+    font-size:20px;
+    line-height:1;
+    border-radius:8px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
+  }
+  .lang-btn.active{
+    border-color:var(--azure);
+    box-shadow:0 0 0 2px rgba(47,143,203,.35);
+  }
+
+  .toc{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin:16px 0 4px;
+  }
+  .toc a{
+    font-size:12px;
+    font-weight:600;
+    color:var(--azure);
+    background:#EAF4FB;
+    padding:7px 14px;
+    border-radius:20px;
+    text-decoration:none;
+  }
+  .toc a:hover{background:#DCEEFA;}
+
+  .card[id]{scroll-margin-top:16px;}
+
+  .day-picker-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin:2px 0 14px;
+    flex-wrap:wrap;
+  }
+  .day-picker-row label{
+    font-size:12.5px;
+    color:var(--grey);
+    font-weight:600;
+  }
+  .day-picker-row input[type="date"]{
+    padding:7px 10px;
+    border:1px solid #DCE6EC;
+    border-radius:10px;
+    font-family:'Inter',sans-serif;
+    font-size:13px;
+    color:var(--ink);
+    background:var(--card);
+    outline:none;
+  }
+  .day-picker-row input[type="date"]:focus{border-color:var(--azure);}
+  .day-selected-label{
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--azure);
+  }
+  .day-selected-minmax{
+    font-size:11px;
+    font-weight:600;
+    color:var(--grey);
+  }
+  .day-selected-minmax .dmin{color:var(--azure);}
+  .day-selected-minmax .dmax{color:#D46B3C;}
+
+  .date-minmax{
+    display:block;
+    font-size:9.5px;
+    font-weight:600;
+    margin-top:2px;
+    text-transform:none;
+    letter-spacing:0;
+  }
+  .date-minmax .dmin{color:var(--azure);}
+  .date-minmax .dmax{color:#D46B3C;}
+
+  .dot-none{color:#B7C4CC;font-size:16px;}
 
   .card{
     background:var(--card);
@@ -143,13 +341,26 @@
     color:var(--grey);
     margin:0 0 12px;
   }
+  .swipe-hints{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-shrink:0;
+  }
   .swipe-hint{
     font-size:10px;
     letter-spacing:0;
     text-transform:none;
     color:var(--azure);
     font-weight:400;
+    background:none;
+    border:none;
+    padding:2px 4px;
+    cursor:pointer;
+    font-family:'Inter',sans-serif;
   }
+  .swipe-hint:hover{text-decoration:underline;}
+  .swipe-hint:active{color:#2679AD;}
 
   .table-scroll{
     width:100%;
@@ -204,12 +415,17 @@
     background:var(--card);
     font-weight:600;
     color:var(--ink);
-    min-width:96px;
-    white-space:nowrap;
+    min-width:116px;
+    max-width:116px;
+    white-space:normal;
+    overflow-wrap:break-word;
+    line-height:1.2;
     z-index:1;
     box-shadow:2px 0 4px -2px rgba(14,42,71,.15);
   }
   table.data-table tbody tr:nth-child(odd) td.row-label{background:#F8FBFC;}
+  .row-label-flex{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;}
+  .row-label-flex svg{flex:none;}
   table.data-table td.icon-cell svg{display:block;margin:0 auto;}
   table.data-table td.day-dot{color:var(--grey);}
   table.data-table td.night-dot{color:var(--ink);}
@@ -221,6 +437,90 @@
     margin-top:10px;
   }
   footer a{color:var(--azure);}
+  .made-with-claude{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    margin-top:8px;
+    color:var(--grey);
+  }
+  .made-with-claude a{color:var(--grey);text-decoration:underline;}
+  .made-with-claude a:hover{color:var(--azure);}
+
+  .weather-alert-container{
+    position:fixed;
+    top:16px;
+    right:16px;
+    z-index:9999;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    max-width:min(320px, calc(100vw - 32px));
+  }
+  .weather-alert-popup{
+    display:flex;
+    align-items:flex-start;
+    gap:10px;
+    background:var(--card);
+    border-left:4px solid #C0392B;
+    border-radius:8px;
+    box-shadow:0 6px 20px rgba(14,42,71,.2);
+    padding:12px 12px 12px 14px;
+    animation:weatherAlertIn .25s ease-out;
+    font-family:'Inter',sans-serif;
+  }
+  .weather-alert-icon{font-size:20px; line-height:1;}
+  .weather-alert-text{flex:1;}
+  .weather-alert-title{font-weight:700; color:var(--ink); margin-bottom:2px; font-size:13px;}
+  .weather-alert-body{font-size:12.5px; color:var(--ink); opacity:.85; line-height:1.35;}
+  .weather-alert-close{
+    background:none;
+    border:none;
+    font-size:18px;
+    line-height:1;
+    cursor:pointer;
+    color:var(--grey);
+    padding:0;
+    margin-left:4px;
+  }
+  .weather-alert-close:hover{color:var(--ink);}
+  @keyframes weatherAlertIn{ from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:translateY(0);} }
+
+  .install-card{
+    text-align:center;
+    margin-top:22px;
+  }
+  .install-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:10px 20px;
+    border:1px solid #DCE6EC;
+    border-radius:24px;
+    background:var(--card);
+    color:var(--ink);
+    font-size:13px;
+    font-weight:600;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    box-shadow:0 4px 14px -6px rgba(14,42,71,.18);
+  }
+  .install-btn:hover{border-color:var(--azure);}
+  .install-instructions{
+    max-width:340px;
+    margin:12px auto 0;
+    background:#EAF4FB;
+    border-radius:12px;
+    padding:12px 16px;
+    text-align:left;
+  }
+  .install-instructions p{
+    margin:0;
+    font-size:12.5px;
+    color:var(--ink);
+    line-height:1.5;
+  }
 
   .badge{
     display:inline-flex;
@@ -257,62 +557,453 @@
       <p id="dateLine">Loading forecast…</p>
       <div class="astro-strip" id="astroStrip"></div>
       <p id="updatedLine" class="updated-line"></p>
+
+      <div class="lang-switch">
+        <button type="button" class="lang-btn" data-lang="en" title="English" aria-label="English">🇺🇸</button>
+        <button type="button" class="lang-btn" data-lang="fr" title="Français" aria-label="Français">🇫🇷</button>
+        <button type="button" class="lang-btn" data-lang="be" title="Nederlands (België)" aria-label="Nederlands (België)">🇧🇪</button>
+        <button type="button" class="lang-btn" data-lang="sk" title="Slovenčina" aria-label="Slovenčina">🇸🇰</button>
+      </div>
+
+      <form id="addressForm" class="address-form">
+        <div class="address-input-wrap">
+          <input type="text" id="addressInput" class="address-input" placeholder="Enter a postal address…" autocomplete="off">
+          <ul id="addressSuggestions" class="address-suggestions" hidden></ul>
+        </div>
+        <button type="submit" class="address-btn" id="goBtn">Go</button>
+      </form>
+      <button type="button" id="locBtn" class="loc-btn">📍 Use my current location</button>
+      <p id="addressMsg" class="address-msg"></p>
     </header>
 
     <div class="card" id="nowCard">
-      <div class="state-msg">Fetching current conditions…</div>
+      <div class="state-msg" id="fetchingMsg">Fetching current conditions…</div>
     </div>
+
+    <nav class="toc">
+      <a href="#minutelyCard" id="tocMinutely">15-minute forecast</a>
+      <a href="#hourlyCard" id="tocHourly">Hourly forecast</a>
+      <a href="#ecmwfCard" id="tocEcmwf">15-day forecast</a>
+      <a href="#dayCard" id="tocDay">Selected day</a>
+    </nav>
   </div>
 
-  <div class="card">
-    <div class="section-title"><span>Hourly forecast — next 24h</span><span class="swipe-hint">swipe →</span></div>
-    <div class="section-sub">AROME-HD model data updates every 3 hours</div>
-    <div class="table-scroll">
-      <table class="data-table" id="hourlyTable"></table>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="section-title"><span>15-minute forecast — next 6h</span><span class="swipe-hint">swipe →</span></div>
-    <div class="section-sub">Nowcast data updates every hour</div>
+  <div class="card" id="minutelyCard">
+    <div class="section-title"><span id="minutelyTitleText">15-minute forecast — next 6h</span><span class="swipe-hints"><button type="button" class="swipe-hint" id="swipeHint2Left" data-dir="left">← swipe</button><button type="button" class="swipe-hint" id="swipeHint2">swipe →</button></span></div>
+    <div class="section-sub" id="minutelySubText">Nowcast data updates every hour</div>
     <div class="table-scroll">
       <table class="data-table" id="minutelyTable"></table>
     </div>
   </div>
 
+  <div class="card" id="hourlyCard">
+    <div class="section-title"><span id="hourlyTitleText">Hourly forecast — next 24h</span><span class="swipe-hints"><button type="button" class="swipe-hint" id="swipeHint1Left" data-dir="left">← swipe</button><button type="button" class="swipe-hint" id="swipeHint1">swipe →</button></span></div>
+    <div class="section-sub" id="hourlySubText">AROME-HD model data updates every 3 hours</div>
+    <div class="table-scroll">
+      <table class="data-table" id="hourlyTable"></table>
+    </div>
+  </div>
+
+  <div class="card" id="ecmwfCard">
+    <div class="section-title"><span id="ecmwfTitleText">15-day forecast</span><span class="swipe-hints"><button type="button" class="swipe-hint" id="swipeHint3Left" data-dir="left">← swipe</button><button type="button" class="swipe-hint" id="swipeHint3">swipe →</button></span></div>
+    <div class="section-sub" id="ecmwfSubText">ECMWF IFS HRES model data updates every 6 hours</div>
+    <div class="table-scroll">
+      <table class="data-table" id="ecmwfTable"></table>
+    </div>
+  </div>
+
+  <div class="card" id="dayCard">
+    <div class="section-title"><span id="dayTitleText">Selected day forecast</span><span class="swipe-hints"><button type="button" class="swipe-hint" id="swipeHint4Left" data-dir="left">← swipe</button><button type="button" class="swipe-hint" id="swipeHint4">swipe →</button></span></div>
+    <div class="section-sub" id="daySubText">ECMWF IFS HRES model data — hourly detail for one day</div>
+    <div class="day-picker-row">
+      <label for="dayPicker" id="dayPickerLabel">Choose a date:</label>
+      <input type="date" id="dayPicker">
+      <span id="daySelectedLabel" class="day-selected-label"></span>
+      <span id="daySelectedMinMax" class="day-selected-minmax"></span>
+    </div>
+    <p id="dayRangeMsg" class="address-msg error"></p>
+    <div class="table-scroll">
+      <table class="data-table" id="dayTable"></table>
+    </div>
+  </div>
+
   <div class="wrap-narrow">
+    <div class="install-card" id="installCard">
+      <button type="button" id="installBtn" class="install-btn">📲 <span id="installBtnText">Add to Home Screen</span></button>
+      <div id="installInstructions" class="install-instructions" hidden>
+        <p id="installInstructionsText"></p>
+      </div>
+    </div>
+
     <footer>
-      * Not provided by AROME-HD — sourced from Open-Meteo's default best-match blend.<br>
-      Data from <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>
+      <span id="dataFromText">Data from</span> <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>
+      <img src="https://raw.githubusercontent.com/open-meteo/open-meteo/6c45053fb1ef0c049de931292a0f5cb35f14c0ba/Public/favicon-16x16.png" width="16" height="16" alt="Open-Meteo" style="vertical-align:middle;margin-left:4px;">
+      <div class="made-with-claude">
+        <span><span id="madeWithClaudeText">Code generated by</span> <a href="https://claude.ai" target="_blank" rel="noopener">Claude</a></span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 2 L14 9.5 L21.5 12 L14 14.5 L12 22 L10 14.5 L2.5 12 L10 9.5 Z" fill="#D97757"/>
+        </svg>
+      </div>
     </footer>
   </div>
 </div>
 
 <script>
-const API = "https://api.open-meteo.com/v1/forecast?latitude=43.628048&longitude=7.015687&hourly=temperature_2m,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,weather_code,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,uv_index,cape&models=meteofrance_arome_france_hd&minutely_15=temperature_2m,precipitation,rain,cape,lightning_potential,wind_speed_10m,wind_gusts_10m,wind_direction_10m&daily=sunrise,sunset,precipitation_sum&timezone=Europe%2FParis&forecast_days=2";
+function buildApiUrl(){
+  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=temperature_2m,apparent_temperature,relative_humidity_2m,precipitation_probability,precipitation,rain,showers,weather_code,cloud_cover,wind_speed_10m,wind_gusts_10m,wind_direction_10m,uv_index,cape,soil_temperature_0cm&models=meteofrance_arome_france_hd&minutely_15=temperature_2m,apparent_temperature,precipitation,rain,cape,lightning_potential,wind_speed_10m,wind_gusts_10m,wind_direction_10m&daily=sunrise,sunset,precipitation_sum&timezone=Europe%2FParis&forecast_days=2`;
+}
 // AROME-HD doesn't output these — pulled instead from Open-Meteo's default best-match blend
-const BLEND_API = "https://api.open-meteo.com/v1/forecast?latitude=43.628048&longitude=7.015687&hourly=precipitation_probability,showers,cloud_cover,uv_index,weather_code,is_day,wind_direction_10m&minutely_15=lightning_potential,weather_code,is_day,wind_direction_10m&timezone=Europe%2FParis&forecast_days=2";
-const BLENDED_FIELDS = ['precipitation_probability','showers','cloud_cover','uv_index','weather_code','is_day','wind_direction_10m'];
+function buildBlendUrl(){
+  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=precipitation_probability,showers,cloud_cover,uv_index,weather_code,is_day,wind_direction_10m,soil_temperature_0cm&minutely_15=lightning_potential,weather_code,is_day,wind_direction_10m&timezone=Europe%2FParis&forecast_days=2`;
+}
+const BLENDED_FIELDS = ['precipitation_probability','showers','cloud_cover','uv_index','weather_code','is_day','wind_direction_10m','soil_temperature_0cm'];
 const BLENDED_MINUTELY_FIELDS = ['lightning_potential','weather_code','is_day','wind_direction_10m'];
-const LAT = 43.628048;
-const LON = 7.015687;
 
-const WMO = {
-  0:{label:"Clear sky", icon:"sun"},
-  1:{label:"Mainly clear", icon:"sun-cloud"},
-  2:{label:"Partly cloudy", icon:"sun-cloud"},
-  3:{label:"Overcast", icon:"cloud"},
-  45:{label:"Fog", icon:"fog"}, 48:{label:"Rime fog", icon:"fog"},
-  51:{label:"Light drizzle", icon:"rain"}, 53:{label:"Drizzle", icon:"rain"}, 55:{label:"Dense drizzle", icon:"rain"},
-  56:{label:"Freezing drizzle", icon:"rain"}, 57:{label:"Freezing drizzle", icon:"rain"},
-  61:{label:"Light rain", icon:"rain"}, 63:{label:"Rain", icon:"rain"}, 65:{label:"Heavy rain", icon:"rain"},
-  66:{label:"Freezing rain", icon:"rain"}, 67:{label:"Freezing rain", icon:"rain"},
-  71:{label:"Light snow", icon:"snow"}, 73:{label:"Snow", icon:"snow"}, 75:{label:"Heavy snow", icon:"snow"},
-  77:{label:"Snow grains", icon:"snow"},
-  80:{label:"Rain showers", icon:"rain"}, 81:{label:"Rain showers", icon:"rain"}, 82:{label:"Violent showers", icon:"rain"},
-  85:{label:"Snow showers", icon:"snow"}, 86:{label:"Snow showers", icon:"snow"},
-  95:{label:"Thunderstorm", icon:"storm"}, 96:{label:"Thunderstorm + hail", icon:"storm"}, 99:{label:"Thunderstorm + hail", icon:"storm"},
+// ECMWF IFS HRES (0.25° / ~25 km, open-data, 15-day horizon, updates every 6h)
+function buildEcmwfUrl(){
+  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=weather_code,temperature_2m,apparent_temperature,precipitation,cloud_cover,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cape,is_day,soil_temperature_0cm&models=ecmwf_ifs&timezone=Europe%2FParis&forecast_days=15`;
+}
+
+// Open-Meteo's separate Air Quality API (CAMS-based) — capped at 7 days,
+// so tables reaching further than that will show a dash for those cells
+function buildAirQualityUrl(){
+  return `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${LAT}&longitude=${LON}&hourly=european_aqi&timezone=Europe%2FParis&forecast_days=7`;
+}
+
+let LANG = localStorage.getItem('weatherLang') || 'en';
+
+const I18N = {
+  en: {
+    titleLoading: 'Locating address…',
+    dateLoading: 'Loading forecast…',
+    fetchingNow: 'Fetching current conditions…',
+    addressPlaceholder: 'Enter a postal address…',
+    goBtn: 'Go',
+    useMyLocation: '📍 Use my current location',
+    gettingLocation: 'Getting your current location…',
+    lookingUpAddress: 'Looking up address…',
+    addressFound: 'Address found — loading forecast…',
+    couldntFindAddress: (m)=> `Couldn't find that address (${m}). Try a more specific address.`,
+    couldntGetLocation: (m)=> `Couldn't get your current location (${m}). Check your browser's location permission.`,
+    couldntLoadForecast: (m)=> `Couldn't load forecast (${m}).`,
+    swipeHint: 'swipe →',
+    swipeHintLeft: '← swipe',
+    hourlyTitle: 'Hourly forecast — next 24h',
+    hourlySub: 'AROME-HD model data updates every 3 hours',
+    minutelyTitle: '15-minute forecast — next 6h',
+    minutelySub: 'Nowcast data updates every hour',
+    dataFrom: 'Data from',
+    codeGeneratedBy: 'Code generated by',
+    refreshedAt: (t)=> `Data refreshed at ${t} · auto-refreshes hourly`,
+    humidityWind: (h,w)=> `Humidity ${h}% · Wind ${w} km/h`,
+    maxToday: 'Max today',
+    minToday: 'Min today',
+    precipNow: (p,peak)=> `Precipitation probability now: <b>${p}%</b> · peak later today: <b>${peak}</b>`,
+    precipTotalToday: (v)=> `Total precipitation today: <b>${v}</b>`,
+    noLightningRisk: 'No lightning risk',
+    lightningLow: 'Low', lightningModerate: 'Moderate', lightningHigh: 'High', lightningExtreme: 'Extreme',
+    thunderUnlikely: 'Unlikely', thunderPossible: 'Possible', thunderRisk: 'Risk', thunderHighRisk: 'High risk',
+    minutelyUnavailable: '15-minute data not available',
+    alertHighPrecipTitle: 'Rain alert',
+    alertHighPrecipBody: (pct)=> `Precipitation probability will reach ${pct}% in the next 24 hours.`,
+    alertThunderTitle: 'Thunderstorm alert',
+    alertThunderBody: 'Thunderstorm risk in the next 24 hours.',
+    alertWindGustTitle: 'Wind gust alert',
+    alertWindGustBody: (kmh)=> `Wind gusts up to ${kmh} km/h expected in the next 24 hours.`,
+    rowTime: 'Time', rowWeather: 'Weather', rowTemp: 'Temperature 2m', rowFeelsLike: 'Feels-like temp.', rowPrecipProb: 'Precip. prob.',
+    rowPrecipitation: 'Precipitation', rowCloudCover: 'Cloud cover', rowHumidity: 'Humidity',
+    rowWindSpeed: 'Wind speed', rowWindGusts: 'Wind gusts', rowWindDir: 'Wind dir.',
+    rowUvIndex: 'UV index', rowThunderstorm: 'Thunderstorm', rowLightning: 'Lightning',
+    rowTotalPrecip: 'Total precipitation', rowSunshine: 'Sunshine duration', rowWindSpeedDir: 'Wind', rowCape: 'CAPE',
+    morning: 'Morning', afternoon: 'Afternoon',
+    now: 'Now',
+    jumpHourly: 'Hourly forecast',
+    jumpMinutely: '15-minute forecast',
+    jumpEcmwf: '15-day forecast',
+    ecmwfTitle: '15-day forecast',
+    ecmwfSub: 'ECMWF IFS HRES model data updates every 6 hours',
+    ecmwfResolution: '~9 km resolution',
+    jumpDay: 'Selected day',
+    dayTitle: 'Selected day forecast',
+    daySub: 'ECMWF IFS HRES model data — hourly detail for one day',
+    dayPickerLabel: 'Choose a date:',
+    dayUnavailable: 'No forecast data available for this date. Please pick a date within the next 15 days.',
+    untilDate: (d)=> `up to ${d}`,
+    installBtnText: 'Add to Home Screen',
+    installStepsIOS: 'In Safari, tap the Share icon (square with an arrow ↑), then tap "Add to Home Screen".',
+    installStepsGeneric: 'Open your browser\u2019s menu and choose "Add to Home Screen" or "Install app".',
+    noAddressResults: 'No matches found',
+    rowGroundTemp: 'Ground temp',
+    rowAirQuality: 'Air quality',
+    aqiGood: 'Good', aqiFair: 'Fair', aqiModerate: 'Moderate', aqiPoor: 'Poor', aqiVeryPoor: 'Very poor', aqiExtremelyPoor: 'Extremely poor',
+    spatialResolution: '~1.5 km resolution',
+    localeCode: 'en-US',
+  },
+  fr: {
+    titleLoading: 'Localisation de l\u2019adresse…',
+    dateLoading: 'Chargement des prévisions…',
+    fetchingNow: 'Récupération des conditions actuelles…',
+    addressPlaceholder: 'Saisissez une adresse postale…',
+    goBtn: 'OK',
+    useMyLocation: '📍 Utiliser ma position actuelle',
+    gettingLocation: 'Récupération de votre position actuelle…',
+    lookingUpAddress: 'Recherche de l\u2019adresse…',
+    addressFound: 'Adresse trouvée — chargement des prévisions…',
+    couldntFindAddress: (m)=> `Adresse introuvable (${m}). Essayez une adresse plus précise.`,
+    couldntGetLocation: (m)=> `Impossible d\u2019obtenir votre position (${m}). Vérifiez l\u2019autorisation de localisation de votre navigateur.`,
+    couldntLoadForecast: (m)=> `Impossible de charger les prévisions (${m}).`,
+    swipeHint: 'glisser →',
+    swipeHintLeft: '← glisser',
+    hourlyTitle: 'Prévisions horaires — 24 prochaines heures',
+    hourlySub: 'Les données du modèle AROME-HD sont mises à jour toutes les 3 heures',
+    minutelyTitle: 'Prévisions 15 minutes — 6 prochaines heures',
+    minutelySub: 'Les données de nowcasting sont mises à jour toutes les heures',
+    dataFrom: 'Données de',
+    codeGeneratedBy: 'Code généré par',
+    refreshedAt: (t)=> `Données actualisées à ${t} · actualisation automatique toutes les heures`,
+    humidityWind: (h,w)=> `Humidité ${h}% · Vent ${w} km/h`,
+    maxToday: 'Max aujourd\u2019hui',
+    minToday: 'Min aujourd\u2019hui',
+    precipNow: (p,peak)=> `Probabilité de précipitations actuelle : <b>${p}%</b> · pic plus tard aujourd\u2019hui : <b>${peak}</b>`,
+    precipTotalToday: (v)=> `Précipitations totales aujourd\u2019hui : <b>${v}</b>`,
+    noLightningRisk: 'Aucun risque de foudre',
+    lightningLow: 'Faible', lightningModerate: 'Modéré', lightningHigh: 'Élevé', lightningExtreme: 'Extrême',
+    thunderUnlikely: 'Improbable', thunderPossible: 'Possible', thunderRisk: 'Risque', thunderHighRisk: 'Risque élevé',
+    minutelyUnavailable: 'Données 15 minutes indisponibles',
+    alertHighPrecipTitle: 'Alerte pluie',
+    alertHighPrecipBody: (pct)=> `La probabilité de précipitations atteindra ${pct}% dans les 24 prochaines heures.`,
+    alertThunderTitle: 'Alerte orage',
+    alertThunderBody: 'Risque d\u2019orage dans les 24 prochaines heures.',
+    alertWindGustTitle: 'Alerte rafales de vent',
+    alertWindGustBody: (kmh)=> `Rafales de vent jusqu\u2019à ${kmh} km/h prévues dans les 24 prochaines heures.`,
+    rowTime: 'Heure', rowWeather: 'Météo', rowTemp: 'Température 2m', rowFeelsLike: 'Température ressentie', rowPrecipProb: 'Prob. précip.',
+    rowPrecipitation: 'Précipitations', rowCloudCover: 'Couverture nuageuse', rowHumidity: 'Humidité',
+    rowWindSpeed: 'Vitesse du vent', rowWindGusts: 'Rafales', rowWindDir: 'Direction du vent',
+    rowUvIndex: 'Indice UV', rowThunderstorm: 'Orage', rowLightning: 'Foudre',
+    rowTotalPrecip: 'Précipitations totales', rowSunshine: 'Durée d\u2019ensoleillement', rowWindSpeedDir: 'Vent', rowCape: 'CAPE',
+    morning: 'Matin', afternoon: 'Après-midi',
+    now: 'Maint.',
+    jumpHourly: 'Prévisions horaires',
+    jumpMinutely: 'Prévisions 15 min',
+    jumpEcmwf: 'Prévisions 15 jours',
+    ecmwfTitle: 'Prévisions 15 jours',
+    ecmwfSub: 'Les données du modèle ECMWF IFS HRES sont mises à jour toutes les 6 heures',
+    ecmwfResolution: 'résolution ~9 km',
+    jumpDay: 'Jour sélectionné',
+    dayTitle: 'Prévisions du jour sélectionné',
+    daySub: 'Données du modèle ECMWF IFS HRES — détail horaire pour un jour',
+    dayPickerLabel: 'Choisissez une date :',
+    dayUnavailable: 'Aucune donnée de prévision pour cette date. Veuillez choisir une date dans les 15 prochains jours.',
+    untilDate: (d)=> `jusqu\u2019au ${d}`,
+    installBtnText: 'Ajouter à l\u2019écran d\u2019accueil',
+    installStepsIOS: 'Dans Safari, appuyez sur l\u2019icône Partager (carré avec une flèche ↑), puis sur « Sur l\u2019écran d\u2019accueil ».',
+    installStepsGeneric: 'Ouvrez le menu de votre navigateur et choisissez « Ajouter à l\u2019écran d\u2019accueil » ou « Installer l\u2019application ».',
+    noAddressResults: 'Aucun résultat',
+    rowGroundTemp: 'Temp. au sol',
+    rowAirQuality: 'Qualité de l\u2019air',
+    aqiGood: 'Bon', aqiFair: 'Moyen', aqiModerate: 'Dégradé', aqiPoor: 'Mauvais', aqiVeryPoor: 'Très mauvais', aqiExtremelyPoor: 'Extrêmement mauvais',
+    spatialResolution: 'résolution ~1,5 km',
+    localeCode: 'fr-FR',
+  },
+  // Dutch (Belgium) — Brussels is officially bilingual French/Dutch; this
+  // entry uses Belgian Dutch (nl-BE) under the Belgian flag.
+  be: {
+    titleLoading: 'Adres opzoeken…',
+    dateLoading: 'Voorspelling laden…',
+    fetchingNow: 'Huidige omstandigheden ophalen…',
+    addressPlaceholder: 'Voer een postadres in…',
+    goBtn: 'OK',
+    useMyLocation: '📍 Mijn huidige locatie gebruiken',
+    gettingLocation: 'Uw huidige locatie ophalen…',
+    lookingUpAddress: 'Adres opzoeken…',
+    addressFound: 'Adres gevonden — voorspelling laden…',
+    couldntFindAddress: (m)=> `Adres niet gevonden (${m}). Probeer een preciezer adres.`,
+    couldntGetLocation: (m)=> `Kon uw locatie niet bepalen (${m}). Controleer de locatietoestemming van uw browser.`,
+    couldntLoadForecast: (m)=> `Kon de voorspelling niet laden (${m}).`,
+    swipeHint: 'veeg →',
+    swipeHintLeft: '← veeg',
+    hourlyTitle: 'Uurlijkse voorspelling — komende 24 u',
+    hourlySub: 'AROME-HD modelgegevens worden om de 3 uur bijgewerkt',
+    minutelyTitle: '15-minutenvoorspelling — komende 6 u',
+    minutelySub: 'Nowcastgegevens worden elk uur bijgewerkt',
+    dataFrom: 'Gegevens van',
+    codeGeneratedBy: 'Code gegenereerd door',
+    refreshedAt: (t)=> `Gegevens bijgewerkt om ${t} · automatische update elk uur`,
+    humidityWind: (h,w)=> `Vochtigheid ${h}% · Wind ${w} km/h`,
+    maxToday: 'Max. vandaag',
+    minToday: 'Min. vandaag',
+    precipNow: (p,peak)=> `Neerslagkans nu: <b>${p}%</b> · piek later vandaag: <b>${peak}</b>`,
+    precipTotalToday: (v)=> `Totale neerslag vandaag: <b>${v}</b>`,
+    noLightningRisk: 'Geen bliksemrisico',
+    lightningLow: 'Laag', lightningModerate: 'Matig', lightningHigh: 'Hoog', lightningExtreme: 'Extreem',
+    thunderUnlikely: 'Onwaarschijnlijk', thunderPossible: 'Mogelijk', thunderRisk: 'Risico', thunderHighRisk: 'Hoog risico',
+    minutelyUnavailable: '15-minutengegevens niet beschikbaar',
+    alertHighPrecipTitle: 'Regenwaarschuwing',
+    alertHighPrecipBody: (pct)=> `De neerslagkans loopt op tot ${pct}% in de komende 24 uur.`,
+    alertThunderTitle: 'Onweerswaarschuwing',
+    alertThunderBody: 'Kans op onweer in de komende 24 uur.',
+    alertWindGustTitle: 'Windstotenwaarschuwing',
+    alertWindGustBody: (kmh)=> `Windstoten tot ${kmh} km/u verwacht in de komende 24 uur.`,
+    rowTime: 'Tijd', rowWeather: 'Weer', rowTemp: 'Temperatuur 2m', rowFeelsLike: 'Gevoelstemperatuur', rowPrecipProb: 'Neerslagkans',
+    rowPrecipitation: 'Neerslag', rowCloudCover: 'Bewolking', rowHumidity: 'Vochtigheid',
+    rowWindSpeed: 'Windsnelheid', rowWindGusts: 'Windstoten', rowWindDir: 'Windrichting',
+    rowUvIndex: 'UV-index', rowThunderstorm: 'Onweer', rowLightning: 'Bliksem',
+    rowTotalPrecip: 'Totale neerslag', rowSunshine: 'Zonneschijnduur', rowWindSpeedDir: 'Wind', rowCape: 'CAPE',
+    morning: 'Voormiddag', afternoon: 'Namiddag',
+    now: 'Nu',
+    jumpHourly: 'Uurlijkse voorspelling',
+    jumpMinutely: '15-minutenvoorspelling',
+    jumpEcmwf: '15-dagenvoorspelling',
+    ecmwfTitle: '15-dagenvoorspelling',
+    ecmwfSub: 'ECMWF IFS HRES modelgegevens worden om de 6 uur bijgewerkt',
+    ecmwfResolution: '~9 km resolutie',
+    jumpDay: 'Gekozen dag',
+    dayTitle: 'Voorspelling voor gekozen dag',
+    daySub: 'ECMWF IFS HRES modelgegevens — uurlijks detail voor één dag',
+    dayPickerLabel: 'Kies een datum:',
+    dayUnavailable: 'Geen voorspellingsgegevens voor deze datum. Kies een datum binnen de komende 15 dagen.',
+    untilDate: (d)=> `tot ${d}`,
+    installBtnText: 'Toevoegen aan beginscherm',
+    installStepsIOS: 'Tik in Safari op het deelicoon (vierkant met pijl ↑), en kies dan "Zet op beginscherm".',
+    installStepsGeneric: 'Open het menu van je browser en kies "Toevoegen aan beginscherm" of "App installeren".',
+    noAddressResults: 'Geen resultaten gevonden',
+    rowGroundTemp: 'Bodemtemp.',
+    rowAirQuality: 'Luchtkwaliteit',
+    aqiGood: 'Goed', aqiFair: 'Matig', aqiModerate: 'Onvoldoende', aqiPoor: 'Slecht', aqiVeryPoor: 'Zeer slecht', aqiExtremelyPoor: 'Extreem slecht',
+    spatialResolution: '~1,5 km resolutie',
+    localeCode: 'nl-BE',
+  },
+  sk: {
+    titleLoading: 'Vyhľadávanie adresy…',
+    dateLoading: 'Načítavanie predpovede…',
+    fetchingNow: 'Načítavanie aktuálnych podmienok…',
+    addressPlaceholder: 'Zadajte poštovú adresu…',
+    goBtn: 'Ísť',
+    useMyLocation: '📍 Použiť moju aktuálnu polohu',
+    gettingLocation: 'Zisťovanie vašej aktuálnej polohy…',
+    lookingUpAddress: 'Vyhľadávanie adresy…',
+    addressFound: 'Adresa nájdená — načítavam predpoveď…',
+    couldntFindAddress: (m)=> `Adresu sa nepodarilo nájsť (${m}). Skúste presnejšiu adresu.`,
+    couldntGetLocation: (m)=> `Nepodarilo sa zistiť vašu polohu (${m}). Skontrolujte povolenie polohy v prehliadači.`,
+    couldntLoadForecast: (m)=> `Nepodarilo sa načítať predpoveď (${m}).`,
+    swipeHint: 'potiahnite →',
+    swipeHintLeft: '← potiahnite',
+    hourlyTitle: 'Hodinová predpoveď — nasledujúcich 24 h',
+    hourlySub: 'Údaje modelu AROME-HD sa aktualizujú každé 3 hodiny',
+    minutelyTitle: '15-minútová predpoveď — nasledujúcich 6 h',
+    minutelySub: 'Údaje nowcastingu sa aktualizujú každú hodinu',
+    dataFrom: 'Údaje z',
+    codeGeneratedBy: 'Kód vygenerovaný pomocou',
+    refreshedAt: (t)=> `Údaje aktualizované o ${t} · automatická aktualizácia každú hodinu`,
+    humidityWind: (h,w)=> `Vlhkosť ${h}% · Vietor ${w} km/h`,
+    maxToday: 'Max. dnes',
+    minToday: 'Min. dnes',
+    precipNow: (p,peak)=> `Pravdepodobnosť zrážok teraz: <b>${p}%</b> · vrchol neskôr dnes: <b>${peak}</b>`,
+    precipTotalToday: (v)=> `Celkové zrážky dnes: <b>${v}</b>`,
+    noLightningRisk: 'Žiadne riziko blesku',
+    lightningLow: 'Nízke', lightningModerate: 'Stredné', lightningHigh: 'Vysoké', lightningExtreme: 'Extrémne',
+    thunderUnlikely: 'Nepravdepodobné', thunderPossible: 'Možné', thunderRisk: 'Riziko', thunderHighRisk: 'Vysoké riziko',
+    minutelyUnavailable: '15-minútové údaje nie sú k dispozícii',
+    alertHighPrecipTitle: 'Upozornenie na dážď',
+    alertHighPrecipBody: (pct)=> `Pravdepodobnosť zrážok dosiahne ${pct}% v priebehu nasledujúcich 24 hodín.`,
+    alertThunderTitle: 'Upozornenie na búrku',
+    alertThunderBody: 'Riziko búrky v priebehu nasledujúcich 24 hodín.',
+    alertWindGustTitle: 'Upozornenie na nárazy vetra',
+    alertWindGustBody: (kmh)=> `V priebehu nasledujúcich 24 hodín sa očakávajú nárazy vetra do ${kmh} km/h.`,
+    rowTime: 'Čas', rowWeather: 'Počasie', rowTemp: 'Teplota 2m', rowFeelsLike: 'Pocitová teplota', rowPrecipProb: 'Prav. zrážok',
+    rowPrecipitation: 'Zrážky', rowCloudCover: 'Oblačnosť', rowHumidity: 'Vlhkosť',
+    rowWindSpeed: 'Rýchlosť vetra', rowWindGusts: 'Nárazy vetra', rowWindDir: 'Smer vetra',
+    rowUvIndex: 'UV index', rowThunderstorm: 'Búrka', rowLightning: 'Blesk',
+    rowTotalPrecip: 'Celkové zrážky', rowSunshine: 'Trvanie slnečného svitu', rowWindSpeedDir: 'Vietor', rowCape: 'CAPE',
+    morning: 'Ráno', afternoon: 'Popoludní',
+    now: 'Teraz',
+    jumpHourly: 'Hodinová predpoveď',
+    jumpMinutely: '15-minútová predpoveď',
+    jumpEcmwf: '15-dňová predpoveď',
+    ecmwfTitle: '15-dňová predpoveď',
+    ecmwfSub: 'Údaje modelu ECMWF IFS HRES sa aktualizujú každých 6 hodín',
+    ecmwfResolution: 'rozlíšenie ~9 km',
+    jumpDay: 'Vybraný deň',
+    dayTitle: 'Predpoveď pre vybraný deň',
+    daySub: 'Údaje modelu ECMWF IFS HRES — hodinové detaily pre jeden deň',
+    dayPickerLabel: 'Vyberte dátum:',
+    dayUnavailable: 'Pre tento dátum nie sú k dispozícii žiadne predpovedné údaje. Vyberte dátum v rámci nasledujúcich 15 dní.',
+    untilDate: (d)=> `do ${d}`,
+    installBtnText: 'Pridať na plochu',
+    installStepsIOS: 'V Safari ťuknite na ikonu Zdieľať (štvorec so šípkou ↑) a potom na "Pridať na plochu".',
+    installStepsGeneric: 'Otvorte ponuku prehliadača a vyberte "Pridať na plochu" alebo "Inštalovať aplikáciu".',
+    noAddressResults: 'Žiadne výsledky',
+    rowGroundTemp: 'Teplota pôdy',
+    rowAirQuality: 'Kvalita ovzdušia',
+    aqiGood: 'Dobrá', aqiFair: 'Priemerná', aqiModerate: 'Zhoršená', aqiPoor: 'Zlá', aqiVeryPoor: 'Veľmi zlá', aqiExtremelyPoor: 'Extrémne zlá',
+    spatialResolution: 'rozlíšenie ~1,5 km',
+    localeCode: 'sk-SK',
+  }
 };
+
+function t(key, ...args){
+  const dict = I18N[LANG] || I18N.en;
+  const entry = dict[key] !== undefined ? dict[key] : I18N.en[key];
+  return typeof entry === 'function' ? entry(...args) : entry;
+}
+
+
+
+const WMO_ICON = {
+  0:"sun", 1:"sun-cloud", 2:"sun-cloud", 3:"cloud",
+  45:"fog", 48:"fog",
+  51:"rain", 53:"rain", 55:"rain", 56:"rain", 57:"rain",
+  61:"rain", 63:"rain", 65:"rain", 66:"rain", 67:"rain",
+  71:"snow", 73:"snow", 75:"snow", 77:"snow",
+  80:"rain", 81:"rain", 82:"rain", 85:"snow", 86:"snow",
+  95:"storm", 96:"storm", 99:"storm",
+};
+
+const WMO_LABEL = {
+  en: {
+    0:"Clear sky", 1:"Mainly clear", 2:"Partly cloudy", 3:"Overcast",
+    45:"Fog", 48:"Rime fog",
+    51:"Light drizzle", 53:"Drizzle", 55:"Dense drizzle", 56:"Freezing drizzle", 57:"Freezing drizzle",
+    61:"Light rain", 63:"Rain", 65:"Heavy rain", 66:"Freezing rain", 67:"Freezing rain",
+    71:"Light snow", 73:"Snow", 75:"Heavy snow", 77:"Snow grains",
+    80:"Rain showers", 81:"Rain showers", 82:"Violent showers", 85:"Snow showers", 86:"Snow showers",
+    95:"Thunderstorm", 96:"Thunderstorm + hail", 99:"Thunderstorm + hail",
+  },
+  fr: {
+    0:"Ciel dégagé", 1:"Généralement dégagé", 2:"Partiellement nuageux", 3:"Couvert",
+    45:"Brouillard", 48:"Brouillard givrant",
+    51:"Bruine légère", 53:"Bruine", 55:"Bruine dense", 56:"Bruine verglaçante", 57:"Bruine verglaçante",
+    61:"Pluie légère", 63:"Pluie", 65:"Pluie forte", 66:"Pluie verglaçante", 67:"Pluie verglaçante",
+    71:"Neige légère", 73:"Neige", 75:"Neige forte", 77:"Grains de neige",
+    80:"Averses de pluie", 81:"Averses de pluie", 82:"Averses violentes", 85:"Averses de neige", 86:"Averses de neige",
+    95:"Orage", 96:"Orage avec grêle", 99:"Orage avec grêle",
+  },
+  sk: {
+    0:"Jasná obloha", 1:"Prevažne jasno", 2:"Polooblačno", 3:"Zamračené",
+    45:"Hmla", 48:"Namŕzajúca hmla",
+    51:"Slabé mrholenie", 53:"Mrholenie", 55:"Husté mrholenie", 56:"Mrznúce mrholenie", 57:"Mrznúce mrholenie",
+    61:"Slabý dážď", 63:"Dážď", 65:"Silný dážď", 66:"Mrznúci dážď", 67:"Mrznúci dážď",
+    71:"Slabé sneženie", 73:"Sneženie", 75:"Silné sneženie", 77:"Snehové zrná",
+    80:"Prehánky", 81:"Prehánky", 82:"Silné prehánky", 85:"Snehové prehánky", 86:"Snehové prehánky",
+    95:"Búrka", 96:"Búrka s krupobitím", 99:"Búrka s krupobitím",
+  }
+};
+// Belgian French uses the same meteorological vocabulary as standard French
+WMO_LABEL.be = {
+  0:"Heldere hemel", 1:"Overwegend helder", 2:"Gedeeltelijk bewolkt", 3:"Zwaar bewolkt",
+  45:"Mist", 48:"Aanvriezende mist",
+  51:"Lichte motregen", 53:"Motregen", 55:"Dichte motregen", 56:"Aanvriezende motregen", 57:"Aanvriezende motregen",
+  61:"Lichte regen", 63:"Regen", 65:"Zware regen", 66:"Aanvriezende regen", 67:"Aanvriezende regen",
+  71:"Lichte sneeuw", 73:"Sneeuw", 75:"Zware sneeuwval", 77:"Sneeuwkorrels",
+  80:"Regenbuien", 81:"Regenbuien", 82:"Hevige buien", 85:"Sneeuwbuien", 86:"Sneeuwbuien",
+  95:"Onweer", 96:"Onweer met hagel", 99:"Onweer met hagel",
+};
+
+function wmoIcon(code){ return WMO_ICON[code] || 'cloud'; }
+function wmoLabel(code){
+  const set = WMO_LABEL[LANG] || WMO_LABEL.en;
+  return set[code] || '—';
+}
 
 function icon(type, size=28){
   const cloudGrey = "#8FA3B0";
@@ -343,6 +1034,14 @@ function icon(type, size=28){
           <g stroke="#8FC4E8" stroke-width="2" stroke-linecap="round"><line x1="8" y1="18" x2="8" y2="25"/><line x1="14" y1="18" x2="14" y2="25"/><line x1="20" y1="18" x2="20" y2="25"/></g>`,
     storm: `<path d="M7 13c-3.3 0-6-2.1-6-4.8C1 5.8 3.4 3.7 6.5 3.5 7.4 1.4 9.9-.5 13-.5c3.5 0 6.4 2.4 6.9 5.5 2 .3 3.6 1.8 3.6 3.6 0 2-1.8 3.6-4.1 3.6H7z" fill="#D7DFE4" stroke="${cloudGrey}" stroke-width="1.6" transform="translate(0,3)"/>
           <path d="M14 17l-4 7h4l-2 6 7-9h-4l3-4z" fill="#D46B3C"/>`,
+    windsock: `<line x1="3" y1="3" x2="3" y2="26" stroke="#5C6B78" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="3" cy="6" r="2.3" fill="#5C6B78"/>
+          <path d="M3 6 L9 2 M3 6 L9 9.5" stroke="#8FA3B0" stroke-width="1.4" stroke-linecap="round" fill="none"/>
+          <polygon points="9,2 12.2,2.8 12.2,9.2 9,10" fill="#DC5A2E"/>
+          <polygon points="12.2,2.8 15.4,3.6 15.4,8.4 12.2,9.2" fill="#EDEFF0"/>
+          <polygon points="15.4,3.6 18.6,4.4 18.6,7.6 15.4,8.4" fill="#DC5A2E"/>
+          <polygon points="18.6,4.4 21.8,5.2 21.8,6.8 18.6,7.6" fill="#EDEFF0"/>
+          <polygon points="21.8,5.2 25,6 21.8,6.8" fill="#DC5A2E"/>`,
   };
   return `<svg width="${size}" height="${size}" viewBox="0 0 28 28" fill="none">${paths[type]||paths.cloud}</svg>`;
 }
@@ -350,8 +1049,7 @@ function icon(type, size=28){
 // picks the right icon variant for a weather_code, swapping sunny icons for
 // moon icons when it's night (isDay: 1=day, 0=night, null/undefined=unknown → assume day)
 function weatherIconType(code, isDay){
-  const wmo = WMO[code] || {icon:'cloud'};
-  let type = wmo.icon;
+  let type = wmoIcon(code);
   if(isDay === 0){
     if(type === 'sun') type = 'moon';
     else if(type === 'sun-cloud') type = 'moon-cloud';
@@ -384,35 +1082,48 @@ function roundOr(v, suffix){
   return Math.round(v)+(suffix||'');
 }
 
-// CAPE (J/kg) — standard convective-instability thresholds, shown as a bar-meter icon
-function capeIcon(v){
+// temperature display: purple + bold when at or below freezing (0°C)
+function tempCell(v, decimals){
   if(v === null || v === undefined || Number.isNaN(v)) return '–';
-  let level, color, label;
-  if(v < 300){ level=1; color='#B7C4CC'; label='Stable'; }
-  else if(v < 1000){ level=2; color='#5FA777'; label='Slight instability'; }
-  else if(v < 2500){ level=3; color='#E0A233'; label='Moderate instability'; }
-  else if(v < 3500){ level=4; color='#DB6A3B'; label='High instability'; }
-  else { level=5; color='#C0392B'; label='Extreme instability'; }
-  const heights = [4,8,12,16,20];
-  let bars = '';
-  for(let b=0;b<5;b++){
-    const h = heights[b];
-    const y = 22-h;
-    const fill = b < level ? color : '#E4EBF0';
-    bars += `<rect x="${b*5+1}" y="${y}" width="3.4" height="${h}" rx="1" fill="${fill}"/>`;
-  }
-  return `<svg width="24" height="22" viewBox="0 0 26 22" fill="none"><title>${label} (CAPE ${Math.round(v)} J/kg)</title>${bars}</svg>`;
+  const text = (decimals ? v.toFixed(decimals) : Math.round(v))+'°';
+  if(v <= 0) return `<span style="color:#8E44AD;font-weight:700;">${text}</span>`;
+  return text;
 }
+
+// CAPE (J/kg) — translated into a plain-language thunderstorm-probability indicator
+function thunderstormBadge(v){
+  if(v === null || v === undefined || Number.isNaN(v)) return '–';
+  let color, label;
+  if(v < 300){ color='#8FA3B0'; label=t('thunderUnlikely'); }
+  else if(v < 1000){ color='#E0A233'; label=t('thunderPossible'); }
+  else if(v < 2500){ color='#DB6A3B'; label=t('thunderRisk'); }
+  else { color='#C0392B'; label=t('thunderHighRisk'); }
+  return `<span class="badge" style="background:${color};" title="CAPE ${Math.round(v)} J/kg">${label}</span>`;
+}
+
+// European Air Quality Index (EEA six-band scale)
+function airQualityBadge(v){
+  if(v === null || v === undefined || Number.isNaN(v)) return '–';
+  let color, label;
+  if(v <= 20){ color='#5FA777'; label=t('aqiGood'); }
+  else if(v <= 40){ color='#A8C24C'; label=t('aqiFair'); }
+  else if(v <= 60){ color='#E0A233'; label=t('aqiModerate'); }
+  else if(v <= 80){ color='#DB6A3B'; label=t('aqiPoor'); }
+  else if(v <= 100){ color='#9B4F96'; label=t('aqiVeryPoor'); }
+  else { color='#7A1F3D'; label=t('aqiExtremelyPoor'); }
+  return `<span class="badge" style="background:${color};" title="European AQI ${Math.round(v)}">${label}</span>`;
+}
+
 
 // Lightning Potential Index (J/kg) — 0 = none, higher = more likely/severe storms
 function lightningBadge(v){
   if(v === null || v === undefined || Number.isNaN(v)) return '–';
-  if(v <= 0) return ''; // nothing to show when there's no lightning risk
+  if(v <= 0) return `<span class="dot-none" title="${t('noLightningRisk')}">•</span>`;
   let cls, label;
-  if(v < 2){ cls='badge-low'; label='⚡ Low'; }
-  else if(v < 5){ cls='badge-moderate'; label='⚡ Moderate'; }
-  else if(v < 10){ cls='badge-high'; label='⚡ High'; }
-  else { cls='badge-extreme'; label='⚡ Extreme'; }
+  if(v < 2){ cls='badge-low'; label='⚡ '+t('lightningLow'); }
+  else if(v < 5){ cls='badge-moderate'; label='⚡ '+t('lightningModerate'); }
+  else if(v < 10){ cls='badge-high'; label='⚡ '+t('lightningHigh'); }
+  else { cls='badge-extreme'; label='⚡ '+t('lightningExtreme'); }
   return `<span class="badge ${cls}">${label}</span>`;
 }
 
@@ -578,40 +1289,252 @@ function renderAstroStrip(data, todayStr, now){
 }
 
 function updateHeader(now){
-  const dateStr = now.toLocaleDateString('en-GB',{weekday:'long', day:'numeric', month:'long'});
-  const timeStr = now.toLocaleTimeString('en-GB',{hour:'2-digit', minute:'2-digit'});
+  const locale = t('localeCode');
+  const dateStr = now.toLocaleDateString(locale,{weekday:'long', day:'numeric', month:'long'});
+  const timeStr = now.toLocaleTimeString(locale,{hour:'2-digit', minute:'2-digit'});
   document.getElementById('dateLine').textContent = `${dateStr} · ${timeStr}`;
   if(lastUpdated){
-    const upd = lastUpdated.toLocaleTimeString('en-GB',{hour:'2-digit', minute:'2-digit'});
-    document.getElementById('updatedLine').textContent = `Data refreshed at ${upd} · auto-refreshes hourly`;
+    const upd = lastUpdated.toLocaleTimeString(locale,{hour:'2-digit', minute:'2-digit'});
+    document.getElementById('updatedLine').textContent = t('refreshedAt', upd);
   }
 }
+
+// applies every static (non-data-dependent) piece of UI text for the current LANG
+function applyStaticTranslations(){
+  document.documentElement.lang = LANG;
+  document.getElementById('addressInput').placeholder = t('addressPlaceholder');
+  document.getElementById('goBtn').textContent = t('goBtn');
+  document.getElementById('locBtn').textContent = t('useMyLocation');
+  document.getElementById('hourlyTitleText').textContent = t('hourlyTitle');
+  document.getElementById('hourlySubText').textContent = `${t('hourlySub')} · ${t('spatialResolution')}`;
+  document.getElementById('minutelyTitleText').textContent = t('minutelyTitle');
+  document.getElementById('minutelySubText').textContent = `${t('minutelySub')} · ${t('spatialResolution')}`;
+  document.getElementById('ecmwfTitleText').textContent = t('ecmwfTitle');
+  document.getElementById('ecmwfSubText').textContent = `${t('ecmwfSub')} · ${t('ecmwfResolution')}`;
+  updateDayTitleWithRange(new Date());
+  document.getElementById('daySubText').textContent = `${t('daySub')} · ${t('ecmwfResolution')}`;
+  document.getElementById('dayPickerLabel').textContent = t('dayPickerLabel');
+  updateDaySelectedLabel();
+  document.getElementById('swipeHint1').textContent = t('swipeHint');
+  document.getElementById('swipeHint2').textContent = t('swipeHint');
+  document.getElementById('swipeHint3').textContent = t('swipeHint');
+  document.getElementById('swipeHint4').textContent = t('swipeHint');
+  document.getElementById('swipeHint1Left').textContent = t('swipeHintLeft');
+  document.getElementById('swipeHint2Left').textContent = t('swipeHintLeft');
+  document.getElementById('swipeHint3Left').textContent = t('swipeHintLeft');
+  document.getElementById('swipeHint4Left').textContent = t('swipeHintLeft');
+  document.getElementById('dataFromText').textContent = t('dataFrom');
+  const madeWithEl = document.getElementById('madeWithClaudeText');
+  if(madeWithEl) madeWithEl.textContent = t('codeGeneratedBy');
+  const installBtnTextEl = document.getElementById('installBtnText');
+  if(installBtnTextEl) installBtnTextEl.textContent = t('installBtnText');
+  const instrEl = document.getElementById('installInstructions');
+  if(instrEl && !instrEl.hidden){
+    document.getElementById('installInstructionsText').textContent = isIOS() ? t('installStepsIOS') : t('installStepsGeneric');
+  }
+  document.getElementById('tocHourly').textContent = t('jumpHourly');
+  document.getElementById('tocMinutely').textContent = t('jumpMinutely');
+  document.getElementById('tocEcmwf').textContent = t('jumpEcmwf');
+  document.getElementById('tocDay').textContent = t('jumpDay');
+  const fetchingEl = document.getElementById('fetchingMsg');
+  if(fetchingEl) fetchingEl.textContent = t('fetchingNow');
+  document.querySelectorAll('.lang-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.lang === LANG);
+  });
+}
+
+function setLanguage(lang){
+  LANG = lang;
+  localStorage.setItem('weatherLang', lang);
+  applyStaticTranslations();
+  updateHeader(new Date());
+  if(cachedData) render(cachedData);
+}
+document.querySelectorAll('.lang-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=> setLanguage(btn.dataset.lang));
+});
+applyStaticTranslations();
 
 // keep the clock (and "last updated" text) ticking between data refreshes
 setInterval(()=> updateHeader(new Date()), 30*1000);
 
-// resolve the coordinates to a human-readable postal address, once, via
-// OpenStreetMap's Nominatim reverse-geocoding service
+// builds a "street, postcode city, country" string from a Photon address feature
+function formatPhotonAddress(props){
+  const street = [props.housenumber, props.street].filter(Boolean).join(' ');
+  const city = props.city || props.town || props.village || props.district || '';
+  const cityLine = [props.postcode, city].filter(Boolean).join(' ');
+  const country = props.country || '';
+  const parts = [street, cityLine, country].filter(Boolean);
+  if(parts.length) return parts.join(', ');
+  return props.name || null;
+}
+
+// resolve the coordinates to a human-readable postal address via Photon
+// (komoot's OSM-based geocoder — same underlying map data as Nominatim, but
+// built for interactive client-side use rather than Nominatim's strict
+// 1-request/second policy meant for occasional lookups)
 async function loadAddress(){
   try{
-    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${LAT}&lon=${LON}&zoom=18&addressdetails=1`);
+    const res = await fetch(`https://photon.komoot.io/reverse?lon=${LON}&lat=${LAT}`);
     if(!res.ok) throw new Error('HTTP '+res.status);
     const data = await res.json();
-    const a = data.address || {};
-    const streetNum = a.house_number || '';
-    const streetName = a.road || a.pedestrian || a.footway || '';
-    const street = [streetNum, streetName].filter(Boolean).join(' ');
-    const city = a.city || a.town || a.village || a.municipality || '';
-    const postcode = a.postcode || '';
-    const cityLine = [postcode, city].filter(Boolean).join(' ');
-    const country = a.country || '';
-    const parts = [street, cityLine, country].filter(Boolean);
-    const title = parts.length ? parts.join(', ') : (data.display_name || `${fmtCoord(LAT,'N','S')}, ${fmtCoord(LON,'E','W')}`);
+    const props = (data.features && data.features[0] && data.features[0].properties) || {};
+    const title = formatPhotonAddress(props) || `${fmtCoord(LAT,'N','S')}, ${fmtCoord(LON,'E','W')}`;
     document.getElementById('titleLine').textContent = title;
   }catch(err){
     document.getElementById('titleLine').textContent = `${fmtCoord(LAT,'N','S')}, ${fmtCoord(LON,'E','W')}`;
   }
 }
+
+// forward-geocode a free-text postal address to coordinates via Photon's
+// search endpoint, then update LAT/LON and reload everything for that location
+async function geocodeAndLoad(query){
+  const msgEl = document.getElementById('addressMsg');
+  const btnEl = document.querySelector('.address-btn');
+  msgEl.textContent = t('lookingUpAddress');
+  msgEl.className = 'address-msg';
+  btnEl.disabled = true;
+  try{
+    const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=1`);
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    const feat = data.features && data.features[0];
+    if(!feat) throw new Error('No matching address found');
+
+    LON = feat.geometry.coordinates[0];
+    LAT = feat.geometry.coordinates[1];
+
+    msgEl.textContent = t('addressFound');
+    msgEl.className = 'address-msg ok';
+
+    document.getElementById('titleLine').textContent = t('titleLoading');
+    await Promise.all([ loadAddress(), load() ]);
+
+    msgEl.textContent = '';
+    msgEl.className = 'address-msg';
+  }catch(err){
+    msgEl.textContent = t('couldntFindAddress', err.message);
+    msgEl.className = 'address-msg error';
+  }finally{
+    btnEl.disabled = false;
+  }
+}
+
+// --- address autocomplete dropdown ---
+let suggestDebounceTimer = null;
+let suggestAbortController = null;
+let currentSuggestions = [];
+let activeSuggestionIndex = -1;
+
+function hideSuggestions(){
+  const listEl = document.getElementById('addressSuggestions');
+  listEl.hidden = true;
+  listEl.innerHTML = '';
+  currentSuggestions = [];
+  activeSuggestionIndex = -1;
+}
+
+function renderSuggestions(){
+  const listEl = document.getElementById('addressSuggestions');
+  activeSuggestionIndex = -1;
+  if(!currentSuggestions.length){
+    listEl.innerHTML = `<li class="no-results">${t('noAddressResults')}</li>`;
+    listEl.hidden = false;
+    return;
+  }
+  listEl.innerHTML = currentSuggestions.map((feat,i)=>{
+    const props = feat.properties || {};
+    const full = formatPhotonAddress(props) || props.name || '';
+    const parts = full.split(', ');
+    const main = parts[0] || full;
+    const secondary = parts.slice(1).join(', ');
+    return `<li data-index="${i}">${main}${secondary ? `<span class="sugg-secondary">${secondary}</span>` : ''}</li>`;
+  }).join('');
+  listEl.hidden = false;
+
+  listEl.querySelectorAll('li[data-index]').forEach(li=>{
+    // mousedown (not click) fires before the input's blur event, so the
+    // selection registers before the dropdown gets hidden by blur
+    li.addEventListener('mousedown', (e)=>{
+      e.preventDefault();
+      selectSuggestion(currentSuggestions[parseInt(li.dataset.index, 10)]);
+    });
+  });
+}
+
+async function fetchSuggestions(query){
+  if(!query || query.trim().length < 3){ hideSuggestions(); return; }
+  if(suggestAbortController) suggestAbortController.abort();
+  suggestAbortController = new AbortController();
+  try{
+    const res = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`, {signal: suggestAbortController.signal});
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    currentSuggestions = (data.features || []).slice(0,5);
+    renderSuggestions();
+  }catch(err){
+    if(err.name === 'AbortError') return; // superseded by a newer keystroke
+    currentSuggestions = [];
+    renderSuggestions();
+  }
+}
+
+function selectSuggestion(feat){
+  if(!feat) return;
+  hideSuggestions();
+  document.getElementById('addressInput').value = '';
+  LON = feat.geometry.coordinates[0];
+  LAT = feat.geometry.coordinates[1];
+  document.getElementById('titleLine').textContent = t('titleLoading');
+  Promise.all([ loadAddress(), load() ]);
+}
+
+const addressInputEl = document.getElementById('addressInput');
+addressInputEl.addEventListener('input', ()=>{
+  clearTimeout(suggestDebounceTimer);
+  const query = addressInputEl.value;
+  suggestDebounceTimer = setTimeout(()=> fetchSuggestions(query), 300);
+});
+addressInputEl.addEventListener('keydown', (e)=>{
+  const listEl = document.getElementById('addressSuggestions');
+  if(listEl.hidden || !currentSuggestions.length) return;
+  const items = Array.from(listEl.querySelectorAll('li[data-index]'));
+  if(e.key === 'ArrowDown'){
+    e.preventDefault();
+    activeSuggestionIndex = Math.min(activeSuggestionIndex+1, items.length-1);
+    items.forEach((li,i)=> li.classList.toggle('active', i===activeSuggestionIndex));
+  }else if(e.key === 'ArrowUp'){
+    e.preventDefault();
+    activeSuggestionIndex = Math.max(activeSuggestionIndex-1, 0);
+    items.forEach((li,i)=> li.classList.toggle('active', i===activeSuggestionIndex));
+  }else if(e.key === 'Enter'){
+    if(activeSuggestionIndex >= 0){
+      e.preventDefault();
+      selectSuggestion(currentSuggestions[activeSuggestionIndex]);
+    }
+    // otherwise let the form's normal submit handler run as a fallback
+  }else if(e.key === 'Escape'){
+    hideSuggestions();
+  }
+});
+addressInputEl.addEventListener('blur', ()=>{
+  // slight delay so a suggestion's mousedown can still register first
+  setTimeout(hideSuggestions, 150);
+});
+addressInputEl.addEventListener('focus', ()=>{
+  if(currentSuggestions.length) document.getElementById('addressSuggestions').hidden = false;
+});
+
+document.getElementById('addressForm').addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const inputEl = document.getElementById('addressInput');
+  const query = inputEl.value.trim();
+  hideSuggestions();
+  if(query){
+    geocodeAndLoad(query);
+    inputEl.value = '';
+  }
+});
 
 function mergeByTime(mainTimes, mainArr, blendTimes, blendArr){
   const map = new Map();
@@ -647,9 +1570,11 @@ let cachedData = null;
 
 async function load(){
   try{
-    const [mainRes, blendRes] = await Promise.all([
-      fetch(API),
-      fetch(BLEND_API).catch(()=>null) // blend is a nice-to-have, don't fail the page if it errors
+    const [mainRes, blendRes, ecmwfRes, aqiRes] = await Promise.all([
+      fetch(buildApiUrl()),
+      fetch(buildBlendUrl()).catch(()=>null), // blend is a nice-to-have, don't fail the page if it errors
+      fetch(buildEcmwfUrl()).catch(()=>null), // 15-day ECMWF table is also a nice-to-have
+      fetch(buildAirQualityUrl()).catch(()=>null) // ditto for air quality
     ]);
     if(!mainRes.ok) throw new Error("HTTP "+mainRes.status);
     const mainData = await mainRes.json();
@@ -657,13 +1582,38 @@ async function load(){
     if(blendRes && blendRes.ok){
       try{ blendData = await blendRes.json(); }catch(e){ blendData = null; }
     }
+    let ecmwfData = null;
+    if(ecmwfRes && ecmwfRes.ok){
+      try{ ecmwfData = await ecmwfRes.json(); }catch(e){ ecmwfData = null; }
+    }
+    let aqiData = null;
+    if(aqiRes && aqiRes.ok){
+      try{ aqiData = await aqiRes.json(); }catch(e){ aqiData = null; }
+    }
     const data = mergeData(mainData, blendData);
+    data.ecmwf = ecmwfData;
+    data.aqiMap = buildAqiMap(aqiData);
     lastUpdated = new Date();
     cachedData = data;
     render(data);
   }catch(err){
-    document.getElementById('nowCard').innerHTML = `<div class="state-msg">Couldn't load forecast (${err.message}).</div>`;
+    document.getElementById('nowCard').innerHTML = `<div class="state-msg">${t('couldntLoadForecast', err.message)}</div>`;
   }
+}
+
+// looks up European AQI by exact hour timestamp (both this and the weather
+// APIs are requested with the same timezone, so the ISO strings line up)
+function buildAqiMap(aqiData){
+  const map = new Map();
+  if(aqiData && aqiData.hourly && aqiData.hourly.time){
+    aqiData.hourly.time.forEach((t,i)=> map.set(t, aqiData.hourly.european_aqi[i]));
+  }
+  return map;
+}
+function aqiAt(aqiMap, iso){
+  if(!aqiMap) return null;
+  const v = aqiMap.get(iso);
+  return v===undefined ? null : v;
 }
 
 // re-render using the already-fetched data, purely to move the "Now" column/
@@ -687,7 +1637,7 @@ function render(data){
   });
 
   const wcode = h.weather_code[curIdx];
-  const wmo = WMO[wcode] || {label:"—", icon:"cloud"};
+  const condLabel = wmoLabel(wcode);
   const iconType = weatherIconType(wcode, h.is_day[curIdx]);
   const humidity = roundOr(h.relative_humidity_2m[curIdx], '');
   const pop = roundOr(h.precipitation_probability[curIdx], '');
@@ -738,59 +1688,169 @@ function render(data){
       <div class="now-left">
         ${icon(iconType, 56)}
         <div>
-          <div class="now-cond">${wmo.label}</div>
-          <div class="now-sub">Humidity ${humidity}% · Wind ${wind} km/h</div>
+          <div class="now-cond">${condLabel}</div>
+          <div class="now-sub">${t('humidityWind', humidity, wind)}</div>
         </div>
       </div>
       <div class="now-temp">${temp}°</div>
     </div>
 
     <div class="minmax">
-      <div class="max">
-        <div class="val">${maxTemp}</div>
-        <div class="lbl">Max today</div>
-      </div>
       <div class="min">
         <div class="val">${minTemp}</div>
-        <div class="lbl">Min today</div>
+        <div class="lbl">${t('minToday')}</div>
+      </div>
+      <div class="max">
+        <div class="val">${maxTemp}</div>
+        <div class="lbl">${t('maxToday')}</div>
       </div>
     </div>
 
     <div class="precip-banner">
       ${icon('rain',22)}
       <div class="precip-lines">
-        <div>Precipitation probability now: <b>${pop}%</b> · peak later today: <b>${maxPop}</b></div>
-        <div>Total precipitation today: <b>${precipTotal}</b></div>
+        <div>${t('precipNow', pop, maxPop)}</div>
+        <div>${t('precipTotalToday', precipTotal)}</div>
       </div>
     </div>
   `;
 
-  buildHourlyTable(h, curIdx);
+  buildHourlyTable(h, curIdx, data.aqiMap);
   buildMinutelyTable(data.minutely_15, now);
+  buildEcmwfTable(data.ecmwf, now, data.aqiMap);
+  buildDayTable(data.ecmwf, document.getElementById('dayPicker').value, data.aqiMap);
+  evaluateWeatherAlerts(h, curIdx);
 }
 
-function buildHourlyTable(h, curIdx){
+// ---- Weather alerts (precip. prob. > 50%, thunderstorm >= Risk, wind gusts >= 60 km/h) ----
+// Mobile devices get a system notification; desktop gets an in-page popup.
+// Each alert type only fires again once its condition clears and re-triggers
+// (edge-triggered), so an hourly auto-refresh doesn't spam repeat alerts.
+const weatherAlertState = { precip:false, thunder:false, wind:false };
+
+function isMobileDevice(){
+  if(window.matchMedia && window.matchMedia('(pointer:coarse)').matches) return true;
+  return /Android|iPhone|iPad|iPod|Mobile|Windows Phone/i.test(navigator.userAgent);
+}
+
+let notificationPermissionRequested = false;
+async function ensureNotificationPermission(){
+  if(!('Notification' in window)) return 'unsupported';
+  if(Notification.permission === 'granted' || Notification.permission === 'denied'){
+    return Notification.permission;
+  }
+  if(notificationPermissionRequested) return Notification.permission;
+  notificationPermissionRequested = true;
+  try{ return await Notification.requestPermission(); }
+  catch(e){ return 'denied'; }
+}
+
+function ensureAlertContainer(){
+  let c = document.getElementById('weatherAlertContainer');
+  if(!c){
+    c = document.createElement('div');
+    c.id = 'weatherAlertContainer';
+    c.className = 'weather-alert-container';
+    document.body.appendChild(c);
+  }
+  return c;
+}
+
+function showDesktopPopup(title, body){
+  const container = ensureAlertContainer();
+  const el = document.createElement('div');
+  el.className = 'weather-alert-popup';
+  el.innerHTML = `
+    <div class="weather-alert-icon">⚠️</div>
+    <div class="weather-alert-text">
+      <div class="weather-alert-title"></div>
+      <div class="weather-alert-body"></div>
+    </div>
+    <button class="weather-alert-close" aria-label="Dismiss">×</button>
+  `;
+  el.querySelector('.weather-alert-title').textContent = title;
+  el.querySelector('.weather-alert-body').textContent = body;
+  el.querySelector('.weather-alert-close').addEventListener('click', ()=> el.remove());
+  container.appendChild(el);
+  setTimeout(()=>{ el.remove(); }, 20000);
+}
+
+async function triggerWeatherAlert(title, body){
+  if(isMobileDevice()){
+    const perm = await ensureNotificationPermission();
+    if(perm === 'granted'){
+      try{
+        if(navigator.serviceWorker){
+          const reg = await navigator.serviceWorker.getRegistration();
+          if(reg){ reg.showNotification(title, {body, icon:'icon-192.png', badge:'icon-192.png'}); return; }
+        }
+        new Notification(title, {body, icon:'icon-192.png'});
+        return;
+      }catch(e){ /* fall through to on-screen popup below */ }
+    }
+  }
+  showDesktopPopup(title, body);
+}
+
+function evaluateWeatherAlerts(h, curIdx){
+  const n = 24;
+  const idxs = Array.from({length:n}, (_,i)=>curIdx+i).filter(i=>i<h.time.length);
+
+  const pops = idxs.map(i=>h.precipitation_probability[i]).filter(v=>v!==null && v!==undefined);
+  const capes = idxs.map(i=>h.cape[i]).filter(v=>v!==null && v!==undefined);
+  const gusts = idxs.map(i=>h.wind_gusts_10m[i]).filter(v=>v!==null && v!==undefined);
+
+  const maxPop = pops.length ? Math.max(...pops) : null;
+  const maxCape = capes.length ? Math.max(...capes) : null;
+  const maxGust = gusts.length ? Math.max(...gusts) : null;
+
+  // "Risk" is the 3rd of 4 thunderstormBadge tiers (CAPE >= 1000), so
+  // "Risk or higher" also covers the top "High risk" tier (CAPE >= 2500).
+  const precipTriggered = maxPop !== null && maxPop > 50;
+  const thunderTriggered = maxCape !== null && maxCape >= 1000;
+  const windTriggered = maxGust !== null && maxGust >= 60;
+
+  if(precipTriggered && !weatherAlertState.precip){
+    triggerWeatherAlert(t('alertHighPrecipTitle'), t('alertHighPrecipBody', Math.round(maxPop)));
+  }
+  weatherAlertState.precip = precipTriggered;
+
+  if(thunderTriggered && !weatherAlertState.thunder){
+    triggerWeatherAlert(t('alertThunderTitle'), t('alertThunderBody'));
+  }
+  weatherAlertState.thunder = thunderTriggered;
+
+  if(windTriggered && !weatherAlertState.wind){
+    triggerWeatherAlert(t('alertWindGustTitle'), t('alertWindGustBody', Math.round(maxGust)));
+  }
+  weatherAlertState.wind = windTriggered;
+}
+
+function buildHourlyTable(h, curIdx, aqiMap){
   const n = 24;
   const idxs = Array.from({length:n}, (_,i)=>curIdx+i).filter(i=>i<h.time.length);
 
   const rows = [
-    {label:'Time', get:(i,n0)=> n0===0 ? 'Now' : fmtHourShort(h.time[i])},
-    {label:'Weather*', get:(i)=> icon(weatherIconType(h.weather_code[i], h.is_day[i]), 22), isIcon:true},
-    {label:'Temp', get:(i)=> roundOr(h.temperature_2m[i], '°')},
-    {label:'Humidity', get:(i)=> roundOr(h.relative_humidity_2m[i], '%')},
-    {label:'Precip. prob.*', get:(i)=> roundOr(h.precipitation_probability[i], '%'),
+    {label:t('rowTime'), get:(i,n0)=> n0===0 ? t('now') : fmtHourShort(h.time[i])},
+    {label:t('rowWeather'), get:(i)=> icon(weatherIconType(h.weather_code[i], h.is_day[i]), 22), isIcon:true},
+    {label:t('rowTemp'), get:(i)=> tempCell(h.temperature_2m[i])},
+    {label:t('rowFeelsLike'), get:(i)=> tempCell(h.apparent_temperature[i])},
+    {label:t('rowGroundTemp'), get:(i)=> tempCell(h.soil_temperature_0cm[i])},
+    {label:t('rowPrecipProb'), get:(i)=> roundOr(h.precipitation_probability[i], '%'),
       cellClass:(i)=> (h.precipitation_probability[i]!==null && h.precipitation_probability[i]>50) ? 'high-pop' : ''},
-    {label:'Precipitation', get:(i)=> numOr(h.precipitation[i], 1, ' mm')},
-    {label:'Cloud cover*', get:(i)=> cloudValue(h.cloud_cover[i])},
-    {label:'Wind speed', get:(i)=> windValue(h.wind_speed_10m[i])},
-    {label:'Wind gusts', get:(i)=> windValue(h.wind_gusts_10m[i])},
-    {label:'Wind dir.', get:(i)=> windDirection(h.wind_direction_10m[i])},
-    {label:'UV index*', get:(i)=> uvValue(h.uv_index[i])},
-    {label:'CAPE', get:(i)=> capeIcon(h.cape[i]), isIcon:true},
+    {label:t('rowPrecipitation'), get:(i)=> numOr(h.precipitation[i], 1, ' mm')},
+    {label:t('rowCloudCover'), get:(i)=> cloudValue(h.cloud_cover[i])},
+    {label:t('rowHumidity'), get:(i)=> roundOr(h.relative_humidity_2m[i], '%')},
+    {label:t('rowWindSpeed'), get:(i)=> windValue(h.wind_speed_10m[i])},
+    {label:t('rowWindGusts'), get:(i)=> windValue(h.wind_gusts_10m[i])},
+    {label:`<span class="row-label-flex">${t('rowWindDir')}${icon('windsock',22)}</span>`, get:(i)=> windDirection(h.wind_direction_10m[i])},
+    {label:t('rowUvIndex'), get:(i)=> uvValue(h.uv_index[i])},
+    {label:t('rowThunderstorm'), get:(i)=> thunderstormBadge(h.cape[i])},
+    {label:t('rowAirQuality'), get:(i)=> airQualityBadge(aqiAt(aqiMap, h.time[i]))},
   ];
 
   let thead = '<thead><tr><th class="row-label"></th>';
-  idxs.forEach((i,n0)=>{ thead += `<th class="${n0===0?'now-col':''}">${n0===0?'Now':fmtHourShort(h.time[i])}</th>`; });
+  idxs.forEach((i,n0)=>{ thead += `<th class="${n0===0?'now-col':''}">${n0===0?t('now'):fmtHourShort(h.time[i])}</th>`; });
   thead += '</tr></thead>';
 
   let tbody = '<tbody>';
@@ -810,7 +1870,7 @@ function buildHourlyTable(h, curIdx){
 
 function buildMinutelyTable(m, now){
   if(!m){
-    document.getElementById('minutelyTable').innerHTML = '<tbody><tr><td>15-minute data not available</td></tr></tbody>';
+    document.getElementById('minutelyTable').innerHTML = `<tbody><tr><td>${t('minutelyUnavailable')}</td></tr></tbody>`;
     return;
   }
   let mIdx = 0, best = Infinity;
@@ -822,18 +1882,19 @@ function buildMinutelyTable(m, now){
   const idxs = Array.from({length:n}, (_,i)=>mIdx+i).filter(i=>i<m.time.length);
 
   let thead = '<thead><tr><th class="row-label"></th>';
-  idxs.forEach((i,n0)=>{ thead += `<th class="${n0===0?'now-col':''}">${n0===0?'Now':fmtTime(m.time[i])}</th>`; });
+  idxs.forEach((i,n0)=>{ thead += `<th class="${n0===0?'now-col':''}">${n0===0?t('now'):fmtTime(m.time[i])}</th>`; });
   thead += '</tr></thead>';
 
   const rows = [
-    {label:'Weather*', get:(i)=> icon(weatherIconType(m.weather_code[i], m.is_day[i]), 20), isIcon:true},
-    {label:'Temp', get:(i)=> numOr(m.temperature_2m[i], 1, '°')},
-    {label:'Precipitation', get:(i)=> numOr(m.precipitation[i], 1, ' mm')},
-    {label:'CAPE', get:(i)=> capeIcon(m.cape[i]), isIcon:true},
-    {label:'Lightning*', get:(i)=> lightningBadge(m.lightning_potential[i])},
-    {label:'Wind speed', get:(i)=> windValue(m.wind_speed_10m[i])},
-    {label:'Wind gusts', get:(i)=> windValue(m.wind_gusts_10m[i])},
-    {label:'Wind dir.', get:(i)=> windDirection(m.wind_direction_10m[i])},
+    {label:t('rowWeather'), get:(i)=> icon(weatherIconType(m.weather_code[i], m.is_day[i]), 20), isIcon:true},
+    {label:t('rowTemp'), get:(i)=> tempCell(m.temperature_2m[i], 1)},
+    {label:t('rowFeelsLike'), get:(i)=> tempCell(m.apparent_temperature[i], 1)},
+    {label:t('rowPrecipitation'), get:(i)=> numOr(m.precipitation[i], 1, ' mm')},
+    {label:t('rowThunderstorm'), get:(i)=> thunderstormBadge(m.cape[i])},
+    {label:t('rowLightning'), get:(i)=> lightningBadge(m.lightning_potential[i])},
+    {label:t('rowWindSpeed'), get:(i)=> windValue(m.wind_speed_10m[i])},
+    {label:t('rowWindGusts'), get:(i)=> windValue(m.wind_gusts_10m[i])},
+    {label:`<span class="row-label-flex">${t('rowWindDir')}${icon('windsock',22)}</span>`, get:(i)=> windDirection(m.wind_direction_10m[i])},
   ];
 
   let tbody = '<tbody>';
@@ -851,8 +1912,407 @@ function buildMinutelyTable(m, now){
   document.getElementById('minutelyTable').innerHTML = thead + tbody;
 }
 
-loadAddress();
-load();
+// weather-icon "severity" used to pick a representative worst-case icon
+// when summarizing several hours into one morning/afternoon cell
+const ICON_SEVERITY = {sun:0, moon:0, 'sun-cloud':1, 'moon-cloud':1, cloud:2, fog:2, rain:4, snow:4, storm:6};
+
+// Both Open-Meteo's precomputed sunshine_duration AND the raw direct_radiation
+// field turned out to be unreliable for this model at longer lead times
+// (interpolated data beyond IFS HRES's native ~90h hourly window doesn't
+// vary sensibly — it stays maxed-out regardless of actual cloud cover).
+// Rather than keep chasing an unreliable radiation-derived source, we
+// estimate sunshine directly from cloud cover (the same value already shown
+// in the Cloud cover row), which guarantees the two rows never contradict
+// each other — e.g. 85% cloud cover can no longer show 100% sunshine.
+function sunshineMinutesFromCloud(cloudCoverPct, isDay){
+  if(cloudCoverPct === null || cloudCoverPct === undefined) return null;
+  if(isDay === 0) return 0; // no sunshine possible at night, however clear the sky
+  const clearFraction = Math.max(0, Math.min(1, 1 - cloudCoverPct/100));
+  return clearFraction * 60; // per-hour estimate, in minutes
+}
+function fmtDuration(totalMin){
+  if(totalMin === null || totalMin === undefined) return '–';
+  if(totalMin > 60){
+    const hrs = Math.floor(totalMin/60), mins = totalMin%60;
+    return `${hrs}h ${mins}min`;
+  }
+  return `${totalMin} min`;
+}
+
+function aggAvg(idxs, arr){
+  const vals = idxs.map(i=>arr[i]).filter(v=>v!==null && v!==undefined);
+  if(!vals.length) return null;
+  return vals.reduce((a,b)=>a+b,0)/vals.length;
+}
+function aggSum(idxs, arr){
+  const vals = idxs.map(i=>arr[i]).filter(v=>v!==null && v!==undefined);
+  if(!vals.length) return null;
+  return vals.reduce((a,b)=>a+b,0);
+}
+function aggMax(idxs, arr){
+  const vals = idxs.map(i=>arr[i]).filter(v=>v!==null && v!==undefined);
+  if(!vals.length) return null;
+  return Math.max(...vals);
+}
+function aggDominantWeatherCode(idxs, codes){
+  let best = null, bestSeverity = -1;
+  idxs.forEach(i=>{
+    const c = codes[i];
+    if(c===null || c===undefined) return;
+    const sev = ICON_SEVERITY[wmoIcon(c)] ?? 0;
+    if(sev > bestSeverity){ bestSeverity = sev; best = c; }
+  });
+  return best;
+}
+// circular (vector) average of wind speed+direction, so opposing directions
+// don't cancel out into a meaningless number
+function aggWindVector(idxs, speeds, dirs){
+  let u = 0, v = 0, n = 0;
+  idxs.forEach(i=>{
+    const s = speeds[i], d = dirs[i];
+    if(s===null || s===undefined || d===null || d===undefined) return;
+    const rad = d*Math.PI/180;
+    u += -s*Math.sin(rad);
+    v += -s*Math.cos(rad);
+    n++;
+  });
+  if(!n) return {speed:null, dir:null};
+  u/=n; v/=n;
+  const speed = Math.sqrt(u*u+v*v);
+  let dir = Math.atan2(-u,-v)*180/Math.PI;
+  if(dir<0) dir+=360;
+  return {speed, dir};
+}
+
+function fmtDateHeader(dateStr){
+  const d = new Date(dateStr+'T12:00:00');
+  let s = d.toLocaleDateString(t('localeCode'), {weekday:'short', day:'numeric', month:'short'});
+  return s.replace(/,/g, '').toUpperCase();
+}
+
+// small "min° / max°" label, colored consistently with the title's min/max display
+function minMaxLabel(idxs, tempsArr, cssClass){
+  const vals = idxs.map(i=>tempsArr[i]).filter(v=>v!==null && v!==undefined);
+  if(!vals.length) return '';
+  const mn = Math.round(Math.min(...vals));
+  const mx = Math.round(Math.max(...vals));
+  return `<span class="${cssClass}"><span class="dmin">${mn}°</span> / <span class="dmax">${mx}°</span></span>`;
+}
+
+function buildEcmwfTable(ecmwf, now, aqiMap){
+  const tableEl = document.getElementById('ecmwfTable');
+  if(!ecmwf || !ecmwf.hourly){
+    tableEl.innerHTML = `<tbody><tr><td>${t('minutelyUnavailable')}</td></tr></tbody>`;
+    return;
+  }
+  const h = ecmwf.hourly;
+  const todayStr = now.toLocaleDateString('en-CA');
+
+  // group hour indices by calendar date, keeping only days after today
+  const byDate = new Map();
+  h.time.forEach((iso,i)=>{
+    const dateStr = iso.slice(0,10);
+    if(dateStr <= todayStr) return; // skip today — table starts tomorrow
+    if(!byDate.has(dateStr)) byDate.set(dateStr, []);
+    byDate.get(dateStr).push(i);
+  });
+
+  const days = Array.from(byDate.keys()).sort();
+  if(!days.length){
+    tableEl.innerHTML = `<tbody><tr><td>${t('minutelyUnavailable')}</td></tr></tbody>`;
+    return;
+  }
+
+  // build morning (06:00–11:59) / afternoon (12:00–17:59) index buckets per day
+  const halfDays = []; // [{dateStr, part:'morning'|'afternoon', idxs:[...]}]
+  days.forEach(dateStr=>{
+    const dayIdxs = byDate.get(dateStr);
+    const morning = dayIdxs.filter(i=>{ const hr = new Date(h.time[i]).getHours(); return hr>=6 && hr<12; });
+    const afternoon = dayIdxs.filter(i=>{ const hr = new Date(h.time[i]).getHours(); return hr>=12 && hr<18; });
+    halfDays.push({dateStr, part:'morning', idxs:morning});
+    halfDays.push({dateStr, part:'afternoon', idxs:afternoon});
+  });
+
+  // header row 1: date, spanning both morning+afternoon columns
+  let theadRow1 = '<tr><th class="row-label" rowspan="2"></th>';
+  days.forEach(dateStr=>{
+    const mmLabel = minMaxLabel(byDate.get(dateStr), h.temperature_2m, 'date-minmax');
+    theadRow1 += `<th colspan="2">${fmtDateHeader(dateStr)}${mmLabel}</th>`;
+  });
+  theadRow1 += '</tr>';
+  // header row 2: Morning / Afternoon labels
+  let theadRow2 = '<tr>';
+  halfDays.forEach(hd=>{ theadRow2 += `<th>${t(hd.part)}</th>`; });
+  theadRow2 += '</tr>';
+  const thead = `<thead>${theadRow1}${theadRow2}</thead>`;
+
+  const rows = [
+    {label:t('rowWeather'), get:(idxs)=> {
+      const code = aggDominantWeatherCode(idxs, h.weather_code);
+      return icon(weatherIconType(code, 1), 20);
+    }, isIcon:true},
+    {label:t('rowTemp'), get:(idxs)=> tempCell(aggAvg(idxs, h.temperature_2m))},
+    {label:t('rowFeelsLike'), get:(idxs)=> tempCell(aggAvg(idxs, h.apparent_temperature))},
+    {label:t('rowGroundTemp'), get:(idxs)=> tempCell(aggAvg(idxs, h.soil_temperature_0cm))},
+    {label:t('rowPrecipitation'), get:(idxs)=> numOr(aggSum(idxs, h.precipitation), 1, ' mm')},
+    {label:t('rowSunshine'), get:(idxs)=> {
+      const vals = idxs.map(i=> sunshineMinutesFromCloud(h.cloud_cover[i], h.is_day[i])).filter(v=>v!==null);
+      if(!vals.length) return '–';
+      return fmtDuration(Math.round(vals.reduce((a,b)=>a+b,0)));
+    }},
+    {label:t('rowCloudCover'), get:(idxs)=> cloudValue(aggAvg(idxs, h.cloud_cover))},
+    {label:t('rowHumidity'), get:(idxs)=> roundOr(aggAvg(idxs, h.relative_humidity_2m), '%')},
+    {label:t('rowWindSpeedDir'), get:(idxs)=> { const w = aggWindVector(idxs, h.wind_speed_10m, h.wind_direction_10m); return `${windValue(w.speed)} ${windDirection(w.dir)}`; }},
+    {label:t('rowWindGusts'), get:(idxs)=> windValue(aggMax(idxs, h.wind_gusts_10m))},
+    {label:t('rowThunderstorm'), get:(idxs)=> thunderstormBadge(aggMax(idxs, h.cape))},
+    {label:t('rowAirQuality'), get:(idxs)=> {
+      const vals = idxs.map(i=> aqiAt(aqiMap, h.time[i])).filter(v=>v!==null && v!==undefined);
+      if(!vals.length) return '–';
+      return airQualityBadge(Math.max(...vals));
+    }},
+  ];
+
+  let tbody = '<tbody>';
+  rows.forEach(row=>{
+    tbody += '<tr>';
+    tbody += `<td class="row-label">${row.label}</td>`;
+    halfDays.forEach(hd=>{
+      const cell = row.get(hd.idxs);
+      tbody += `<td class="${row.isIcon?'icon-cell':''}">${cell}</td>`;
+    });
+    tbody += '</tr>';
+  });
+  tbody += '</tbody>';
+
+  tableEl.innerHTML = thead + tbody;
+}
+
+function buildDayTable(ecmwf, dateStr, aqiMap){
+  const tableEl = document.getElementById('dayTable');
+  if(!tableEl) return;
+  const minMaxEl = document.getElementById('daySelectedMinMax');
+  if(!ecmwf || !ecmwf.hourly || !dateStr){
+    tableEl.innerHTML = `<tbody><tr><td>${t('dayUnavailable')}</td></tr></tbody>`;
+    if(minMaxEl) minMaxEl.innerHTML = '';
+    return;
+  }
+  const h = ecmwf.hourly;
+  const idxs = [];
+  h.time.forEach((iso,i)=>{ if(iso.slice(0,10) === dateStr) idxs.push(i); });
+
+  if(!idxs.length){
+    tableEl.innerHTML = `<tbody><tr><td>${t('dayUnavailable')}</td></tr></tbody>`;
+    if(minMaxEl) minMaxEl.innerHTML = '';
+    return;
+  }
+
+  if(minMaxEl) minMaxEl.innerHTML = minMaxLabel(idxs, h.temperature_2m, 'day-selected-minmax-inner');
+
+  let thead = '<thead><tr><th class="row-label"></th>';
+  idxs.forEach(i=>{ thead += `<th>${fmtHourShort(h.time[i])}</th>`; });
+  thead += '</tr></thead>';
+
+  const rows = [
+    {label:t('rowWeather'), get:(i)=> icon(weatherIconType(h.weather_code[i], h.is_day[i]), 20), isIcon:true},
+    {label:t('rowTemp'), get:(i)=> tempCell(h.temperature_2m[i])},
+    {label:t('rowFeelsLike'), get:(i)=> tempCell(h.apparent_temperature[i])},
+    {label:t('rowGroundTemp'), get:(i)=> tempCell(h.soil_temperature_0cm[i])},
+    {label:t('rowPrecipitation'), get:(i)=> numOr(h.precipitation[i], 1, ' mm')},
+    {label:t('rowSunshine'), get:(i)=> {
+      const mins = sunshineMinutesFromCloud(h.cloud_cover[i], h.is_day[i]);
+      return mins===null ? '–' : fmtDuration(Math.round(mins));
+    }},
+    {label:t('rowCloudCover'), get:(i)=> cloudValue(h.cloud_cover[i])},
+    {label:t('rowHumidity'), get:(i)=> roundOr(h.relative_humidity_2m[i], '%')},
+    {label:t('rowWindSpeedDir'), get:(i)=> `${windValue(h.wind_speed_10m[i])} ${windDirection(h.wind_direction_10m[i])}`},
+    {label:t('rowWindGusts'), get:(i)=> windValue(h.wind_gusts_10m[i])},
+    {label:t('rowThunderstorm'), get:(i)=> thunderstormBadge(h.cape[i])},
+    {label:t('rowAirQuality'), get:(i)=> airQualityBadge(aqiAt(aqiMap, h.time[i]))},
+  ];
+
+  let tbody = '<tbody>';
+  rows.forEach(row=>{
+    tbody += '<tr>';
+    tbody += `<td class="row-label">${row.label}</td>`;
+    idxs.forEach(i=>{
+      const cell = row.get(i);
+      tbody += `<td class="${row.isIcon?'icon-cell':''}">${cell}</td>`;
+    });
+    tbody += '</tr>';
+  });
+  tbody += '</tbody>';
+
+  tableEl.innerHTML = thead + tbody;
+}
+
+function updateDaySelectedLabel(){
+  const picker = document.getElementById('dayPicker');
+  const labelEl = document.getElementById('daySelectedLabel');
+  if(!picker || !labelEl || !picker.value) return;
+  const d = new Date(picker.value+'T12:00:00');
+  labelEl.textContent = d.toLocaleDateString(t('localeCode'), {weekday:'long', day:'numeric', month:'long'});
+}
+
+function updateDayTitleWithRange(now){
+  const titleEl = document.getElementById('dayTitleText');
+  if(!titleEl) return;
+  const maxDate = new Date(now); maxDate.setDate(maxDate.getDate()+14);
+  const maxLabel = maxDate.toLocaleDateString(t('localeCode'), {day:'numeric', month:'short'});
+  titleEl.textContent = `${t('dayTitle')} (${t('untilDate', maxLabel)})`;
+}
+
+function setupDayPicker(now){
+  const picker = document.getElementById('dayPicker');
+  if(!picker) return;
+  const todayStr = now.toLocaleDateString('en-CA');
+  const maxDate = new Date(now); maxDate.setDate(maxDate.getDate()+14);
+  const maxStr = maxDate.toLocaleDateString('en-CA');
+  const tomorrow = new Date(now); tomorrow.setDate(tomorrow.getDate()+1);
+  picker.min = todayStr;
+  picker.max = maxStr;
+  if(!picker.value) picker.value = tomorrow.toLocaleDateString('en-CA');
+  updateDaySelectedLabel();
+  updateDayTitleWithRange(now);
+  picker.addEventListener('change', ()=>{
+    // iOS Safari's native date-picker wheel doesn't always strictly enforce
+    // min/max, so clamp defensively here rather than trust the browser
+    const rangeMsgEl = document.getElementById('dayRangeMsg');
+    let wasClamped = false;
+    if(picker.value < todayStr){ picker.value = todayStr; wasClamped = true; }
+    if(picker.value > maxStr){ picker.value = maxStr; wasClamped = true; }
+    if(rangeMsgEl) rangeMsgEl.textContent = wasClamped ? t('dayUnavailable') : '';
+    updateDaySelectedLabel();
+    if(cachedData) buildDayTable(cachedData.ecmwf, picker.value, cachedData.aqiMap);
+  });
+}
+setupDayPicker(new Date());
+
+// --- Add to Home Screen ---
+function isIOS(){
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+}
+function isStandaloneApp(){
+  return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+}
+
+let deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', (e)=>{
+  e.preventDefault();
+  deferredInstallPrompt = e;
+});
+window.addEventListener('appinstalled', ()=>{
+  const card = document.getElementById('installCard');
+  if(card) card.style.display = 'none';
+});
+
+function setupInstallButton(){
+  const btn = document.getElementById('installBtn');
+  const card = document.getElementById('installCard');
+  const instrEl = document.getElementById('installInstructions');
+  const instrTextEl = document.getElementById('installInstructionsText');
+  if(!btn || !card) return;
+
+  if(isStandaloneApp()){ card.style.display = 'none'; return; }
+
+  btn.addEventListener('click', async ()=>{
+    if(deferredInstallPrompt){
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      if(choice && choice.outcome === 'accepted'){ card.style.display = 'none'; return; }
+      return;
+    }
+    // no native install prompt available (iOS Safari, or Chrome hasn't
+    // offered one) — show manual step-by-step instructions instead
+    instrTextEl.textContent = isIOS() ? t('installStepsIOS') : t('installStepsGeneric');
+    instrEl.hidden = !instrEl.hidden;
+  });
+}
+setupInstallButton();
+
+if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('service-worker.js').catch(()=>{});
+  });
+}
+
+
+// clicking "swipe →" scrolls that table's horizontal container by one
+// full viewport-width step, so it's a usable control, not just a hint
+document.querySelectorAll('.swipe-hint').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const card = btn.closest('.card');
+    const scrollEl = card ? card.querySelector('.table-scroll') : null;
+    if(!scrollEl) return;
+    const dir = btn.dataset.dir === 'left' ? -1 : 1;
+    scrollEl.scrollBy({left: dir * scrollEl.clientWidth, behavior:'smooth'});
+  });
+});
+
+// try device GPS first (most accurate), fall back to IP-based geolocation,
+// and finally fall back to the hardcoded default coordinates if both fail
+function detectDeviceLocation(){
+  return new Promise(resolve=>{
+    if(!navigator.geolocation){ resolve(null); return; }
+    navigator.geolocation.getCurrentPosition(
+      pos=> resolve({lat: pos.coords.latitude, lon: pos.coords.longitude}),
+      ()=> resolve(null),
+      {timeout: 8000, maximumAge: 10*60*1000}
+    );
+  });
+}
+
+async function detectIpLocation(){
+  try{
+    const res = await fetch('https://get.geojs.io/v1/ip/geo.json');
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const data = await res.json();
+    if(data.latitude && data.longitude){
+      return { lat: parseFloat(data.latitude), lon: parseFloat(data.longitude) };
+    }
+    return null;
+  }catch(e){
+    return null;
+  }
+}
+
+async function initLocation(){
+  const loc = (await detectDeviceLocation()) || (await detectIpLocation());
+  if(loc && !Number.isNaN(loc.lat) && !Number.isNaN(loc.lon)){
+    LAT = loc.lat;
+    LON = loc.lon;
+  }
+  loadAddress();
+  load();
+}
+
+// re-detects the device's current location on demand (e.g. after the person
+// has searched a different address and wants to jump back to where they are)
+async function useMyLocation(){
+  const msgEl = document.getElementById('addressMsg');
+  const btnEl = document.getElementById('locBtn');
+  msgEl.textContent = t('gettingLocation');
+  msgEl.className = 'address-msg';
+  btnEl.disabled = true;
+  try{
+    const loc = (await detectDeviceLocation()) || (await detectIpLocation());
+    if(!loc) throw new Error('location unavailable');
+    LAT = loc.lat;
+    LON = loc.lon;
+    document.getElementById('titleLine').textContent = t('titleLoading');
+    await Promise.all([ loadAddress(), load() ]);
+    msgEl.textContent = '';
+    msgEl.className = 'address-msg';
+  }catch(err){
+    msgEl.textContent = t('couldntGetLocation', err.message);
+    msgEl.className = 'address-msg error';
+  }finally{
+    btnEl.disabled = false;
+  }
+}
+document.getElementById('locBtn').addEventListener('click', useMyLocation);
+
+initLocation();
 setInterval(load, 60*60*1000); // auto-refresh forecast data every hour — matches the
                                 // minutely_15 update cadence (hourly); the AROME-HD
                                 // hourly run itself only refreshes every 3h anyway
