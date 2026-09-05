@@ -521,6 +521,19 @@
     color:var(--ink);
     line-height:1.5;
   }
+  .alerts-btn-row{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .alerts-status-text{
+    margin:10px auto 0;
+    max-width:340px;
+    font-size:12px;
+    color:var(--grey);
+    line-height:1.5;
+  }
 
   .badge{
     display:inline-flex;
@@ -628,6 +641,14 @@
   </div>
 
   <div class="wrap-narrow">
+    <div class="install-card" id="alertsCard">
+      <div class="alerts-btn-row">
+        <button type="button" id="enableAlertsBtn" class="install-btn">🔔 <span id="enableAlertsBtnText">Enable weather alerts</span></button>
+        <button type="button" id="testAlertBtn" class="install-btn">🧪 <span id="testAlertBtnText">Send test alert</span></button>
+      </div>
+      <p id="alertsStatusText" class="alerts-status-text"></p>
+    </div>
+
     <div class="install-card" id="installCard">
       <button type="button" id="installBtn" class="install-btn">📲 <span id="installBtnText">Add to Home Screen</span></button>
       <div id="installInstructions" class="install-instructions" hidden>
@@ -732,6 +753,16 @@ const I18N = {
     installBtnText: 'Add to Home Screen',
     installStepsIOS: 'In Safari, tap the Share icon (square with an arrow ↑), then tap "Add to Home Screen".',
     installStepsGeneric: 'Open your browser\u2019s menu and choose "Add to Home Screen" or "Install app".',
+    enableAlertsBtnText: 'Enable weather alerts',
+    testAlertBtnText: 'Send test alert',
+    alertTestTitle: 'Test alert',
+    alertTestBody: 'If you can see this, weather alerts are working correctly on this device.',
+    alertsStatusGranted: '✅ Notifications are enabled on this device.',
+    alertsStatusDenied: '🚫 Notifications are blocked. Enable them for this site in your device/browser settings.',
+    alertsStatusDefault: 'Tap "Enable weather alerts" and allow notifications when prompted.',
+    alertsStatusUnsupported: 'This browser doesn\u2019t support notifications — alerts will show as on-screen popups instead.',
+    alertsStatusIOSNotInstalled: '📲 On iPhone, notifications only work once this app is added to your Home Screen (see below) and opened from there — not from a Safari tab.',
+    alertsStatusDesktop: 'On this device, alerts appear as an on-screen popup in the corner of the page.',
     noAddressResults: 'No matches found',
     rowGroundTemp: 'Ground temp',
     rowAirQuality: 'Air quality',
@@ -798,6 +829,16 @@ const I18N = {
     installBtnText: 'Ajouter à l\u2019écran d\u2019accueil',
     installStepsIOS: 'Dans Safari, appuyez sur l\u2019icône Partager (carré avec une flèche ↑), puis sur « Sur l\u2019écran d\u2019accueil ».',
     installStepsGeneric: 'Ouvrez le menu de votre navigateur et choisissez « Ajouter à l\u2019écran d\u2019accueil » ou « Installer l\u2019application ».',
+    enableAlertsBtnText: 'Activer les alertes météo',
+    testAlertBtnText: 'Envoyer une alerte test',
+    alertTestTitle: 'Alerte test',
+    alertTestBody: 'Si vous voyez ceci, les alertes météo fonctionnent correctement sur cet appareil.',
+    alertsStatusGranted: '✅ Les notifications sont activées sur cet appareil.',
+    alertsStatusDenied: '🚫 Les notifications sont bloquées. Activez-les pour ce site dans les réglages de votre appareil/navigateur.',
+    alertsStatusDefault: 'Appuyez sur « Activer les alertes météo » et autorisez les notifications lorsque demandé.',
+    alertsStatusUnsupported: 'Ce navigateur ne prend pas en charge les notifications — les alertes s\u2019afficheront sous forme de popup à l\u2019écran.',
+    alertsStatusIOSNotInstalled: '📲 Sur iPhone, les notifications ne fonctionnent qu\u2019une fois cette application ajoutée à l\u2019écran d\u2019accueil (voir ci-dessous) et ouverte depuis celui-ci — pas depuis un onglet Safari.',
+    alertsStatusDesktop: 'Sur cet appareil, les alertes s\u2019affichent sous forme de popup dans un coin de la page.',
     noAddressResults: 'Aucun résultat',
     rowGroundTemp: 'Temp. au sol',
     rowAirQuality: 'Qualité de l\u2019air',
@@ -866,6 +907,16 @@ const I18N = {
     installBtnText: 'Toevoegen aan beginscherm',
     installStepsIOS: 'Tik in Safari op het deelicoon (vierkant met pijl ↑), en kies dan "Zet op beginscherm".',
     installStepsGeneric: 'Open het menu van je browser en kies "Toevoegen aan beginscherm" of "App installeren".',
+    enableAlertsBtnText: 'Weerwaarschuwingen inschakelen',
+    testAlertBtnText: 'Testwaarschuwing versturen',
+    alertTestTitle: 'Testwaarschuwing',
+    alertTestBody: 'Als je dit ziet, werken weerwaarschuwingen correct op dit apparaat.',
+    alertsStatusGranted: '✅ Meldingen zijn ingeschakeld op dit apparaat.',
+    alertsStatusDenied: '🚫 Meldingen zijn geblokkeerd. Schakel ze in voor deze site in je apparaat-/browserinstellingen.',
+    alertsStatusDefault: 'Tik op "Weerwaarschuwingen inschakelen" en sta meldingen toe wanneer daarom gevraagd wordt.',
+    alertsStatusUnsupported: 'Deze browser ondersteunt geen meldingen — waarschuwingen worden als pop-up op het scherm getoond.',
+    alertsStatusIOSNotInstalled: '📲 Op iPhone werken meldingen alleen als deze app aan je beginscherm is toegevoegd (zie hieronder) en van daaruit is geopend — niet vanuit een Safari-tabblad.',
+    alertsStatusDesktop: 'Op dit apparaat verschijnen waarschuwingen als pop-up in een hoek van de pagina.',
     noAddressResults: 'Geen resultaten gevonden',
     rowGroundTemp: 'Bodemtemp.',
     rowAirQuality: 'Luchtkwaliteit',
@@ -932,6 +983,16 @@ const I18N = {
     installBtnText: 'Pridať na plochu',
     installStepsIOS: 'V Safari ťuknite na ikonu Zdieľať (štvorec so šípkou ↑) a potom na "Pridať na plochu".',
     installStepsGeneric: 'Otvorte ponuku prehliadača a vyberte "Pridať na plochu" alebo "Inštalovať aplikáciu".',
+    enableAlertsBtnText: 'Zapnúť upozornenia na počasie',
+    testAlertBtnText: 'Odoslať testovacie upozornenie',
+    alertTestTitle: 'Testovacie upozornenie',
+    alertTestBody: 'Ak toto vidíte, upozornenia na počasie fungujú na tomto zariadení správne.',
+    alertsStatusGranted: '✅ Upozornenia sú na tomto zariadení povolené.',
+    alertsStatusDenied: '🚫 Upozornenia sú zablokované. Povoľte ich pre túto stránku v nastaveniach zariadenia/prehliadača.',
+    alertsStatusDefault: 'Ťuknite na "Zapnúť upozornenia na počasie" a pri výzve upozornenia povoľte.',
+    alertsStatusUnsupported: 'Tento prehliadač nepodporuje upozornenia — upozornenia sa namiesto toho zobrazia ako kontextové okno na obrazovke.',
+    alertsStatusIOSNotInstalled: '📲 Na iPhone fungujú upozornenia až po pridaní tejto aplikácie na plochu (pozri nižšie) a jej otvorení odtiaľ — nie z karty Safari.',
+    alertsStatusDesktop: 'Na tomto zariadení sa upozornenia zobrazujú ako kontextové okno v rohu stránky.',
     noAddressResults: 'Žiadne výsledky',
     rowGroundTemp: 'Teplota pôdy',
     rowAirQuality: 'Kvalita ovzdušia',
@@ -1332,6 +1393,11 @@ function applyStaticTranslations(){
   if(instrEl && !instrEl.hidden){
     document.getElementById('installInstructionsText').textContent = isIOS() ? t('installStepsIOS') : t('installStepsGeneric');
   }
+  const enableAlertsBtnTextEl = document.getElementById('enableAlertsBtnText');
+  if(enableAlertsBtnTextEl) enableAlertsBtnTextEl.textContent = t('enableAlertsBtnText');
+  const testAlertBtnTextEl = document.getElementById('testAlertBtnText');
+  if(testAlertBtnTextEl) testAlertBtnTextEl.textContent = t('testAlertBtnText');
+  if(typeof updateAlertsStatusText === 'function') updateAlertsStatusText();
   document.getElementById('tocHourly').textContent = t('jumpHourly');
   document.getElementById('tocMinutely').textContent = t('jumpMinutely');
   document.getElementById('tocEcmwf').textContent = t('jumpEcmwf');
@@ -2229,6 +2295,49 @@ function setupInstallButton(){
   });
 }
 setupInstallButton();
+
+// ---- Weather alerts: manual enable + test buttons ----
+// iOS Safari only grants Notification permission when requested directly
+// inside a user tap, and only supports notifications at all once the app is
+// installed to the Home Screen and opened from there (iOS 16.4+) — never
+// from a plain Safari tab. These buttons make both facts visible and let
+// the person confirm the whole pipeline works via a one-tap test alert,
+// rather than waiting for a real threshold to be crossed.
+function alertsStatusMessage(){
+  if(isMobileDevice()){
+    if(isIOS() && !isStandaloneApp()) return t('alertsStatusIOSNotInstalled');
+    if(!('Notification' in window)) return t('alertsStatusUnsupported');
+    if(Notification.permission === 'granted') return t('alertsStatusGranted');
+    if(Notification.permission === 'denied') return t('alertsStatusDenied');
+    return t('alertsStatusDefault');
+  }
+  return t('alertsStatusDesktop');
+}
+
+function updateAlertsStatusText(){
+  const el = document.getElementById('alertsStatusText');
+  if(el) el.textContent = alertsStatusMessage();
+}
+
+function setupAlertsButtons(){
+  const enableBtn = document.getElementById('enableAlertsBtn');
+  const testBtn = document.getElementById('testAlertBtn');
+  if(enableBtn){
+    enableBtn.addEventListener('click', async ()=>{
+      if(isMobileDevice() && 'Notification' in window){
+        await ensureNotificationPermission(); // called inside the tap — required on iOS
+      }
+      updateAlertsStatusText();
+    });
+  }
+  if(testBtn){
+    testBtn.addEventListener('click', ()=>{
+      triggerWeatherAlert(t('alertTestTitle'), t('alertTestBody'));
+    });
+  }
+  updateAlertsStatusText();
+}
+setupAlertsButtons();
 
 if('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')){
   window.addEventListener('load', ()=>{
