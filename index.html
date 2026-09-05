@@ -706,7 +706,9 @@ const I18N = {
     addressFound: 'Address found — loading forecast…',
     couldntFindAddress: (m)=> `Couldn't find that address (${m}). Try a more specific address.`,
     couldntGetLocation: (m)=> `Couldn't get your current location (${m}). Check your browser's location permission.`,
-    couldntLoadForecast: (m)=> `Couldn't load forecast (${m}).`,
+    couldntLoadForecast: (m)=> `Couldn't load the forecast for this location. ${m}`,
+    forecastUnavailableReason: 'Forecast data isn\u2019t available for this location. Please try a different address.',
+    forecastDataUnavailable: 'No forecast data available.',
     swipeHint: 'swipe →',
     swipeHintLeft: '← swipe',
     hourlyTitle: 'Hourly forecast — next 24h',
@@ -782,7 +784,9 @@ const I18N = {
     addressFound: 'Adresse trouvée — chargement des prévisions…',
     couldntFindAddress: (m)=> `Adresse introuvable (${m}). Essayez une adresse plus précise.`,
     couldntGetLocation: (m)=> `Impossible d\u2019obtenir votre position (${m}). Vérifiez l\u2019autorisation de localisation de votre navigateur.`,
-    couldntLoadForecast: (m)=> `Impossible de charger les prévisions (${m}).`,
+    couldntLoadForecast: (m)=> `Impossible de charger les prévisions pour cet endroit. ${m}`,
+    forecastUnavailableReason: 'Les données de prévision ne sont pas disponibles pour cet endroit. Essayez une autre adresse.',
+    forecastDataUnavailable: 'Aucune donnée de prévision disponible.',
     swipeHint: 'glisser →',
     swipeHintLeft: '← glisser',
     hourlyTitle: 'Prévisions horaires — 24 prochaines heures',
@@ -860,7 +864,9 @@ const I18N = {
     addressFound: 'Adres gevonden — voorspelling laden…',
     couldntFindAddress: (m)=> `Adres niet gevonden (${m}). Probeer een preciezer adres.`,
     couldntGetLocation: (m)=> `Kon uw locatie niet bepalen (${m}). Controleer de locatietoestemming van uw browser.`,
-    couldntLoadForecast: (m)=> `Kon de voorspelling niet laden (${m}).`,
+    couldntLoadForecast: (m)=> `Kon de voorspelling voor deze locatie niet laden. ${m}`,
+    forecastUnavailableReason: 'Voorspellingsgegevens zijn niet beschikbaar voor deze locatie. Probeer een ander adres.',
+    forecastDataUnavailable: 'Geen voorspellingsgegevens beschikbaar.',
     swipeHint: 'veeg →',
     swipeHintLeft: '← veeg',
     hourlyTitle: 'Uurlijkse voorspelling — komende 24 u',
@@ -936,7 +942,9 @@ const I18N = {
     addressFound: 'Adresa nájdená — načítavam predpoveď…',
     couldntFindAddress: (m)=> `Adresu sa nepodarilo nájsť (${m}). Skúste presnejšiu adresu.`,
     couldntGetLocation: (m)=> `Nepodarilo sa zistiť vašu polohu (${m}). Skontrolujte povolenie polohy v prehliadači.`,
-    couldntLoadForecast: (m)=> `Nepodarilo sa načítať predpoveď (${m}).`,
+    couldntLoadForecast: (m)=> `Nepodarilo sa načítať predpoveď pre toto miesto. ${m}`,
+    forecastUnavailableReason: 'Údaje o predpovedi nie sú pre toto miesto k dispozícii. Skúste inú adresu.',
+    forecastDataUnavailable: 'Nie sú k dispozícii žiadne údaje o predpovedi.',
     swipeHint: 'potiahnite →',
     swipeHintLeft: '← potiahnite',
     hourlyTitle: 'Hodinová predpoveď — nasledujúcich 24 h',
@@ -1634,6 +1642,19 @@ function mergeData(main, blend){
 
 let cachedData = null;
 
+// Empties the four forecast tables (and the selected-day min/max chip) so a
+// failed load never leaves stale or nonsensical numbers on screen from a
+// previous, unrelated location.
+function clearForecastTables(){
+  const placeholder = `<tbody><tr><td>${t('forecastDataUnavailable')}</td></tr></tbody>`;
+  ['hourlyTable','minutelyTable','ecmwfTable','dayTable'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = placeholder;
+  });
+  const minMaxEl = document.getElementById('daySelectedMinMax');
+  if(minMaxEl) minMaxEl.innerHTML = '';
+}
+
 async function load(){
   try{
     const [mainRes, blendRes, ecmwfRes, aqiRes] = await Promise.all([
@@ -1642,8 +1663,21 @@ async function load(){
       fetch(buildEcmwfUrl()).catch(()=>null), // 15-day ECMWF table is also a nice-to-have
       fetch(buildAirQualityUrl()).catch(()=>null) // ditto for air quality
     ]);
-    if(!mainRes.ok) throw new Error("HTTP "+mainRes.status);
-    const mainData = await mainRes.json();
+
+    // Parse the main response defensively: an unsupported/out-of-range
+    // location can make the API (or a proxy in front of it) return a body
+    // that isn't valid JSON at all, which would otherwise surface a raw,
+    // engine-specific "JSON.parse: unexpected..." message to the user.
+    let mainData;
+    try{
+      mainData = await mainRes.json();
+    }catch(parseErr){
+      throw new Error(t('forecastUnavailableReason'));
+    }
+    if(!mainRes.ok || mainData.error){
+      throw new Error(mainData.reason || t('forecastUnavailableReason'));
+    }
+
     let blendData = null;
     if(blendRes && blendRes.ok){
       try{ blendData = await blendRes.json(); }catch(e){ blendData = null; }
@@ -1663,7 +1697,9 @@ async function load(){
     cachedData = data;
     render(data);
   }catch(err){
+    cachedData = null;
     document.getElementById('nowCard').innerHTML = `<div class="state-msg">${t('couldntLoadForecast', err.message)}</div>`;
+    clearForecastTables();
   }
 }
 
