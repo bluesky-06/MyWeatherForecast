@@ -1,6 +1,6 @@
 {
-  "name": "Weather Forecast",
-  "short_name": "Weather",
+  "name": "My Local Weather",
+  "short_name": "My Local Weather",
   "description": "Hyper-local weather forecast — 15-minute, hourly, 15-day and single-day views.",
   "start_url": "./index.html",
   "scope": "./",
