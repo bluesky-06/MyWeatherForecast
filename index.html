@@ -470,7 +470,7 @@
     animation:weatherAlertIn .25s ease-out;
     font-family:'Inter',sans-serif;
   }
-  .weather-alert-icon{font-size:20px; line-height:1;}
+  .weather-alert-icon{font-size:20px; line-height:1; flex:none; display:flex; align-items:center;}
   .weather-alert-text{flex:1;}
   .weather-alert-title{font-weight:700; color:var(--ink); margin-bottom:2px; font-size:13px;}
   .weather-alert-body{font-size:12.5px; color:var(--ink); opacity:.85; line-height:1.35;}
@@ -728,11 +728,11 @@ const I18N = {
     thunderUnlikely: 'Unlikely', thunderPossible: 'Possible', thunderRisk: 'Risk', thunderHighRisk: 'High risk',
     minutelyUnavailable: '15-minute data not available',
     alertHighPrecipTitle: 'Rain alert',
-    alertHighPrecipBody: (pct)=> `Precipitation probability will reach ${pct}% in the next 24 hours.`,
+    alertHighPrecipBody: (pct, time)=> `Precipitation probability will reach ${pct}% from ${time} in the next 24 hours.`,
     alertThunderTitle: 'Thunderstorm alert',
-    alertThunderBody: 'Thunderstorm risk in the next 24 hours.',
+    alertThunderBody: (time)=> `Thunderstorm risk from ${time} in the next 24 hours.`,
     alertWindGustTitle: 'Wind gust alert',
-    alertWindGustBody: (kmh)=> `Wind gusts up to ${kmh} km/h expected in the next 24 hours.`,
+    alertWindGustBody: (kmh, time)=> `Wind gusts up to ${kmh} km/h expected from ${time} in the next 24 hours.`,
     rowTime: 'Time', rowWeather: 'Weather', rowTemp: 'Temperature 2m', rowFeelsLike: 'Feels-like temp.', rowPrecipProb: 'Precip. prob.',
     rowPrecipitation: 'Precipitation', rowCloudCover: 'Cloud cover', rowHumidity: 'Humidity',
     rowWindSpeed: 'Wind speed', rowWindGusts: 'Wind gusts', rowWindDir: 'Wind dir.',
@@ -806,11 +806,11 @@ const I18N = {
     thunderUnlikely: 'Improbable', thunderPossible: 'Possible', thunderRisk: 'Risque', thunderHighRisk: 'Risque élevé',
     minutelyUnavailable: 'Données 15 minutes indisponibles',
     alertHighPrecipTitle: 'Alerte pluie',
-    alertHighPrecipBody: (pct)=> `La probabilité de précipitations atteindra ${pct}% dans les 24 prochaines heures.`,
+    alertHighPrecipBody: (pct, time)=> `La probabilité de précipitations atteindra ${pct}% à partir de ${time} dans les 24 prochaines heures.`,
     alertThunderTitle: 'Alerte orage',
-    alertThunderBody: 'Risque d\u2019orage dans les 24 prochaines heures.',
+    alertThunderBody: (time)=> `Risque d\u2019orage à partir de ${time} dans les 24 prochaines heures.`,
     alertWindGustTitle: 'Alerte rafales de vent',
-    alertWindGustBody: (kmh)=> `Rafales de vent jusqu\u2019à ${kmh} km/h prévues dans les 24 prochaines heures.`,
+    alertWindGustBody: (kmh, time)=> `Rafales de vent jusqu\u2019à ${kmh} km/h prévues à partir de ${time} dans les 24 prochaines heures.`,
     rowTime: 'Heure', rowWeather: 'Météo', rowTemp: 'Température 2m', rowFeelsLike: 'Température ressentie', rowPrecipProb: 'Prob. précip.',
     rowPrecipitation: 'Précipitations', rowCloudCover: 'Couverture nuageuse', rowHumidity: 'Humidité',
     rowWindSpeed: 'Vitesse du vent', rowWindGusts: 'Rafales', rowWindDir: 'Direction du vent',
@@ -886,11 +886,11 @@ const I18N = {
     thunderUnlikely: 'Onwaarschijnlijk', thunderPossible: 'Mogelijk', thunderRisk: 'Risico', thunderHighRisk: 'Hoog risico',
     minutelyUnavailable: '15-minutengegevens niet beschikbaar',
     alertHighPrecipTitle: 'Regenwaarschuwing',
-    alertHighPrecipBody: (pct)=> `De neerslagkans loopt op tot ${pct}% in de komende 24 uur.`,
+    alertHighPrecipBody: (pct, time)=> `De neerslagkans loopt op tot ${pct}% vanaf ${time} in de komende 24 uur.`,
     alertThunderTitle: 'Onweerswaarschuwing',
-    alertThunderBody: 'Kans op onweer in de komende 24 uur.',
+    alertThunderBody: (time)=> `Kans op onweer vanaf ${time} in de komende 24 uur.`,
     alertWindGustTitle: 'Windstotenwaarschuwing',
-    alertWindGustBody: (kmh)=> `Windstoten tot ${kmh} km/u verwacht in de komende 24 uur.`,
+    alertWindGustBody: (kmh, time)=> `Windstoten tot ${kmh} km/u verwacht vanaf ${time} in de komende 24 uur.`,
     rowTime: 'Tijd', rowWeather: 'Weer', rowTemp: 'Temperatuur 2m', rowFeelsLike: 'Gevoelstemperatuur', rowPrecipProb: 'Neerslagkans',
     rowPrecipitation: 'Neerslag', rowCloudCover: 'Bewolking', rowHumidity: 'Vochtigheid',
     rowWindSpeed: 'Windsnelheid', rowWindGusts: 'Windstoten', rowWindDir: 'Windrichting',
@@ -964,11 +964,11 @@ const I18N = {
     thunderUnlikely: 'Nepravdepodobné', thunderPossible: 'Možné', thunderRisk: 'Riziko', thunderHighRisk: 'Vysoké riziko',
     minutelyUnavailable: '15-minútové údaje nie sú k dispozícii',
     alertHighPrecipTitle: 'Upozornenie na dážď',
-    alertHighPrecipBody: (pct)=> `Pravdepodobnosť zrážok dosiahne ${pct}% v priebehu nasledujúcich 24 hodín.`,
+    alertHighPrecipBody: (pct, time)=> `Pravdepodobnosť zrážok dosiahne ${pct}% od ${time} v priebehu nasledujúcich 24 hodín.`,
     alertThunderTitle: 'Upozornenie na búrku',
-    alertThunderBody: 'Riziko búrky v priebehu nasledujúcich 24 hodín.',
+    alertThunderBody: (time)=> `Riziko búrky od ${time} v priebehu nasledujúcich 24 hodín.`,
     alertWindGustTitle: 'Upozornenie na nárazy vetra',
-    alertWindGustBody: (kmh)=> `V priebehu nasledujúcich 24 hodín sa očakávajú nárazy vetra do ${kmh} km/h.`,
+    alertWindGustBody: (kmh, time)=> `V priebehu nasledujúcich 24 hodín sa od ${time} očakávajú nárazy vetra do ${kmh} km/h.`,
     rowTime: 'Čas', rowWeather: 'Počasie', rowTemp: 'Teplota 2m', rowFeelsLike: 'Pocitová teplota', rowPrecipProb: 'Prav. zrážok',
     rowPrecipitation: 'Zrážky', rowCloudCover: 'Oblačnosť', rowHumidity: 'Vlhkosť',
     rowWindSpeed: 'Rýchlosť vetra', rowWindGusts: 'Nárazy vetra', rowWindDir: 'Smer vetra',
@@ -1112,6 +1112,11 @@ function icon(type, size=28){
           <polygon points="15.4,3.6 18.6,4.4 18.6,7.6 15.4,8.4" fill="#DC5A2E"/>
           <polygon points="18.6,4.4 21.8,5.2 21.8,6.8 18.6,7.6" fill="#EDEFF0"/>
           <polygon points="21.8,5.2 25,6 21.8,6.8" fill="#DC5A2E"/>`,
+    windgust: `<g stroke="#5C88A3" stroke-width="2.4" stroke-linecap="round" fill="none">
+          <path d="M2 9 H15 a2.8 2.8 0 1 0 -2.8 -2.8"/>
+          <path d="M2 15 H19 a3.2 3.2 0 1 1 -3.2 3.2"/>
+          <path d="M2 21 H12 a2.2 2.2 0 1 0 -2.2 -2.2"/>
+          </g>`,
   };
   return `<svg width="${size}" height="${size}" viewBox="0 0 28 28" fill="none">${paths[type]||paths.cloud}</svg>`;
 }
@@ -1859,12 +1864,40 @@ function ensureAlertContainer(){
   return c;
 }
 
-function showDesktopPopup(title, body){
+// Maps each alert kind to its existing icon-library glyph and to an audio
+// file the person supplies under sounds/ (not bundled — see README note).
+const ALERT_KIND_ICON = { precip:'rain', thunder:'storm', wind:'windgust' };
+const ALERT_KIND_SOUND = { precip:'sounds/rain-alert.mp3', thunder:'sounds/thunder-alert.mp3', wind:'sounds/wind-alert.mp3' };
+
+function alertIconSvg(kind, size=22){
+  return icon(ALERT_KIND_ICON[kind] || 'cloud', size);
+}
+// Notification icon fields need an image URL rather than inline markup —
+// an SVG data URI reuses the exact same glyph without needing separate
+// image files (some platforms, notably iOS, ignore this and just show the
+// app icon instead; that's a platform limitation, not a bug here).
+function alertIconDataUri(kind){
+  return 'data:image/svg+xml,' + encodeURIComponent(alertIconSvg(kind, 64));
+}
+
+// Plays the person's own supplied sound file for this alert kind. Browsers
+// block un-requested audio autoplay in some circumstances, so a rejected
+// play() (e.g. no prior user interaction this session) is swallowed rather
+// than surfaced — the visual popup/notification still gets shown either way.
+function playAlertSound(kind){
+  const src = ALERT_KIND_SOUND[kind];
+  if(!src) return;
+  try{
+    new Audio(src).play().catch(()=>{});
+  }catch(e){ /* ignore */ }
+}
+
+function showDesktopPopup(kind, title, body){
   const container = ensureAlertContainer();
   const el = document.createElement('div');
   el.className = 'weather-alert-popup';
   el.innerHTML = `
-    <div class="weather-alert-icon">⚠️</div>
+    <div class="weather-alert-icon">${alertIconSvg(kind)}</div>
     <div class="weather-alert-text">
       <div class="weather-alert-title"></div>
       <div class="weather-alert-body"></div>
@@ -1876,55 +1909,63 @@ function showDesktopPopup(title, body){
   el.querySelector('.weather-alert-close').addEventListener('click', ()=> el.remove());
   container.appendChild(el);
   setTimeout(()=>{ el.remove(); }, 20000);
+  playAlertSound(kind);
 }
 
-async function triggerWeatherAlert(title, body){
+async function triggerWeatherAlert(kind, title, body){
   if(isMobileDevice()){
     const perm = await ensureNotificationPermission();
     if(perm === 'granted'){
       try{
+        const iconUri = alertIconDataUri(kind);
         if(navigator.serviceWorker){
           const reg = await navigator.serviceWorker.getRegistration();
-          if(reg){ reg.showNotification(title, {body, icon:'icon-192.png', badge:'icon-192.png'}); return; }
+          if(reg){ reg.showNotification(title, {body, icon:iconUri, badge:'icon-192.png'}); return; }
         }
-        new Notification(title, {body, icon:'icon-192.png'});
+        new Notification(title, {body, icon:iconUri});
         return;
       }catch(e){ /* fall through to on-screen popup below */ }
     }
   }
-  showDesktopPopup(title, body);
+  showDesktopPopup(kind, title, body);
 }
 
 function evaluateWeatherAlerts(h, curIdx){
   const n = 24;
   const idxs = Array.from({length:n}, (_,i)=>curIdx+i).filter(i=>i<h.time.length);
 
-  const pops = idxs.map(i=>h.precipitation_probability[i]).filter(v=>v!==null && v!==undefined);
-  const capes = idxs.map(i=>h.cape[i]).filter(v=>v!==null && v!==undefined);
-  const gusts = idxs.map(i=>h.wind_gusts_10m[i]).filter(v=>v!==null && v!==undefined);
+  const pops = idxs.map(i=>({i, v:h.precipitation_probability[i]})).filter(o=>o.v!==null && o.v!==undefined);
+  const capes = idxs.map(i=>({i, v:h.cape[i]})).filter(o=>o.v!==null && o.v!==undefined);
+  const gusts = idxs.map(i=>({i, v:h.wind_gusts_10m[i]})).filter(o=>o.v!==null && o.v!==undefined);
 
-  const maxPop = pops.length ? Math.max(...pops) : null;
-  const maxCape = capes.length ? Math.max(...capes) : null;
-  const maxGust = gusts.length ? Math.max(...gusts) : null;
+  const maxPopObj = pops.reduce((a,b)=> (!a||b.v>a.v)?b:a, null);
+  const maxCapeObj = capes.reduce((a,b)=> (!a||b.v>a.v)?b:a, null);
+  const maxGustObj = gusts.reduce((a,b)=> (!a||b.v>a.v)?b:a, null);
 
   // "Risk" is the 3rd of 4 thunderstormBadge tiers (CAPE >= 1000), so
   // "Risk or higher" also covers the top "High risk" tier (CAPE >= 2500).
-  const precipTriggered = maxPop !== null && maxPop > 50;
-  const thunderTriggered = maxCape !== null && maxCape >= 1000;
-  const windTriggered = maxGust !== null && maxGust >= 60;
+  const precipTriggered = !!maxPopObj && maxPopObj.v > 50;
+  const thunderTriggered = !!maxCapeObj && maxCapeObj.v >= 1000;
+  const windTriggered = !!maxGustObj && maxGustObj.v >= 60;
+
+  // the hour the risk *starts* (first crossing), not the hour of the peak —
+  // that's the more useful "from [time]" to show the person
+  const firstPrecipIdx = precipTriggered ? pops.find(o=>o.v>50).i : null;
+  const firstThunderIdx = thunderTriggered ? capes.find(o=>o.v>=1000).i : null;
+  const firstWindIdx = windTriggered ? gusts.find(o=>o.v>=60).i : null;
 
   if(precipTriggered && !weatherAlertState.precip){
-    triggerWeatherAlert(t('alertHighPrecipTitle'), t('alertHighPrecipBody', Math.round(maxPop)));
+    triggerWeatherAlert('precip', t('alertHighPrecipTitle'), t('alertHighPrecipBody', Math.round(maxPopObj.v), fmtTime(h.time[firstPrecipIdx])));
   }
   weatherAlertState.precip = precipTriggered;
 
   if(thunderTriggered && !weatherAlertState.thunder){
-    triggerWeatherAlert(t('alertThunderTitle'), t('alertThunderBody'));
+    triggerWeatherAlert('thunder', t('alertThunderTitle'), t('alertThunderBody', fmtTime(h.time[firstThunderIdx])));
   }
   weatherAlertState.thunder = thunderTriggered;
 
   if(windTriggered && !weatherAlertState.wind){
-    triggerWeatherAlert(t('alertWindGustTitle'), t('alertWindGustBody', Math.round(maxGust)));
+    triggerWeatherAlert('wind', t('alertWindGustTitle'), t('alertWindGustBody', Math.round(maxGustObj.v), fmtTime(h.time[firstWindIdx])));
   }
   weatherAlertState.wind = windTriggered;
 }
@@ -2369,7 +2410,10 @@ function setupAlertsButtons(){
   }
   if(testBtn){
     testBtn.addEventListener('click', ()=>{
-      triggerWeatherAlert(t('alertTestTitle'), t('alertTestBody'));
+      // fire one of each kind, staggered, so all three icons/sounds can be checked in one tap
+      triggerWeatherAlert('precip', t('alertTestTitle'), t('alertTestBody'));
+      setTimeout(()=> triggerWeatherAlert('thunder', t('alertTestTitle'), t('alertTestBody')), 1200);
+      setTimeout(()=> triggerWeatherAlert('wind', t('alertTestTitle'), t('alertTestBody')), 2400);
     });
   }
   updateAlertsStatusText();
