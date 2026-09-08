@@ -1908,7 +1908,6 @@ function showDesktopPopup(kind, title, body){
   el.querySelector('.weather-alert-body').textContent = body;
   el.querySelector('.weather-alert-close').addEventListener('click', ()=> el.remove());
   container.appendChild(el);
-  setTimeout(()=>{ el.remove(); }, 20000);
   playAlertSound(kind);
 }
 
@@ -1920,9 +1919,9 @@ async function triggerWeatherAlert(kind, title, body){
         const iconUri = alertIconDataUri(kind);
         if(navigator.serviceWorker){
           const reg = await navigator.serviceWorker.getRegistration();
-          if(reg){ reg.showNotification(title, {body, icon:iconUri, badge:'icon-192.png'}); return; }
+          if(reg){ reg.showNotification(title, {body, icon:iconUri, badge:'icon-192.png', requireInteraction:true}); return; }
         }
-        new Notification(title, {body, icon:iconUri});
+        new Notification(title, {body, icon:iconUri, requireInteraction:true});
         return;
       }catch(e){ /* fall through to on-screen popup below */ }
     }
