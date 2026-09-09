@@ -729,11 +729,13 @@ const I18N = {
     thunderUnlikely: 'Unlikely', thunderPossible: 'Possible', thunderRisk: 'Risk', thunderHighRisk: 'High risk',
     minutelyUnavailable: '15-minute data not available',
     alertHighPrecipTitle: 'Rain alert',
-    alertHighPrecipBody: (pct, time)=> `Precipitation probability will reach ${pct}% from ${time} in the next 24 hours.`,
+    alertHighPrecipBody: (pct, rel, absTime)=> `Precipitation probability will reach ${pct}% in ${rel} (around ${absTime}).`,
     alertThunderTitle: 'Thunderstorm alert',
-    alertThunderBody: (time)=> `Thunderstorm risk from ${time} in the next 24 hours.`,
+    alertThunderBody: (rel, absTime)=> `Thunderstorm risk in ${rel} (around ${absTime}).`,
     alertWindGustTitle: 'Wind gust alert',
-    alertWindGustBody: (kmh, time)=> `Wind gusts up to ${kmh} km/h expected from ${time} in the next 24 hours.`,
+    alertWindGustBody: (kmh, rel, absTime)=> `Wind gusts up to ${kmh} km/h expected in ${rel} (around ${absTime}).`,
+    relDuration: (hh, mm)=> hh>0 && mm>0 ? `${hh}h ${mm}min` : hh>0 ? `${hh}h` : `${mm}min`,
+    relNow: 'now',
     rowTime: 'Time', rowWeather: 'Weather', rowTemp: 'Temperature 2m', rowFeelsLike: 'Feels-like temp.', rowPrecipProb: 'Precip. prob.',
     rowPrecipitation: 'Precipitation', rowCloudCover: 'Cloud cover', rowHumidity: 'Humidity',
     rowWindSpeed: 'Wind speed', rowWindGusts: 'Wind gusts', rowWindDir: 'Wind dir.',
@@ -807,11 +809,13 @@ const I18N = {
     thunderUnlikely: 'Improbable', thunderPossible: 'Possible', thunderRisk: 'Risque', thunderHighRisk: 'Risque élevé',
     minutelyUnavailable: 'Données 15 minutes indisponibles',
     alertHighPrecipTitle: 'Alerte pluie',
-    alertHighPrecipBody: (pct, time)=> `La probabilité de précipitations atteindra ${pct}% à partir de ${time} dans les 24 prochaines heures.`,
+    alertHighPrecipBody: (pct, rel, absTime)=> `La probabilité de précipitations atteindra ${pct}% dans ${rel} (vers ${absTime}).`,
     alertThunderTitle: 'Alerte orage',
-    alertThunderBody: (time)=> `Risque d\u2019orage à partir de ${time} dans les 24 prochaines heures.`,
+    alertThunderBody: (rel, absTime)=> `Risque d\u2019orage dans ${rel} (vers ${absTime}).`,
     alertWindGustTitle: 'Alerte rafales de vent',
-    alertWindGustBody: (kmh, time)=> `Rafales de vent jusqu\u2019à ${kmh} km/h prévues à partir de ${time} dans les 24 prochaines heures.`,
+    alertWindGustBody: (kmh, rel, absTime)=> `Rafales de vent jusqu\u2019à ${kmh} km/h prévues dans ${rel} (vers ${absTime}).`,
+    relDuration: (hh, mm)=> hh>0 && mm>0 ? `${hh}h ${mm}min` : hh>0 ? `${hh}h` : `${mm}min`,
+    relNow: 'maintenant',
     rowTime: 'Heure', rowWeather: 'Météo', rowTemp: 'Température 2m', rowFeelsLike: 'Température ressentie', rowPrecipProb: 'Prob. précip.',
     rowPrecipitation: 'Précipitations', rowCloudCover: 'Couverture nuageuse', rowHumidity: 'Humidité',
     rowWindSpeed: 'Vitesse du vent', rowWindGusts: 'Rafales', rowWindDir: 'Direction du vent',
@@ -887,11 +891,13 @@ const I18N = {
     thunderUnlikely: 'Onwaarschijnlijk', thunderPossible: 'Mogelijk', thunderRisk: 'Risico', thunderHighRisk: 'Hoog risico',
     minutelyUnavailable: '15-minutengegevens niet beschikbaar',
     alertHighPrecipTitle: 'Regenwaarschuwing',
-    alertHighPrecipBody: (pct, time)=> `De neerslagkans loopt op tot ${pct}% vanaf ${time} in de komende 24 uur.`,
+    alertHighPrecipBody: (pct, rel, absTime)=> `De neerslagkans loopt op tot ${pct}% over ${rel} (rond ${absTime}).`,
     alertThunderTitle: 'Onweerswaarschuwing',
-    alertThunderBody: (time)=> `Kans op onweer vanaf ${time} in de komende 24 uur.`,
+    alertThunderBody: (rel, absTime)=> `Kans op onweer over ${rel} (rond ${absTime}).`,
     alertWindGustTitle: 'Windstotenwaarschuwing',
-    alertWindGustBody: (kmh, time)=> `Windstoten tot ${kmh} km/u verwacht vanaf ${time} in de komende 24 uur.`,
+    alertWindGustBody: (kmh, rel, absTime)=> `Windstoten tot ${kmh} km/u verwacht over ${rel} (rond ${absTime}).`,
+    relDuration: (hh, mm)=> hh>0 && mm>0 ? `${hh}u ${mm}min` : hh>0 ? `${hh}u` : `${mm}min`,
+    relNow: 'nu',
     rowTime: 'Tijd', rowWeather: 'Weer', rowTemp: 'Temperatuur 2m', rowFeelsLike: 'Gevoelstemperatuur', rowPrecipProb: 'Neerslagkans',
     rowPrecipitation: 'Neerslag', rowCloudCover: 'Bewolking', rowHumidity: 'Vochtigheid',
     rowWindSpeed: 'Windsnelheid', rowWindGusts: 'Windstoten', rowWindDir: 'Windrichting',
@@ -965,11 +971,13 @@ const I18N = {
     thunderUnlikely: 'Nepravdepodobné', thunderPossible: 'Možné', thunderRisk: 'Riziko', thunderHighRisk: 'Vysoké riziko',
     minutelyUnavailable: '15-minútové údaje nie sú k dispozícii',
     alertHighPrecipTitle: 'Upozornenie na dážď',
-    alertHighPrecipBody: (pct, time)=> `Pravdepodobnosť zrážok dosiahne ${pct}% od ${time} v priebehu nasledujúcich 24 hodín.`,
+    alertHighPrecipBody: (pct, rel, absTime)=> `Pravdepodobnosť zrážok dosiahne ${pct}% o ${rel} (okolo ${absTime}).`,
     alertThunderTitle: 'Upozornenie na búrku',
-    alertThunderBody: (time)=> `Riziko búrky od ${time} v priebehu nasledujúcich 24 hodín.`,
+    alertThunderBody: (rel, absTime)=> `Riziko búrky o ${rel} (okolo ${absTime}).`,
     alertWindGustTitle: 'Upozornenie na nárazy vetra',
-    alertWindGustBody: (kmh, time)=> `V priebehu nasledujúcich 24 hodín sa od ${time} očakávajú nárazy vetra do ${kmh} km/h.`,
+    alertWindGustBody: (kmh, rel, absTime)=> `Nárazy vetra do ${kmh} km/h sa očakávajú o ${rel} (okolo ${absTime}).`,
+    relDuration: (hh, mm)=> hh>0 && mm>0 ? `${hh}h ${mm}min` : hh>0 ? `${hh}h` : `${mm}min`,
+    relNow: 'teraz',
     rowTime: 'Čas', rowWeather: 'Počasie', rowTemp: 'Teplota 2m', rowFeelsLike: 'Pocitová teplota', rowPrecipProb: 'Prav. zrážok',
     rowPrecipitation: 'Zrážky', rowCloudCover: 'Oblačnosť', rowHumidity: 'Vlhkosť',
     rowWindSpeed: 'Rýchlosť vetra', rowWindGusts: 'Nárazy vetra', rowWindDir: 'Smer vetra',
@@ -1828,7 +1836,7 @@ function render(data){
   buildMinutelyTable(data.minutely_15, now);
   buildEcmwfTable(data.ecmwf, now, data.aqiMap);
   buildDayTable(data.ecmwf, document.getElementById('dayPicker').value, data.aqiMap);
-  evaluateWeatherAlerts(h, curIdx);
+  evaluateWeatherAlerts(h, curIdx, data.minutely_15);
 }
 
 // ---- Weather alerts (precip. prob. > 50%, thunderstorm >= Risk, wind gusts >= 60 km/h) ----
@@ -1930,9 +1938,32 @@ async function triggerWeatherAlert(kind, title, body){
   showDesktopPopup(kind, title, body);
 }
 
-function evaluateWeatherAlerts(h, curIdx){
+// Scans minutely_15 data (finer-grained, ~6h ahead) for the first timestamp
+// from now onward where a field crosses a threshold — used to sharpen the
+// hourly-derived crossing time whenever the near-term 15-min data covers it.
+function firstMinutelyCrossing(minutely, field, predicate, now){
+  if(!minutely || !minutely.time || !minutely[field]) return null;
+  for(let i=0;i<minutely.time.length;i++){
+    const ti = new Date(minutely.time[i]);
+    if(ti < now) continue;
+    const v = minutely[field][i];
+    if(v!==null && v!==undefined && predicate(v)) return minutely.time[i];
+  }
+  return null;
+}
+
+// "in 2h 15min" / "in 40min" / "now" — how far the crossing time is from now.
+function relativeDurationLabel(targetIso, now){
+  const diffMs = new Date(targetIso) - now;
+  if(diffMs <= 60000) return t('relNow');
+  const totalMin = Math.round(diffMs/60000);
+  return t('relDuration', Math.floor(totalMin/60), totalMin%60);
+}
+
+function evaluateWeatherAlerts(h, curIdx, minutely){
   const n = 24;
   const idxs = Array.from({length:n}, (_,i)=>curIdx+i).filter(i=>i<h.time.length);
+  const now = new Date();
 
   const pops = idxs.map(i=>({i, v:h.precipitation_probability[i]})).filter(o=>o.v!==null && o.v!==undefined);
   const capes = idxs.map(i=>({i, v:h.cape[i]})).filter(o=>o.v!==null && o.v!==undefined);
@@ -1948,24 +1979,47 @@ function evaluateWeatherAlerts(h, curIdx){
   const thunderTriggered = !!maxCapeObj && maxCapeObj.v >= 1000;
   const windTriggered = !!maxGustObj && maxGustObj.v >= 60;
 
-  // the hour the risk *starts* (first crossing), not the hour of the peak —
-  // that's the more useful "from [time]" to show the person
+  // the hour the risk *starts* (first crossing) in the hourly data, not the
+  // hour of the peak — this is the fallback timing when 15-min data doesn't
+  // reach far enough ahead to cover it
   const firstPrecipIdx = precipTriggered ? pops.find(o=>o.v>50).i : null;
   const firstThunderIdx = thunderTriggered ? capes.find(o=>o.v>=1000).i : null;
   const firstWindIdx = windTriggered ? gusts.find(o=>o.v>=60).i : null;
 
+  let precipCrossing = precipTriggered ? h.time[firstPrecipIdx] : null;
+  let thunderCrossing = thunderTriggered ? h.time[firstThunderIdx] : null;
+  let windCrossing = windTriggered ? h.time[firstWindIdx] : null;
+
+  // Refine with the 15-MINUTE FORECAST table's data where it reaches far
+  // enough ahead: cape and wind_gusts_10m are the same metric at finer
+  // resolution, so a hit there is strictly more precise. Precipitation
+  // probability isn't in the 15-min data, so actual precipitation amount
+  // (mm) is used instead, as a proxy for when rain is expected to start.
+  if(precipTriggered){
+    const refined = firstMinutelyCrossing(minutely, 'precipitation', v=>v>0, now);
+    if(refined) precipCrossing = refined;
+  }
+  if(thunderTriggered){
+    const refined = firstMinutelyCrossing(minutely, 'cape', v=>v>=1000, now);
+    if(refined) thunderCrossing = refined;
+  }
+  if(windTriggered){
+    const refined = firstMinutelyCrossing(minutely, 'wind_gusts_10m', v=>v>=60, now);
+    if(refined) windCrossing = refined;
+  }
+
   if(precipTriggered && !weatherAlertState.precip){
-    triggerWeatherAlert('precip', t('alertHighPrecipTitle'), t('alertHighPrecipBody', Math.round(maxPopObj.v), fmtTime(h.time[firstPrecipIdx])));
+    triggerWeatherAlert('precip', t('alertHighPrecipTitle'), t('alertHighPrecipBody', Math.round(maxPopObj.v), relativeDurationLabel(precipCrossing, now), fmtTime(precipCrossing)));
   }
   weatherAlertState.precip = precipTriggered;
 
   if(thunderTriggered && !weatherAlertState.thunder){
-    triggerWeatherAlert('thunder', t('alertThunderTitle'), t('alertThunderBody', fmtTime(h.time[firstThunderIdx])));
+    triggerWeatherAlert('thunder', t('alertThunderTitle'), t('alertThunderBody', relativeDurationLabel(thunderCrossing, now), fmtTime(thunderCrossing)));
   }
   weatherAlertState.thunder = thunderTriggered;
 
   if(windTriggered && !weatherAlertState.wind){
-    triggerWeatherAlert('wind', t('alertWindGustTitle'), t('alertWindGustBody', Math.round(maxGustObj.v), fmtTime(h.time[firstWindIdx])));
+    triggerWeatherAlert('wind', t('alertWindGustTitle'), t('alertWindGustBody', Math.round(maxGustObj.v), relativeDurationLabel(windCrossing, now), fmtTime(windCrossing)));
   }
   weatherAlertState.wind = windTriggered;
 }
