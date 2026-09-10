@@ -1938,16 +1938,19 @@ async function triggerWeatherAlert(kind, title, body){
   showDesktopPopup(kind, title, body);
 }
 
-// Scans minutely_15 data (finer-grained, ~6h ahead) for the first timestamp
+// Scans minutely_15 data (finer-grained, ~6h ahead) for the first index
 // from now onward where a field crosses a threshold — used to sharpen the
-// hourly-derived crossing time whenever the near-term 15-min data covers it.
-function firstMinutelyCrossing(minutely, field, predicate, now){
+// hourly-derived crossing time (and value) whenever the near-term 15-min
+// data covers it. Returns the array index (not just the time) so the value
+// at that exact same moment can also be read out, keeping any quoted
+// magnitude and quoted time referring to one single, consistent instant.
+function firstMinutelyCrossingIdx(minutely, field, predicate, now){
   if(!minutely || !minutely.time || !minutely[field]) return null;
   for(let i=0;i<minutely.time.length;i++){
     const ti = new Date(minutely.time[i]);
     if(ti < now) continue;
     const v = minutely[field][i];
-    if(v!==null && v!==undefined && predicate(v)) return minutely.time[i];
+    if(v!==null && v!==undefined && predicate(v)) return i;
   }
   return null;
 }
@@ -1979,37 +1982,37 @@ function evaluateWeatherAlerts(h, curIdx, minutely){
   const thunderTriggered = !!maxCapeObj && maxCapeObj.v >= 1000;
   const windTriggered = !!maxGustObj && maxGustObj.v >= 60;
 
-  // the hour the risk *starts* (first crossing) in the hourly data, not the
-  // hour of the peak — this is the fallback timing when 15-min data doesn't
-  // reach far enough ahead to cover it
-  const firstPrecipIdx = precipTriggered ? pops.find(o=>o.v>50).i : null;
-  const firstThunderIdx = thunderTriggered ? capes.find(o=>o.v>=1000).i : null;
-  const firstWindIdx = windTriggered ? gusts.find(o=>o.v>=60).i : null;
+  // IMPORTANT: the quoted magnitude and the quoted time must always describe
+  // the *same* moment — e.g. "will reach 61% in 3h (around 14:00)" means
+  // 61% is the value at 14:00, not some other, later peak value paired with
+  // an earlier "first crossed the threshold" time. So every alert reports
+  // the value *at* the first-crossing point, not the separate 24h peak.
+  const firstPrecip = precipTriggered ? pops.find(o=>o.v>50) : null; // {i, v}
+  const firstThunder = thunderTriggered ? capes.find(o=>o.v>=1000) : null;
+  const firstWind = windTriggered ? gusts.find(o=>o.v>=60) : null;
 
-  let precipCrossing = precipTriggered ? h.time[firstPrecipIdx] : null;
-  let thunderCrossing = thunderTriggered ? h.time[firstThunderIdx] : null;
-  let windCrossing = windTriggered ? h.time[firstWindIdx] : null;
+  let precipCrossing = firstPrecip ? h.time[firstPrecip.i] : null;
+  let thunderCrossing = firstThunder ? h.time[firstThunder.i] : null;
+  let windCrossing = firstWind ? h.time[firstWind.i] : null;
+  let windValue = firstWind ? firstWind.v : null;
 
-  // Refine with the 15-MINUTE FORECAST table's data where it reaches far
-  // enough ahead: cape and wind_gusts_10m are the same metric at finer
-  // resolution, so a hit there is strictly more precise. Precipitation
-  // probability isn't in the 15-min data, so actual precipitation amount
-  // (mm) is used instead, as a proxy for when rain is expected to start.
-  if(precipTriggered){
-    const refined = firstMinutelyCrossing(minutely, 'precipitation', v=>v>0, now);
-    if(refined) precipCrossing = refined;
-  }
+  // Refine timing (and, for wind, the paired value too) with the 15-MINUTE
+  // FORECAST table where it reaches far enough ahead: cape and
+  // wind_gusts_10m are the same metric at finer resolution, so a hit there
+  // is strictly more precise. Precipitation probability isn't in the 15-min
+  // data at all, so it always uses the hourly first-crossing point — no
+  // mismatched proxy metric, which is what caused the original bug.
   if(thunderTriggered){
-    const refined = firstMinutelyCrossing(minutely, 'cape', v=>v>=1000, now);
-    if(refined) thunderCrossing = refined;
+    const idx = firstMinutelyCrossingIdx(minutely, 'cape', v=>v>=1000, now);
+    if(idx!==null) thunderCrossing = minutely.time[idx];
   }
   if(windTriggered){
-    const refined = firstMinutelyCrossing(minutely, 'wind_gusts_10m', v=>v>=60, now);
-    if(refined) windCrossing = refined;
+    const idx = firstMinutelyCrossingIdx(minutely, 'wind_gusts_10m', v=>v>=60, now);
+    if(idx!==null){ windCrossing = minutely.time[idx]; windValue = minutely.wind_gusts_10m[idx]; }
   }
 
   if(precipTriggered && !weatherAlertState.precip){
-    triggerWeatherAlert('precip', t('alertHighPrecipTitle'), t('alertHighPrecipBody', Math.round(maxPopObj.v), relativeDurationLabel(precipCrossing, now), fmtTime(precipCrossing)));
+    triggerWeatherAlert('precip', t('alertHighPrecipTitle'), t('alertHighPrecipBody', Math.round(firstPrecip.v), relativeDurationLabel(precipCrossing, now), fmtTime(precipCrossing)));
   }
   weatherAlertState.precip = precipTriggered;
 
@@ -2019,7 +2022,7 @@ function evaluateWeatherAlerts(h, curIdx, minutely){
   weatherAlertState.thunder = thunderTriggered;
 
   if(windTriggered && !weatherAlertState.wind){
-    triggerWeatherAlert('wind', t('alertWindGustTitle'), t('alertWindGustBody', Math.round(maxGustObj.v), relativeDurationLabel(windCrossing, now), fmtTime(windCrossing)));
+    triggerWeatherAlert('wind', t('alertWindGustTitle'), t('alertWindGustBody', Math.round(windValue), relativeDurationLabel(windCrossing, now), fmtTime(windCrossing)));
   }
   weatherAlertState.wind = windTriggered;
 }
