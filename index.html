@@ -736,6 +736,7 @@ const I18N = {
     alertWindGustBody: (kmh, rel, absTime)=> `Wind gusts up to ${kmh} km/h expected in ${rel} (around ${absTime}).`,
     relDuration: (hh, mm)=> hh>0 && mm>0 ? `${hh}h ${mm}min` : hh>0 ? `${hh}h` : `${mm}min`,
     relNow: 'now',
+    alertLocationSuffix: (addr)=> ` Location: ${addr}.`,
     rowTime: 'Time', rowWeather: 'Weather', rowTemp: 'Temperature 2m', rowFeelsLike: 'Feels-like temp.', rowPrecipProb: 'Precip. prob.',
     rowPrecipitation: 'Precipitation', rowCloudCover: 'Cloud cover', rowHumidity: 'Humidity',
     rowWindSpeed: 'Wind speed', rowWindGusts: 'Wind gusts', rowWindDir: 'Wind dir.',
@@ -816,6 +817,7 @@ const I18N = {
     alertWindGustBody: (kmh, rel, absTime)=> `Rafales de vent jusqu\u2019à ${kmh} km/h prévues dans ${rel} (vers ${absTime}).`,
     relDuration: (hh, mm)=> hh>0 && mm>0 ? `${hh}h ${mm}min` : hh>0 ? `${hh}h` : `${mm}min`,
     relNow: 'maintenant',
+    alertLocationSuffix: (addr)=> ` Lieu : ${addr}.`,
     rowTime: 'Heure', rowWeather: 'Météo', rowTemp: 'Température 2m', rowFeelsLike: 'Température ressentie', rowPrecipProb: 'Prob. précip.',
     rowPrecipitation: 'Précipitations', rowCloudCover: 'Couverture nuageuse', rowHumidity: 'Humidité',
     rowWindSpeed: 'Vitesse du vent', rowWindGusts: 'Rafales', rowWindDir: 'Direction du vent',
@@ -898,6 +900,7 @@ const I18N = {
     alertWindGustBody: (kmh, rel, absTime)=> `Windstoten tot ${kmh} km/u verwacht over ${rel} (rond ${absTime}).`,
     relDuration: (hh, mm)=> hh>0 && mm>0 ? `${hh}u ${mm}min` : hh>0 ? `${hh}u` : `${mm}min`,
     relNow: 'nu',
+    alertLocationSuffix: (addr)=> ` Locatie: ${addr}.`,
     rowTime: 'Tijd', rowWeather: 'Weer', rowTemp: 'Temperatuur 2m', rowFeelsLike: 'Gevoelstemperatuur', rowPrecipProb: 'Neerslagkans',
     rowPrecipitation: 'Neerslag', rowCloudCover: 'Bewolking', rowHumidity: 'Vochtigheid',
     rowWindSpeed: 'Windsnelheid', rowWindGusts: 'Windstoten', rowWindDir: 'Windrichting',
@@ -978,6 +981,7 @@ const I18N = {
     alertWindGustBody: (kmh, rel, absTime)=> `Nárazy vetra do ${kmh} km/h sa očakávajú o ${rel} (okolo ${absTime}).`,
     relDuration: (hh, mm)=> hh>0 && mm>0 ? `${hh}h ${mm}min` : hh>0 ? `${hh}h` : `${mm}min`,
     relNow: 'teraz',
+    alertLocationSuffix: (addr)=> ` Miesto: ${addr}.`,
     rowTime: 'Čas', rowWeather: 'Počasie', rowTemp: 'Teplota 2m', rowFeelsLike: 'Pocitová teplota', rowPrecipProb: 'Prav. zrážok',
     rowPrecipitation: 'Zrážky', rowCloudCover: 'Oblačnosť', rowHumidity: 'Vlhkosť',
     rowWindSpeed: 'Rýchlosť vetra', rowWindGusts: 'Nárazy vetra', rowWindDir: 'Smer vetra',
@@ -1470,8 +1474,11 @@ async function loadAddress(){
     const props = (data.features && data.features[0] && data.features[0].properties) || {};
     const title = formatPhotonAddress(props) || `${fmtCoord(LAT,'N','S')}, ${fmtCoord(LON,'E','W')}`;
     document.getElementById('titleLine').textContent = title;
+    currentAddressLabel = title;
   }catch(err){
-    document.getElementById('titleLine').textContent = `${fmtCoord(LAT,'N','S')}, ${fmtCoord(LON,'E','W')}`;
+    const coordLabel = `${fmtCoord(LAT,'N','S')}, ${fmtCoord(LON,'E','W')}`;
+    document.getElementById('titleLine').textContent = coordLabel;
+    currentAddressLabel = coordLabel;
   }
 }
 
@@ -1656,6 +1663,7 @@ function mergeData(main, blend){
 }
 
 let cachedData = null;
+let currentAddressLabel = ''; // the resolved postal address, reused in alert messages
 
 // Empties the four forecast tables (and the selected-day min/max chip) so a
 // failed load never leaves stale or nonsensical numbers on screen from a
@@ -2012,17 +2020,23 @@ function evaluateWeatherAlerts(h, curIdx, minutely){
   }
 
   if(precipTriggered && !weatherAlertState.precip){
-    triggerWeatherAlert('precip', t('alertHighPrecipTitle'), t('alertHighPrecipBody', Math.round(firstPrecip.v), relativeDurationLabel(precipCrossing, now), fmtTime(precipCrossing)));
+    const body = t('alertHighPrecipBody', Math.round(firstPrecip.v), relativeDurationLabel(precipCrossing, now), fmtTime(precipCrossing))
+      + (currentAddressLabel ? t('alertLocationSuffix', currentAddressLabel) : '');
+    triggerWeatherAlert('precip', t('alertHighPrecipTitle'), body);
   }
   weatherAlertState.precip = precipTriggered;
 
   if(thunderTriggered && !weatherAlertState.thunder){
-    triggerWeatherAlert('thunder', t('alertThunderTitle'), t('alertThunderBody', relativeDurationLabel(thunderCrossing, now), fmtTime(thunderCrossing)));
+    const body = t('alertThunderBody', relativeDurationLabel(thunderCrossing, now), fmtTime(thunderCrossing))
+      + (currentAddressLabel ? t('alertLocationSuffix', currentAddressLabel) : '');
+    triggerWeatherAlert('thunder', t('alertThunderTitle'), body);
   }
   weatherAlertState.thunder = thunderTriggered;
 
   if(windTriggered && !weatherAlertState.wind){
-    triggerWeatherAlert('wind', t('alertWindGustTitle'), t('alertWindGustBody', Math.round(windValue), relativeDurationLabel(windCrossing, now), fmtTime(windCrossing)));
+    const body = t('alertWindGustBody', Math.round(windValue), relativeDurationLabel(windCrossing, now), fmtTime(windCrossing))
+      + (currentAddressLabel ? t('alertLocationSuffix', currentAddressLabel) : '');
+    triggerWeatherAlert('wind', t('alertWindGustTitle'), body);
   }
   weatherAlertState.wind = windTriggered;
 }
@@ -2467,10 +2481,11 @@ function setupAlertsButtons(){
   }
   if(testBtn){
     testBtn.addEventListener('click', ()=>{
+      const testBody = t('alertTestBody') + (currentAddressLabel ? t('alertLocationSuffix', currentAddressLabel) : '');
       // fire one of each kind, staggered, so all three icons/sounds can be checked in one tap
-      triggerWeatherAlert('precip', t('alertTestTitle'), t('alertTestBody'));
-      setTimeout(()=> triggerWeatherAlert('thunder', t('alertTestTitle'), t('alertTestBody')), 1200);
-      setTimeout(()=> triggerWeatherAlert('wind', t('alertTestTitle'), t('alertTestBody')), 2400);
+      triggerWeatherAlert('precip', t('alertTestTitle'), testBody);
+      setTimeout(()=> triggerWeatherAlert('thunder', t('alertTestTitle'), testBody), 1200);
+      setTimeout(()=> triggerWeatherAlert('wind', t('alertTestTitle'), testBody), 2400);
     });
   }
   updateAlertsStatusText();
