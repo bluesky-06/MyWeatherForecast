@@ -363,6 +363,21 @@
   .swipe-hint:hover{text-decoration:underline;}
   .swipe-hint:active{color:#2679AD;}
 
+  .ecmwf-date-link{
+    font: inherit;
+    font-weight: 700;
+    color: var(--azure);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    transition: text-decoration-color .15s;
+  }
+  .ecmwf-date-link:hover, .ecmwf-date-link:focus-visible{ text-decoration-color: var(--azure); }
+  .ecmwf-date-link:active{ color:#2679AD; }
+
   .table-scroll{
     width:100%;
     overflow-x:auto;
@@ -2248,11 +2263,13 @@ function buildEcmwfTable(ecmwf, now, aqiMap){
     halfDays.push({dateStr, part:'afternoon', idxs:afternoon});
   });
 
-  // header row 1: date, spanning both morning+afternoon columns
+  // header row 1: date, spanning both morning+afternoon columns — each date
+  // is a button that jumps straight to the Selected Day table below with
+  // that date pre-loaded, mirroring what picking it in the date field does
   let theadRow1 = '<tr><th class="row-label" rowspan="2"></th>';
   days.forEach(dateStr=>{
     const mmLabel = minMaxLabel(byDate.get(dateStr), h.temperature_2m, 'date-minmax');
-    theadRow1 += `<th colspan="2">${fmtDateHeader(dateStr)}${mmLabel}</th>`;
+    theadRow1 += `<th colspan="2"><button type="button" class="ecmwf-date-link" data-date="${dateStr}">${fmtDateHeader(dateStr)}</button>${mmLabel}</th>`;
   });
   theadRow1 += '</tr>';
   // header row 2: Morning / Afternoon labels
@@ -2366,6 +2383,30 @@ function updateDaySelectedLabel(){
   if(!picker || !labelEl || !picker.value) return;
   const d = new Date(picker.value+'T12:00:00');
   labelEl.textContent = d.toLocaleDateString(t('localeCode'), {weekday:'long', day:'numeric', month:'long'});
+}
+
+// Jumps to the Selected Day table pre-loaded with the given date — used by
+// clicking a date in the 15-DAY FORECAST table, so a person doesn't have to
+// separately look the same date up again in the date field below.
+function selectDayFromEcmwf(dateStr){
+  const picker = document.getElementById('dayPicker');
+  if(!picker || !cachedData) return;
+  picker.value = dateStr;
+  updateDaySelectedLabel();
+  buildDayTable(cachedData.ecmwf, dateStr, cachedData.aqiMap);
+  const dayCard = document.getElementById('dayCard');
+  if(dayCard && dayCard.scrollIntoView) dayCard.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// Delegated listener — buildEcmwfTable() rewrites #ecmwfTable's innerHTML on
+// every refresh, so a listener bound once on the table container (rather
+// than on each button) keeps working across rebuilds without leaking.
+const ecmwfTableEl = document.getElementById('ecmwfTable');
+if(ecmwfTableEl){
+  ecmwfTableEl.addEventListener('click', (e)=>{
+    const btn = e.target.closest('.ecmwf-date-link');
+    if(btn) selectDayFromEcmwf(btn.dataset.date);
+  });
 }
 
 function updateDayTitleWithRange(now){
