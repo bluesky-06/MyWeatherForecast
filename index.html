@@ -378,6 +378,56 @@
   .ecmwf-date-link:hover, .ecmwf-date-link:focus-visible{ text-decoration-color: var(--azure); }
   .ecmwf-date-link:active{ color:#2679AD; }
 
+  .arpege-days{ display:flex; flex-direction:column; gap:10px; }
+  .arpege-day{
+    background:#F8FBFC;
+    border-radius:12px;
+    padding:12px 14px;
+  }
+  .arpege-day-header{
+    display:block;
+    font: inherit;
+    font-weight:700;
+    font-size:13px;
+    letter-spacing:.04em;
+    color:var(--azure);
+    background:none;
+    border:none;
+    padding:0 0 8px;
+    cursor:pointer;
+    text-align:left;
+    text-decoration:underline;
+    text-decoration-color:transparent;
+    transition:text-decoration-color .15s;
+  }
+  .arpege-day-header:hover, .arpege-day-header:focus-visible{ text-decoration-color: var(--azure); }
+  .arpege-day-row{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:14px 18px;
+  }
+  .arpege-metric-icon svg{ display:block; }
+  .arpege-metric{
+    display:flex;
+    flex-direction:column;
+    gap:2px;
+    min-width:64px;
+  }
+  .arpege-metric-label{
+    font-size:10.5px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    color:var(--grey);
+  }
+  .arpege-metric-value{
+    font-size:14px;
+    font-weight:600;
+    color:var(--ink);
+    white-space:nowrap;
+  }
+  .arpege-day-empty{ color:var(--grey); font-size:13px; padding:8px 2px; }
+
   .table-scroll{
     width:100%;
     overflow-x:auto;
@@ -612,6 +662,7 @@
     <nav class="toc">
       <a href="#minutelyCard" id="tocMinutely">15-minute forecast</a>
       <a href="#hourlyCard" id="tocHourly">Hourly forecast</a>
+      <a href="#arpegeCard" id="tocArpege">3-day forecast</a>
       <a href="#ecmwfCard" id="tocEcmwf">15-day forecast</a>
       <a href="#dayCard" id="tocDay">Selected day</a>
     </nav>
@@ -631,6 +682,12 @@
     <div class="table-scroll">
       <table class="data-table" id="hourlyTable"></table>
     </div>
+  </div>
+
+  <div class="card" id="arpegeCard">
+    <div class="section-title"><span id="arpegeTitleText">3-day forecast</span></div>
+    <div class="section-sub" id="arpegeSubText">ARPEGE Europe model data updates every 6 hours</div>
+    <div id="arpegeTable" class="arpege-days"></div>
   </div>
 
   <div class="card" id="ecmwfCard">
@@ -701,6 +758,15 @@ function buildEcmwfUrl(){
   return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=weather_code,temperature_2m,apparent_temperature,precipitation,cloud_cover,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cape,is_day,soil_temperature_0cm&models=ecmwf_ifs&timezone=Europe%2FParis&forecast_days=15`;
 }
 
+// Météo-France ARPEGE Europe (~11 km, updates every 6h, ~4.5-day horizon).
+// Requested hourly rather than daily because Open-Meteo's daily aggregation
+// doesn't include humidity at all — hourly values are aggregated into daily
+// figures client-side instead, the same way the 15-day/selected-day tables
+// already do for their own model.
+function buildArpegeUrl(){
+  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=weather_code,temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,wind_direction_10m&models=meteofrance_arpege_europe&timezone=Europe%2FParis&forecast_days=4`;
+}
+
 // Open-Meteo's separate Air Quality API (CAMS-based) — capped at 7 days,
 // so tables reaching further than that will show a dash for those cells
 function buildAirQualityUrl(){
@@ -729,6 +795,12 @@ const I18N = {
     swipeHintLeft: '← swipe',
     hourlyTitle: 'Hourly forecast — next 24h',
     hourlySub: 'AROME-HD model data updates every 3 hours',
+    arpegeTitle: '3-day forecast',
+    arpegeSub: 'ARPEGE Europe model data updates every 6 hours',
+    arpegeResolution: '~11 km resolution',
+    jumpArpege: '3-day forecast',
+    rowTempMin: 'Min. temperature',
+    rowTempMax: 'Max. temperature',
     minutelyTitle: '15-minute forecast — next 6h',
     minutelySub: 'Nowcast data updates every hour',
     dataFrom: 'Data from',
@@ -810,6 +882,12 @@ const I18N = {
     swipeHintLeft: '← glisser',
     hourlyTitle: 'Prévisions horaires — 24 prochaines heures',
     hourlySub: 'Les données du modèle AROME-HD sont mises à jour toutes les 3 heures',
+    arpegeTitle: 'Prévisions à 3 jours',
+    arpegeSub: 'Les données du modèle ARPEGE Europe sont mises à jour toutes les 6 heures',
+    arpegeResolution: 'résolution ~11 km',
+    jumpArpege: 'Prévisions à 3 jours',
+    rowTempMin: 'Température min.',
+    rowTempMax: 'Température max.',
     minutelyTitle: 'Prévisions 15 minutes — 6 prochaines heures',
     minutelySub: 'Les données de nowcasting sont mises à jour toutes les heures',
     dataFrom: 'Données de',
@@ -893,6 +971,12 @@ const I18N = {
     swipeHintLeft: '← veeg',
     hourlyTitle: 'Uurlijkse voorspelling — komende 24 u',
     hourlySub: 'AROME-HD modelgegevens worden om de 3 uur bijgewerkt',
+    arpegeTitle: '3-daagse voorspelling',
+    arpegeSub: 'ARPEGE Europe modelgegevens worden om de 6 uur bijgewerkt',
+    arpegeResolution: '~11 km resolutie',
+    jumpArpege: '3-daagse voorspelling',
+    rowTempMin: 'Min. temperatuur',
+    rowTempMax: 'Max. temperatuur',
     minutelyTitle: '15-minutenvoorspelling — komende 6 u',
     minutelySub: 'Nowcastgegevens worden elk uur bijgewerkt',
     dataFrom: 'Gegevens van',
@@ -974,6 +1058,12 @@ const I18N = {
     swipeHintLeft: '← potiahnite',
     hourlyTitle: 'Hodinová predpoveď — nasledujúcich 24 h',
     hourlySub: 'Údaje modelu AROME-HD sa aktualizujú každé 3 hodiny',
+    arpegeTitle: '3-dňová predpoveď',
+    arpegeSub: 'Údaje modelu ARPEGE Europe sa aktualizujú každých 6 hodín',
+    arpegeResolution: 'rozlíšenie ~11 km',
+    jumpArpege: '3-dňová predpoveď',
+    rowTempMin: 'Min. teplota',
+    rowTempMax: 'Max. teplota',
     minutelyTitle: '15-minútová predpoveď — nasledujúcich 6 h',
     minutelySub: 'Údaje nowcastingu sa aktualizujú každú hodinu',
     dataFrom: 'Údaje z',
@@ -1410,6 +1500,8 @@ function applyStaticTranslations(){
   document.getElementById('locBtn').textContent = t('useMyLocation');
   document.getElementById('hourlyTitleText').textContent = t('hourlyTitle');
   document.getElementById('hourlySubText').textContent = `${t('hourlySub')} · ${t('spatialResolution')}`;
+  document.getElementById('arpegeTitleText').textContent = t('arpegeTitle');
+  document.getElementById('arpegeSubText').textContent = `${t('arpegeSub')} · ${t('arpegeResolution')}`;
   document.getElementById('minutelyTitleText').textContent = t('minutelyTitle');
   document.getElementById('minutelySubText').textContent = `${t('minutelySub')} · ${t('spatialResolution')}`;
   document.getElementById('ecmwfTitleText').textContent = t('ecmwfTitle');
@@ -1442,6 +1534,7 @@ function applyStaticTranslations(){
   if(typeof updateAlertsStatusText === 'function') updateAlertsStatusText();
   document.getElementById('tocHourly').textContent = t('jumpHourly');
   document.getElementById('tocMinutely').textContent = t('jumpMinutely');
+  document.getElementById('tocArpege').textContent = t('jumpArpege');
   document.getElementById('tocEcmwf').textContent = t('jumpEcmwf');
   document.getElementById('tocDay').textContent = t('jumpDay');
   const fetchingEl = document.getElementById('fetchingMsg');
@@ -1689,17 +1782,22 @@ function clearForecastTables(){
     const el = document.getElementById(id);
     if(el) el.innerHTML = placeholder;
   });
+  // arpegeTable is a plain <div> (stacked day cards), not a <table>, so it
+  // needs its own non-table placeholder markup
+  const arpegeEl = document.getElementById('arpegeTable');
+  if(arpegeEl) arpegeEl.innerHTML = `<div class="arpege-day-empty">${t('forecastDataUnavailable')}</div>`;
   const minMaxEl = document.getElementById('daySelectedMinMax');
   if(minMaxEl) minMaxEl.innerHTML = '';
 }
 
 async function load(){
   try{
-    const [mainRes, blendRes, ecmwfRes, aqiRes] = await Promise.all([
+    const [mainRes, blendRes, ecmwfRes, aqiRes, arpegeRes] = await Promise.all([
       fetch(buildApiUrl()),
       fetch(buildBlendUrl()).catch(()=>null), // blend is a nice-to-have, don't fail the page if it errors
       fetch(buildEcmwfUrl()).catch(()=>null), // 15-day ECMWF table is also a nice-to-have
-      fetch(buildAirQualityUrl()).catch(()=>null) // ditto for air quality
+      fetch(buildAirQualityUrl()).catch(()=>null), // ditto for air quality
+      fetch(buildArpegeUrl()).catch(()=>null) // ditto for the 3-day ARPEGE table
     ]);
 
     // Parse the main response defensively: an unsupported/out-of-range
@@ -1728,9 +1826,14 @@ async function load(){
     if(aqiRes && aqiRes.ok){
       try{ aqiData = await aqiRes.json(); }catch(e){ aqiData = null; }
     }
+    let arpegeData = null;
+    if(arpegeRes && arpegeRes.ok){
+      try{ arpegeData = await arpegeRes.json(); }catch(e){ arpegeData = null; }
+    }
     const data = mergeData(mainData, blendData);
     data.ecmwf = ecmwfData;
     data.aqiMap = buildAqiMap(aqiData);
+    data.arpege = arpegeData;
     lastUpdated = new Date();
     cachedData = data;
     render(data);
@@ -1858,6 +1961,7 @@ function render(data){
   buildHourlyTable(h, curIdx, data.aqiMap);
   buildMinutelyTable(data.minutely_15, now);
   buildEcmwfTable(data.ecmwf, now, data.aqiMap);
+  buildArpegeTable(data.arpege, now);
   buildDayTable(data.ecmwf, document.getElementById('dayPicker').value, data.aqiMap);
   evaluateWeatherAlerts(h, curIdx, data.minutely_15);
 }
@@ -2184,6 +2288,11 @@ function aggMax(idxs, arr){
   if(!vals.length) return null;
   return Math.max(...vals);
 }
+function aggMin(idxs, arr){
+  const vals = idxs.map(i=>arr[i]).filter(v=>v!==null && v!==undefined);
+  if(!vals.length) return null;
+  return Math.min(...vals);
+}
 function aggDominantWeatherCode(idxs, codes){
   let best = null, bestSeverity = -1;
   idxs.forEach(i=>{
@@ -2319,6 +2428,76 @@ function buildEcmwfTable(ecmwf, now, aqiMap){
   tableEl.innerHTML = thead + tbody;
 }
 
+// Météo-France ARPEGE Europe, aggregated from hourly into one column per day
+// (full day, not split morning/afternoon like the 15-day ECMWF table) —
+// weather code, min/max temperature, humidity, total precipitation, wind
+// gusts and wind direction, as requested.
+function buildArpegeTable(arpege, now){
+  const containerEl = document.getElementById('arpegeTable');
+  if(!arpege || !arpege.hourly){
+    containerEl.innerHTML = `<div class="arpege-day-empty">${t('minutelyUnavailable')}</div>`;
+    return;
+  }
+  const h = arpege.hourly;
+  const todayStr = now.toLocaleDateString('en-CA');
+
+  // group hour indices by calendar date, keeping only days after today,
+  // capped at 3 days
+  const byDate = new Map();
+  h.time.forEach((iso,i)=>{
+    const dateStr = iso.slice(0,10);
+    if(dateStr <= todayStr) return; // skip today — starts tomorrow
+    if(!byDate.has(dateStr)) byDate.set(dateStr, []);
+    byDate.get(dateStr).push(i);
+  });
+
+  const days = Array.from(byDate.keys()).sort().slice(0, 3);
+  if(!days.length){
+    containerEl.innerHTML = `<div class="arpege-day-empty">${t('minutelyUnavailable')}</div>`;
+    return;
+  }
+
+  // One stacked row per day (rather than one scrollable column per day) —
+  // all 3 days are visible without horizontal scrolling on a phone screen.
+  containerEl.innerHTML = days.map(dateStr=>{
+    const idxs = byDate.get(dateStr);
+    const code = aggDominantWeatherCode(idxs, h.weather_code);
+    const iconSvg = icon(weatherIconType(code, 1), 34);
+    const tMin = tempCell(aggMin(idxs, h.temperature_2m));
+    const tMax = tempCell(aggMax(idxs, h.temperature_2m));
+    const humidity = roundOr(aggAvg(idxs, h.relative_humidity_2m), '%');
+    const precip = numOr(aggSum(idxs, h.precipitation), 1, ' mm');
+    const gusts = windValue(aggMax(idxs, h.wind_gusts_10m));
+    // wind_gusts_10m used as the vector weight so gustier hours dominate the
+    // day's dominant direction reading, rather than a flat average
+    const w = aggWindVector(idxs, h.wind_gusts_10m, h.wind_direction_10m);
+    const dir = windDirection(w.dir);
+
+    return `<div class="arpege-day">
+      <button type="button" class="arpege-day-header ecmwf-date-link" data-date="${dateStr}">${fmtDateHeader(dateStr)}</button>
+      <div class="arpege-day-row">
+        <div class="arpege-metric arpege-metric-icon">${iconSvg}</div>
+        <div class="arpege-metric">
+          <span class="arpege-metric-label">${t('rowTempMin')} / ${t('rowTempMax')}</span>
+          <span class="arpege-metric-value">${tMin} / ${tMax}</span>
+        </div>
+        <div class="arpege-metric">
+          <span class="arpege-metric-label">${t('rowHumidity')}</span>
+          <span class="arpege-metric-value">${humidity}</span>
+        </div>
+        <div class="arpege-metric">
+          <span class="arpege-metric-label">${t('rowTotalPrecip')}</span>
+          <span class="arpege-metric-value">${precip}</span>
+        </div>
+        <div class="arpege-metric">
+          <span class="arpege-metric-label">${t('rowWindGusts')} / ${t('rowWindDir')}</span>
+          <span class="arpege-metric-value">${gusts} ${dir}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function buildDayTable(ecmwf, dateStr, aqiMap){
   const tableEl = document.getElementById('dayTable');
   if(!tableEl) return;
@@ -2401,13 +2580,14 @@ function selectDayFromEcmwf(dateStr){
 // Delegated listener — buildEcmwfTable() rewrites #ecmwfTable's innerHTML on
 // every refresh, so a listener bound once on the table container (rather
 // than on each button) keeps working across rebuilds without leaking.
-const ecmwfTableEl = document.getElementById('ecmwfTable');
-if(ecmwfTableEl){
-  ecmwfTableEl.addEventListener('click', (e)=>{
+// Same pattern applied to the 3-day ARPEGE table's date links.
+[document.getElementById('ecmwfTable'), document.getElementById('arpegeTable')].forEach(tableEl=>{
+  if(!tableEl) return;
+  tableEl.addEventListener('click', (e)=>{
     const btn = e.target.closest('.ecmwf-date-link');
     if(btn) selectDayFromEcmwf(btn.dataset.date);
   });
-}
+});
 
 function updateDayTitleWithRange(now){
   const titleEl = document.getElementById('dayTitleText');
