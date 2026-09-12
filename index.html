@@ -714,6 +714,14 @@
   </div>
 
   <div class="wrap-narrow">
+    <nav class="toc">
+      <a href="#minutelyCard" id="tocMinutely2">15-minute forecast</a>
+      <a href="#hourlyCard" id="tocHourly2">Hourly forecast</a>
+      <a href="#arpegeCard" id="tocArpege2">3-day forecast</a>
+      <a href="#ecmwfCard" id="tocEcmwf2">15-day forecast</a>
+      <a href="#dayCard" id="tocDay2">Selected day</a>
+    </nav>
+
     <div class="install-card" id="alertsCard">
       <div class="alerts-btn-row">
         <button type="button" id="enableAlertsBtn" class="install-btn">🔔 <span id="enableAlertsBtnText">Enable weather alerts</span></button>
@@ -1525,6 +1533,11 @@ function applyStaticTranslations(){
   document.getElementById('tocArpege').textContent = t('jumpArpege');
   document.getElementById('tocEcmwf').textContent = t('jumpEcmwf');
   document.getElementById('tocDay').textContent = t('jumpDay');
+  document.getElementById('tocHourly2').textContent = t('jumpHourly');
+  document.getElementById('tocMinutely2').textContent = t('jumpMinutely');
+  document.getElementById('tocArpege2').textContent = t('jumpArpege');
+  document.getElementById('tocEcmwf2').textContent = t('jumpEcmwf');
+  document.getElementById('tocDay2').textContent = t('jumpDay');
   const fetchingEl = document.getElementById('fetchingMsg');
   if(fetchingEl) fetchingEl.textContent = t('fetchingNow');
   document.querySelectorAll('.lang-btn').forEach(btn=>{
