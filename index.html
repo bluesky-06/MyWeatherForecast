@@ -753,18 +753,10 @@ function buildBlendUrl(){
 const BLENDED_FIELDS = ['precipitation_probability','showers','cloud_cover','uv_index','weather_code','is_day','wind_direction_10m','soil_temperature_0cm'];
 const BLENDED_MINUTELY_FIELDS = ['lightning_potential','weather_code','is_day','wind_direction_10m'];
 
-// ECMWF IFS HRES (0.25° / ~25 km, open-data, 15-day horizon, updates every 6h)
+// ECMWF IFS HRES (full native ~9 km resolution since ECMWF's Oct 2025 open-data
+// transition, up from the older 0.25°/~25km open feed), 15-day horizon, updates every 6h
 function buildEcmwfUrl(){
   return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=weather_code,temperature_2m,apparent_temperature,precipitation,cloud_cover,relative_humidity_2m,wind_speed_10m,wind_direction_10m,wind_gusts_10m,cape,is_day,soil_temperature_0cm&models=ecmwf_ifs&timezone=Europe%2FParis&forecast_days=15`;
-}
-
-// Météo-France ARPEGE Europe (~11 km, updates every 6h, ~4.5-day horizon).
-// Requested hourly rather than daily because Open-Meteo's daily aggregation
-// doesn't include humidity at all — hourly values are aggregated into daily
-// figures client-side instead, the same way the 15-day/selected-day tables
-// already do for their own model.
-function buildArpegeUrl(){
-  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=weather_code,temperature_2m,relative_humidity_2m,precipitation,wind_gusts_10m,wind_direction_10m&models=meteofrance_arpege_europe&timezone=Europe%2FParis&forecast_days=4`;
 }
 
 // Open-Meteo's separate Air Quality API (CAMS-based) — capped at 7 days,
@@ -796,8 +788,7 @@ const I18N = {
     hourlyTitle: 'Hourly forecast — next 24h',
     hourlySub: 'AROME-HD model data updates every 3 hours',
     arpegeTitle: '3-day forecast',
-    arpegeSub: 'ARPEGE Europe model data updates every 6 hours',
-    arpegeResolution: '~11 km resolution',
+    arpegeSub: 'AROME-HD (~1.5 km) where available, ECMWF IFS (~9 km) beyond its ~2-day reach',
     jumpArpege: '3-day forecast',
     rowTempMin: 'Min. temperature',
     rowTempMax: 'Max. temperature',
@@ -883,8 +874,7 @@ const I18N = {
     hourlyTitle: 'Prévisions horaires — 24 prochaines heures',
     hourlySub: 'Les données du modèle AROME-HD sont mises à jour toutes les 3 heures',
     arpegeTitle: 'Prévisions à 3 jours',
-    arpegeSub: 'Les données du modèle ARPEGE Europe sont mises à jour toutes les 6 heures',
-    arpegeResolution: 'résolution ~11 km',
+    arpegeSub: 'AROME-HD (~1,5 km) si disponible, sinon ECMWF IFS (~9 km) au-delà de sa portée de ~2 jours',
     jumpArpege: 'Prévisions à 3 jours',
     rowTempMin: 'Température min.',
     rowTempMax: 'Température max.',
@@ -972,8 +962,7 @@ const I18N = {
     hourlyTitle: 'Uurlijkse voorspelling — komende 24 u',
     hourlySub: 'AROME-HD modelgegevens worden om de 3 uur bijgewerkt',
     arpegeTitle: '3-daagse voorspelling',
-    arpegeSub: 'ARPEGE Europe modelgegevens worden om de 6 uur bijgewerkt',
-    arpegeResolution: '~11 km resolutie',
+    arpegeSub: 'AROME-HD (~1,5 km) indien beschikbaar, anders ECMWF IFS (~9 km) voorbij het bereik van ~2 dagen',
     jumpArpege: '3-daagse voorspelling',
     rowTempMin: 'Min. temperatuur',
     rowTempMax: 'Max. temperatuur',
@@ -1059,8 +1048,7 @@ const I18N = {
     hourlyTitle: 'Hodinová predpoveď — nasledujúcich 24 h',
     hourlySub: 'Údaje modelu AROME-HD sa aktualizujú každé 3 hodiny',
     arpegeTitle: '3-dňová predpoveď',
-    arpegeSub: 'Údaje modelu ARPEGE Europe sa aktualizujú každých 6 hodín',
-    arpegeResolution: 'rozlíšenie ~11 km',
+    arpegeSub: 'AROME-HD (~1,5 km) ak je k dispozícii, inak ECMWF IFS (~9 km) nad rámec jeho dosahu ~2 dní',
     jumpArpege: '3-dňová predpoveď',
     rowTempMin: 'Min. teplota',
     rowTempMax: 'Max. teplota',
@@ -1501,7 +1489,7 @@ function applyStaticTranslations(){
   document.getElementById('hourlyTitleText').textContent = t('hourlyTitle');
   document.getElementById('hourlySubText').textContent = `${t('hourlySub')} · ${t('spatialResolution')}`;
   document.getElementById('arpegeTitleText').textContent = t('arpegeTitle');
-  document.getElementById('arpegeSubText').textContent = `${t('arpegeSub')} · ${t('arpegeResolution')}`;
+  document.getElementById('arpegeSubText').textContent = t('arpegeSub');
   document.getElementById('minutelyTitleText').textContent = t('minutelyTitle');
   document.getElementById('minutelySubText').textContent = `${t('minutelySub')} · ${t('spatialResolution')}`;
   document.getElementById('ecmwfTitleText').textContent = t('ecmwfTitle');
@@ -1792,12 +1780,11 @@ function clearForecastTables(){
 
 async function load(){
   try{
-    const [mainRes, blendRes, ecmwfRes, aqiRes, arpegeRes] = await Promise.all([
+    const [mainRes, blendRes, ecmwfRes, aqiRes] = await Promise.all([
       fetch(buildApiUrl()),
       fetch(buildBlendUrl()).catch(()=>null), // blend is a nice-to-have, don't fail the page if it errors
       fetch(buildEcmwfUrl()).catch(()=>null), // 15-day ECMWF table is also a nice-to-have
-      fetch(buildAirQualityUrl()).catch(()=>null), // ditto for air quality
-      fetch(buildArpegeUrl()).catch(()=>null) // ditto for the 3-day ARPEGE table
+      fetch(buildAirQualityUrl()).catch(()=>null) // ditto for air quality
     ]);
 
     // Parse the main response defensively: an unsupported/out-of-range
@@ -1826,14 +1813,9 @@ async function load(){
     if(aqiRes && aqiRes.ok){
       try{ aqiData = await aqiRes.json(); }catch(e){ aqiData = null; }
     }
-    let arpegeData = null;
-    if(arpegeRes && arpegeRes.ok){
-      try{ arpegeData = await arpegeRes.json(); }catch(e){ arpegeData = null; }
-    }
     const data = mergeData(mainData, blendData);
     data.ecmwf = ecmwfData;
     data.aqiMap = buildAqiMap(aqiData);
-    data.arpege = arpegeData;
     lastUpdated = new Date();
     cachedData = data;
     render(data);
@@ -1961,7 +1943,7 @@ function render(data){
   buildHourlyTable(h, curIdx, data.aqiMap);
   buildMinutelyTable(data.minutely_15, now);
   buildEcmwfTable(data.ecmwf, now, data.aqiMap);
-  buildArpegeTable(data.arpege, now);
+  buildArpegeTable(h, data.ecmwf, now);
   buildDayTable(data.ecmwf, document.getElementById('dayPicker').value, data.aqiMap);
   evaluateWeatherAlerts(h, curIdx, data.minutely_15);
 }
@@ -2428,23 +2410,44 @@ function buildEcmwfTable(ecmwf, now, aqiMap){
   tableEl.innerHTML = thead + tbody;
 }
 
-// Météo-France ARPEGE Europe, aggregated from hourly into one column per day
-// (full day, not split morning/afternoon like the 15-day ECMWF table) —
-// weather code, min/max temperature, humidity, total precipitation, wind
-// gusts and wind direction, as requested.
-function buildArpegeTable(arpege, now){
+// Hybrid 3-day forecast: AROME-HD (~1.5 km) for every hour it actually
+// covers (~42h from now, France only), falling back hour-by-hour to ECMWF
+// IFS (~9 km, reaches 15 days) beyond that reach or outside AROME's
+// coverage area — rather than switching wholesale partway through a day,
+// each individual hour uses whichever model actually has data for it.
+function buildArpegeTable(aromeHourly, ecmwf, now){
   const containerEl = document.getElementById('arpegeTable');
-  if(!arpege || !arpege.hourly){
+  if(!ecmwf || !ecmwf.hourly){
     containerEl.innerHTML = `<div class="arpege-day-empty">${t('minutelyUnavailable')}</div>`;
     return;
   }
-  const h = arpege.hourly;
+  const eh = ecmwf.hourly;
+  const aromeIdxByTime = new Map();
+  if(aromeHourly && aromeHourly.time){
+    aromeHourly.time.forEach((iso,i)=> aromeIdxByTime.set(iso, i));
+  }
+
+  const merged = { time:[], weather_code:[], temperature_2m:[], relative_humidity_2m:[], precipitation:[], wind_gusts_10m:[], wind_direction_10m:[] };
+  eh.time.forEach((iso, ei)=>{
+    const ai = aromeIdxByTime.get(iso);
+    const useArome = ai!==undefined && aromeHourly.temperature_2m[ai]!==null && aromeHourly.temperature_2m[ai]!==undefined;
+    const src = useArome ? aromeHourly : eh;
+    const si = useArome ? ai : ei;
+    merged.time.push(iso);
+    merged.weather_code.push(src.weather_code[si]);
+    merged.temperature_2m.push(src.temperature_2m[si]);
+    merged.relative_humidity_2m.push(src.relative_humidity_2m[si]);
+    merged.precipitation.push(src.precipitation[si]);
+    merged.wind_gusts_10m.push(src.wind_gusts_10m[si]);
+    merged.wind_direction_10m.push(src.wind_direction_10m[si]);
+  });
+
   const todayStr = now.toLocaleDateString('en-CA');
 
   // group hour indices by calendar date, keeping only days after today,
   // capped at 3 days
   const byDate = new Map();
-  h.time.forEach((iso,i)=>{
+  merged.time.forEach((iso,i)=>{
     const dateStr = iso.slice(0,10);
     if(dateStr <= todayStr) return; // skip today — starts tomorrow
     if(!byDate.has(dateStr)) byDate.set(dateStr, []);
@@ -2461,16 +2464,16 @@ function buildArpegeTable(arpege, now){
   // all 3 days are visible without horizontal scrolling on a phone screen.
   containerEl.innerHTML = days.map(dateStr=>{
     const idxs = byDate.get(dateStr);
-    const code = aggDominantWeatherCode(idxs, h.weather_code);
+    const code = aggDominantWeatherCode(idxs, merged.weather_code);
     const iconSvg = icon(weatherIconType(code, 1), 34);
-    const tMin = tempCell(aggMin(idxs, h.temperature_2m));
-    const tMax = tempCell(aggMax(idxs, h.temperature_2m));
-    const humidity = roundOr(aggAvg(idxs, h.relative_humidity_2m), '%');
-    const precip = numOr(aggSum(idxs, h.precipitation), 1, ' mm');
-    const gusts = windValue(aggMax(idxs, h.wind_gusts_10m));
+    const tMin = tempCell(aggMin(idxs, merged.temperature_2m));
+    const tMax = tempCell(aggMax(idxs, merged.temperature_2m));
+    const humidity = roundOr(aggAvg(idxs, merged.relative_humidity_2m), '%');
+    const precip = numOr(aggSum(idxs, merged.precipitation), 1, ' mm');
+    const gusts = windValue(aggMax(idxs, merged.wind_gusts_10m));
     // wind_gusts_10m used as the vector weight so gustier hours dominate the
     // day's dominant direction reading, rather than a flat average
-    const w = aggWindVector(idxs, h.wind_gusts_10m, h.wind_direction_10m);
+    const w = aggWindVector(idxs, merged.wind_gusts_10m, merged.wind_direction_10m);
     const dir = windDirection(w.dir);
 
     return `<div class="arpege-day">
