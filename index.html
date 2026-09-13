@@ -492,6 +492,41 @@
   table.data-table tbody tr:nth-child(odd) td.row-label{background:#F8FBFC;}
   .row-label-flex{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap;}
   .row-label-flex svg{flex:none;}
+
+  .info-tooltip-btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:15px;
+    height:15px;
+    border-radius:50%;
+    border:1.4px solid var(--grey);
+    color:var(--grey);
+    background:none;
+    font-size:10px;
+    font-weight:700;
+    font-family:'Inter',sans-serif;
+    line-height:1;
+    padding:0;
+    cursor:pointer;
+    flex:none;
+  }
+  .info-tooltip-btn:hover, .info-tooltip-btn:focus-visible, .info-tooltip-btn.active{
+    border-color:var(--azure);
+    color:var(--azure);
+  }
+  .info-tooltip-popup{
+    position:fixed;
+    z-index:9999;
+    max-width:min(260px, calc(100vw - 32px));
+    background:var(--ink);
+    color:#fff;
+    font-size:12.5px;
+    line-height:1.4;
+    padding:10px 12px;
+    border-radius:8px;
+    box-shadow:0 8px 24px rgba(14,42,71,.3);
+  }
   table.data-table td.icon-cell svg{display:block;margin:0 auto;}
   table.data-table td.day-dot{color:var(--grey);}
   table.data-table td.night-dot{color:var(--ink);}
@@ -827,6 +862,7 @@ const I18N = {
     rowPrecipitation: 'Precipitation', rowCloudCover: 'Cloud cover', rowHumidity: 'Humidity',
     rowWindSpeed: 'Wind speed', rowWindGusts: 'Wind gusts', rowWindDir: 'Wind dir.',
     rowUvIndex: 'UV index', rowThunderstorm: 'Thunderstorm', rowLightning: 'Lightning',
+    precipProbTooltip: 'This comes from a different forecast model than the Precipitation amount row below, so the two may not always perfectly agree.',
     rowTotalPrecip: 'Total precipitation', rowSunshine: 'Sunshine duration', rowWindSpeedDir: 'Wind', rowCape: 'CAPE',
     morning: 'Morning', afternoon: 'Afternoon',
     now: 'Now',
@@ -913,6 +949,7 @@ const I18N = {
     rowPrecipitation: 'Précipitations', rowCloudCover: 'Couverture nuageuse', rowHumidity: 'Humidité',
     rowWindSpeed: 'Vitesse du vent', rowWindGusts: 'Rafales', rowWindDir: 'Direction du vent',
     rowUvIndex: 'Indice UV', rowThunderstorm: 'Orage', rowLightning: 'Foudre',
+    precipProbTooltip: 'Cette valeur provient d\u2019un modèle de prévision différent de celui de la ligne Précipitations ci-dessous, les deux peuvent donc ne pas toujours correspondre parfaitement.',
     rowTotalPrecip: 'Précipitations totales', rowSunshine: 'Durée d\u2019ensoleillement', rowWindSpeedDir: 'Vent', rowCape: 'CAPE',
     morning: 'Matin', afternoon: 'Après-midi',
     now: 'Maint.',
@@ -1001,6 +1038,7 @@ const I18N = {
     rowPrecipitation: 'Neerslag', rowCloudCover: 'Bewolking', rowHumidity: 'Vochtigheid',
     rowWindSpeed: 'Windsnelheid', rowWindGusts: 'Windstoten', rowWindDir: 'Windrichting',
     rowUvIndex: 'UV-index', rowThunderstorm: 'Onweer', rowLightning: 'Bliksem',
+    precipProbTooltip: 'Deze waarde komt uit een ander voorspellingsmodel dan de rij Neerslag hieronder, dus ze komen niet altijd perfect overeen.',
     rowTotalPrecip: 'Totale neerslag', rowSunshine: 'Zonneschijnduur', rowWindSpeedDir: 'Wind', rowCape: 'CAPE',
     morning: 'Voormiddag', afternoon: 'Namiddag',
     now: 'Nu',
@@ -1087,6 +1125,7 @@ const I18N = {
     rowPrecipitation: 'Zrážky', rowCloudCover: 'Oblačnosť', rowHumidity: 'Vlhkosť',
     rowWindSpeed: 'Rýchlosť vetra', rowWindGusts: 'Nárazy vetra', rowWindDir: 'Smer vetra',
     rowUvIndex: 'UV index', rowThunderstorm: 'Búrka', rowLightning: 'Blesk',
+    precipProbTooltip: 'Táto hodnota pochádza z iného predpovedného modelu ako riadok Zrážky nižšie, takže sa nemusia vždy presne zhodovať.',
     rowTotalPrecip: 'Celkové zrážky', rowSunshine: 'Trvanie slnečného svitu', rowWindSpeedDir: 'Vietor', rowCape: 'CAPE',
     morning: 'Ráno', afternoon: 'Popoludní',
     now: 'Teraz',
@@ -1248,6 +1287,11 @@ function weatherIconType(code, isDay){
 
 function fmtHourShort(iso){
   return new Date(iso).getHours()+"h";
+}
+
+// Escapes text for safe use inside an HTML attribute (e.g. data-tooltip="...")
+function escapeAttr(s){
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 function fmtTime(iso){
@@ -1918,7 +1962,7 @@ function render(data){
     let dIdx = data.daily.time.indexOf(todayStr);
     if(dIdx === -1) dIdx = 0;
     const v = data.daily.precipitation_sum ? data.daily.precipitation_sum[dIdx] : null;
-    if(v !== null && v !== undefined) precipTotal = v.toFixed(1)+' mm';
+    if(v !== null && v !== undefined) precipTotal = v.toFixed(2)+' mm';
   }
 
   updateHeader(now);
@@ -2168,7 +2212,7 @@ function buildHourlyTable(h, curIdx, aqiMap){
     {label:t('rowTemp'), get:(i)=> tempCell(h.temperature_2m[i])},
     {label:t('rowFeelsLike'), get:(i)=> tempCell(h.apparent_temperature[i])},
     {label:t('rowGroundTemp'), get:(i)=> tempCell(h.soil_temperature_0cm[i])},
-    {label:t('rowPrecipProb'), get:(i)=> roundOr(h.precipitation_probability[i], '%'),
+    {label:`<span class="row-label-flex">${t('rowPrecipProb')}<button type="button" class="info-tooltip-btn" data-tooltip="${escapeAttr(t('precipProbTooltip'))}" aria-label="Info">i</button></span>`, get:(i)=> roundOr(h.precipitation_probability[i], '%'),
       cellClass:(i)=> (h.precipitation_probability[i]!==null && h.precipitation_probability[i]>50) ? 'high-pop' : ''},
     {label:t('rowPrecipitation'), get:(i)=> numOr(h.precipitation[i], 2, ' mm')},
     {label:t('rowCloudCover'), get:(i)=> cloudValue(h.cloud_cover[i])},
@@ -2607,6 +2651,47 @@ function selectDayFromEcmwf(dateStr){
     if(btn) selectDayFromEcmwf(btn.dataset.date);
   });
 });
+
+// Tap-to-toggle info tooltip (used by the Precip. prob. row's info button) —
+// a native `title` attribute would work on desktop hover, but there's no
+// hover on mobile, so this is a small fixed-position popup positioned next
+// to whichever button was tapped, dismissed by tapping it again or elsewhere.
+let openTooltipEl = null;
+function closeInfoTooltip(){
+  if(openTooltipEl){ openTooltipEl.remove(); openTooltipEl = null; }
+  document.querySelectorAll('.info-tooltip-btn.active').forEach(b=> b.classList.remove('active'));
+}
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.info-tooltip-btn');
+  if(!btn){
+    if(!e.target.closest('.info-tooltip-popup')) closeInfoTooltip();
+    return;
+  }
+  const wasActive = btn.classList.contains('active');
+  closeInfoTooltip();
+  if(wasActive) return; // tapping the same button again just closes it
+
+  btn.classList.add('active');
+  const popup = document.createElement('div');
+  popup.className = 'info-tooltip-popup';
+  popup.textContent = btn.dataset.tooltip;
+  document.body.appendChild(popup);
+
+  const btnRect = btn.getBoundingClientRect();
+  const popupRect = popup.getBoundingClientRect();
+  let left = btnRect.left;
+  let top = btnRect.bottom + 8;
+  left = Math.min(left, window.innerWidth - popupRect.width - 16);
+  left = Math.max(left, 16);
+  if(top + popupRect.height > window.innerHeight - 16){
+    top = btnRect.top - popupRect.height - 8; // flip above if no room below
+  }
+  popup.style.left = left+'px';
+  popup.style.top = top+'px';
+  openTooltipEl = popup;
+});
+window.addEventListener('scroll', closeInfoTooltip, {passive:true});
+
 
 function updateDayTitleWithRange(now){
   const titleEl = document.getElementById('dayTitleText');
