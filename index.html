@@ -756,9 +756,9 @@ function buildApiUrl(){
 }
 // AROME-HD doesn't output these — pulled instead from Open-Meteo's default best-match blend
 function buildBlendUrl(){
-  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=precipitation_probability,showers,cloud_cover,uv_index,weather_code,is_day,wind_direction_10m,soil_temperature_0cm&minutely_15=lightning_potential,weather_code,is_day,wind_direction_10m&timezone=Europe%2FParis&forecast_days=2`;
+  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=showers,cloud_cover,uv_index,weather_code,is_day,wind_direction_10m,soil_temperature_0cm&minutely_15=lightning_potential,weather_code,is_day,wind_direction_10m&timezone=Europe%2FParis&forecast_days=2`;
 }
-const BLENDED_FIELDS = ['precipitation_probability','showers','cloud_cover','uv_index','weather_code','is_day','wind_direction_10m','soil_temperature_0cm'];
+const BLENDED_FIELDS = ['showers','cloud_cover','uv_index','weather_code','is_day','wind_direction_10m','soil_temperature_0cm'];
 const BLENDED_MINUTELY_FIELDS = ['lightning_potential','weather_code','is_day','wind_direction_10m'];
 
 // ECMWF IFS HRES (full native ~9 km resolution since ECMWF's Oct 2025 open-data
@@ -796,7 +796,7 @@ const I18N = {
     hourlyTitle: 'Hourly forecast — next 24h',
     hourlySub: 'AROME-HD model data updates every 3 hours',
     arpegeTitle: '3-day forecast',
-    arpegeSub: 'AROME-HD (~1.5 km) where available, ECMWF IFS (~9 km) beyond its ~2-day reach',
+    arpegeSub: 'AROME-HD (~1.5 km) where available, ECMWF IFS HRES (~9 km) beyond its ~2-day reach',
     jumpArpege: '3-day forecast',
     rowTempMin: 'Min. temperature',
     rowTempMax: 'Max. temperature',
@@ -882,7 +882,7 @@ const I18N = {
     hourlyTitle: 'Prévisions horaires — 24 prochaines heures',
     hourlySub: 'Les données du modèle AROME-HD sont mises à jour toutes les 3 heures',
     arpegeTitle: 'Prévisions à 3 jours',
-    arpegeSub: 'AROME-HD (~1,5 km) si disponible, sinon ECMWF IFS (~9 km) au-delà de sa portée de ~2 jours',
+    arpegeSub: 'AROME-HD (~1,5 km) si disponible, sinon ECMWF IFS HRES (~9 km) au-delà de sa portée de ~2 jours',
     jumpArpege: 'Prévisions à 3 jours',
     rowTempMin: 'Température min.',
     rowTempMax: 'Température max.',
@@ -970,7 +970,7 @@ const I18N = {
     hourlyTitle: 'Uurlijkse voorspelling — komende 24 u',
     hourlySub: 'AROME-HD modelgegevens worden om de 3 uur bijgewerkt',
     arpegeTitle: '3-daagse voorspelling',
-    arpegeSub: 'AROME-HD (~1,5 km) indien beschikbaar, anders ECMWF IFS (~9 km) voorbij het bereik van ~2 dagen',
+    arpegeSub: 'AROME-HD (~1,5 km) indien beschikbaar, anders ECMWF IFS HRES (~9 km) voorbij het bereik van ~2 dagen',
     jumpArpege: '3-daagse voorspelling',
     rowTempMin: 'Min. temperatuur',
     rowTempMax: 'Max. temperatuur',
@@ -1056,7 +1056,7 @@ const I18N = {
     hourlyTitle: 'Hodinová predpoveď — nasledujúcich 24 h',
     hourlySub: 'Údaje modelu AROME-HD sa aktualizujú každé 3 hodiny',
     arpegeTitle: '3-dňová predpoveď',
-    arpegeSub: 'AROME-HD (~1,5 km) ak je k dispozícii, inak ECMWF IFS (~9 km) nad rámec jeho dosahu ~2 dní',
+    arpegeSub: 'AROME-HD (~1,5 km) ak je k dispozícii, inak ECMWF IFS HRES (~9 km) nad rámec jeho dosahu ~2 dní',
     jumpArpege: '3-dňová predpoveď',
     rowTempMin: 'Min. teplota',
     rowTempMax: 'Max. teplota',
@@ -1687,7 +1687,9 @@ async function fetchSuggestions(query){
 function selectSuggestion(feat){
   if(!feat) return;
   hideSuggestions();
-  document.getElementById('addressInput').value = '';
+  const inputEl = document.getElementById('addressInput');
+  inputEl.value = '';
+  inputEl.blur(); // dismiss the on-screen keyboard on mobile
   LON = feat.geometry.coordinates[0];
   LAT = feat.geometry.coordinates[1];
   document.getElementById('titleLine').textContent = t('titleLoading');
@@ -1735,6 +1737,7 @@ document.getElementById('addressForm').addEventListener('submit', (e)=>{
   const inputEl = document.getElementById('addressInput');
   const query = inputEl.value.trim();
   hideSuggestions();
+  inputEl.blur(); // dismiss the on-screen keyboard on mobile
   if(query){
     geocodeAndLoad(query);
     inputEl.value = '';
@@ -2167,7 +2170,7 @@ function buildHourlyTable(h, curIdx, aqiMap){
     {label:t('rowGroundTemp'), get:(i)=> tempCell(h.soil_temperature_0cm[i])},
     {label:t('rowPrecipProb'), get:(i)=> roundOr(h.precipitation_probability[i], '%'),
       cellClass:(i)=> (h.precipitation_probability[i]!==null && h.precipitation_probability[i]>50) ? 'high-pop' : ''},
-    {label:t('rowPrecipitation'), get:(i)=> numOr(h.precipitation[i], 1, ' mm')},
+    {label:t('rowPrecipitation'), get:(i)=> numOr(h.precipitation[i], 2, ' mm')},
     {label:t('rowCloudCover'), get:(i)=> cloudValue(h.cloud_cover[i])},
     {label:t('rowHumidity'), get:(i)=> roundOr(h.relative_humidity_2m[i], '%')},
     {label:t('rowWindSpeed'), get:(i)=> windValue(h.wind_speed_10m[i])},
@@ -2218,7 +2221,7 @@ function buildMinutelyTable(m, now){
     {label:t('rowWeather'), get:(i)=> icon(weatherIconType(m.weather_code[i], m.is_day[i]), 20), isIcon:true},
     {label:t('rowTemp'), get:(i)=> tempCell(m.temperature_2m[i], 1)},
     {label:t('rowFeelsLike'), get:(i)=> tempCell(m.apparent_temperature[i], 1)},
-    {label:t('rowPrecipitation'), get:(i)=> numOr(m.precipitation[i], 1, ' mm')},
+    {label:t('rowPrecipitation'), get:(i)=> numOr(m.precipitation[i], 2, ' mm')},
     {label:t('rowThunderstorm'), get:(i)=> thunderstormBadge(m.cape[i])},
     {label:t('rowLightning'), get:(i)=> lightningBadge(m.lightning_potential[i])},
     {label:t('rowWindSpeed'), get:(i)=> windValue(m.wind_speed_10m[i])},
@@ -2390,7 +2393,7 @@ function buildEcmwfTable(ecmwf, now, aqiMap){
     {label:t('rowTemp'), get:(idxs)=> tempCell(aggAvg(idxs, h.temperature_2m))},
     {label:t('rowFeelsLike'), get:(idxs)=> tempCell(aggAvg(idxs, h.apparent_temperature))},
     {label:t('rowGroundTemp'), get:(idxs)=> tempCell(aggAvg(idxs, h.soil_temperature_0cm))},
-    {label:t('rowPrecipitation'), get:(idxs)=> numOr(aggSum(idxs, h.precipitation), 1, ' mm')},
+    {label:t('rowPrecipitation'), get:(idxs)=> numOr(aggSum(idxs, h.precipitation), 2, ' mm')},
     {label:t('rowSunshine'), get:(idxs)=> {
       const vals = idxs.map(i=> sunshineMinutesFromCloud(h.cloud_cover[i], h.is_day[i])).filter(v=>v!==null);
       if(!vals.length) return '–';
@@ -2482,7 +2485,7 @@ function buildArpegeTable(aromeHourly, ecmwf, now){
     const tMin = tempCell(aggMin(idxs, merged.temperature_2m));
     const tMax = tempCell(aggMax(idxs, merged.temperature_2m));
     const humidity = roundOr(aggAvg(idxs, merged.relative_humidity_2m), '%');
-    const precip = numOr(aggSum(idxs, merged.precipitation), 1, ' mm');
+    const precip = numOr(aggSum(idxs, merged.precipitation), 2, ' mm');
     const gusts = windValue(aggMax(idxs, merged.wind_gusts_10m));
     // wind_gusts_10m used as the vector weight so gustier hours dominate the
     // day's dominant direction reading, rather than a flat average
@@ -2544,7 +2547,7 @@ function buildDayTable(ecmwf, dateStr, aqiMap){
     {label:t('rowTemp'), get:(i)=> tempCell(h.temperature_2m[i])},
     {label:t('rowFeelsLike'), get:(i)=> tempCell(h.apparent_temperature[i])},
     {label:t('rowGroundTemp'), get:(i)=> tempCell(h.soil_temperature_0cm[i])},
-    {label:t('rowPrecipitation'), get:(i)=> numOr(h.precipitation[i], 1, ' mm')},
+    {label:t('rowPrecipitation'), get:(i)=> numOr(h.precipitation[i], 2, ' mm')},
     {label:t('rowSunshine'), get:(i)=> {
       const mins = sunshineMinutesFromCloud(h.cloud_cover[i], h.is_day[i]);
       return mins===null ? '–' : fmtDuration(Math.round(mins));
