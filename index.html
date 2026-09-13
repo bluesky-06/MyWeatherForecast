@@ -756,9 +756,9 @@ function buildApiUrl(){
 }
 // AROME-HD doesn't output these — pulled instead from Open-Meteo's default best-match blend
 function buildBlendUrl(){
-  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=showers,cloud_cover,uv_index,weather_code,is_day,wind_direction_10m,soil_temperature_0cm&minutely_15=lightning_potential,weather_code,is_day,wind_direction_10m&timezone=Europe%2FParis&forecast_days=2`;
+  return `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=precipitation_probability,showers,cloud_cover,uv_index,weather_code,is_day,wind_direction_10m,soil_temperature_0cm&minutely_15=lightning_potential,weather_code,is_day,wind_direction_10m&timezone=Europe%2FParis&forecast_days=2`;
 }
-const BLENDED_FIELDS = ['showers','cloud_cover','uv_index','weather_code','is_day','wind_direction_10m','soil_temperature_0cm'];
+const BLENDED_FIELDS = ['precipitation_probability','showers','cloud_cover','uv_index','weather_code','is_day','wind_direction_10m','soil_temperature_0cm'];
 const BLENDED_MINUTELY_FIELDS = ['lightning_potential','weather_code','is_day','wind_direction_10m'];
 
 // ECMWF IFS HRES (full native ~9 km resolution since ECMWF's Oct 2025 open-data
